@@ -9,14 +9,20 @@ function(call, env, ir)
      limits = getLimits(inn)
   } else {
        # we have a call to something and so
-       # need to create a temporary variable
+       # may need to create a temporary variable
        # Then we need to loop over those
        # and so create limits from that object, i.e.
-       # 1 to length(var)
+       # 1 to length(var).
+       # if the inn is a symbol, then we loop over its elements.
+       # We need to know its type.
      if(!is.name(inn)) {
-         # create temporary variable
-     } 
-     limits = NULL
+         # create temporary variable by evaluating the call
+         # and then create the limits for that.
+        # compile the call and assign to a new variable, then
+        # loop over that.
+     } else
+         limits
+
    }
 }
 

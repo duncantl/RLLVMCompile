@@ -30,6 +30,48 @@ this information at present.
 </abstract>
 
 <section>
+<title>Background</title>
+<para>
+It is clear that using high-level programming languages such as R,
+MATLAB, Python and Perl lead to improved productivity and use of human
+time.  However, these interpreted languages often lead to code that is
+considerably slower than compiled languages such as C++, C, FORTRAN,
+Java, etc.  This trade-off between development and maintenance time
+and compute time is one that everyone would like to remove by making
+the high-level code run as fast as the low-level code.  This is very
+challenging. However, we believe that there is a continuum between the
+use of high-level languages and low-level languages. Specifically, as
+we interactively develop code, we want the facilities of the
+high-level language - namely no need for type declarations, the
+disruptive compile-load-run cycle, etc.  But after we have finalized
+our script or functions, we want the speed of low-level languages. We
+are prepared to endure compilation times if the code will run
+significantly faster. We further expect that many users of R would be
+willing to provide additional information about their "final" code to
+make it run ten or one hundred times faster.
+Motivated by this expectation, we have developed a prototype system
+for compiling R code to machine code that exploits the types of the
+different R objects to attain significant speed-up in the execution of the code.
+</para>
+<para>
+This paper describes our initial experiments with compiling R code to
+machine instructions by leveraging a third party library - LLVM, the
+Low-Level Virtual Machine.  LLVM is a C++ library that facilitates
+creating intermediate representations of code and then optimizing that
+code and generating machine-level instructions for many different
+target platforms. In this respect, it is a general compiler
+infrastructure that works on many platforms.  It is being used in many
+different applications, including alternatives to the compilers gcc
+and g++.  It is a robust, comprehensive compiler toolkit with a
+dynamic developer and user community.  This is what makes it
+attractive as we can passively leverage the ongoing improvements to
+the code base without squandering resources within our own limited
+community.
+
+</para>
+
+</section>
+<section>
 <title></title>
 
 
