@@ -6,6 +6,11 @@
 
 <title>Experiments in Compiling R Code</title>
 
+<author><firstname>Vincent</firstname><surname>Buffalo</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+  </affiliation>
+</author>
+
 <author><firstname>Duncan</firstname><surname>Temple Lang</surname>
   <affiliation><orgname>University of California at Davis</orgname>
                <orgdiv>Department of Statistics</orgdiv>
@@ -66,7 +71,9 @@ and g++.  It is a robust, comprehensive compiler toolkit with a
 dynamic developer and user community.  This is what makes it
 attractive as we can passively leverage the ongoing improvements to
 the code base without squandering resources within our own limited
-community.
+community.  The optimization passes of the code this library presents,
+and continues to provide, makes this a promising direction to which we
+can connect compilation of R code.
 
 </para>
 
