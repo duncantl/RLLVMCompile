@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title>Experiments in Compiling R Code</title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<abstract>
+
+<para>
+We describe some experiments and an approach to compiling
+R code to native machine instructions.
+The primary goal is to make R code execute significantly
+faster, e.g. by a factor of 100 or 500 or more.
+
+An important part of our approach is exploiting information
+about the type of R objects. We rely on the caller providing 
+this information at present.
+
+</para>
+
+</abstract>
+
+<section>
+<title></title>
+
+
+
+<para>
+A very important motivation to us  in this approach
+is that we are building on work of a vibrant, reasonably 
+large community, i.e. the LLVM developers and users, 
+that will continue to maintain,  adapt and improve 
+LLVM to future platforms and opportunities.
+We can develop a compiler ourselves within the R
+or statistics community, but we feel that there are too
+few of us to maintain and develop this successfully in the future.
+We applaud those who are doing this as it is a worthwhile endeavor.
+</para>
+
+<para>
+We are making extensive use of information of the types of each variable.
+At present, the caller is required to specify this information for every
+variable.  We can make this system a great deal smarter and infer the types
+of intermediate variables in many cases. We may even be able to infer the
+types of <citation>DiamondRuby</citation>
+
+</para>
+
+
+</section>
+<section>
+<title>Future Directions</title>
+
+<para>
+We plan to make our compiler handle more R idioms
+and language features.
+</para>
+
+<para>
+We will provide interfaces to more of the LLVM C++ API from
+within R.
+</para>
+
+<para>
+We plan to analyze R functions and scripts
+so that we can identify where copying 
+R objects can be avoided, given that we are running
+in a special "optimized" mode.
+The CodeDepends package will help here in identifying
+where variables are no longer used,
+when they are redefined, etc.
+</para>
+
+
+
+
+</section>
+</article>
