@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- <?xml-stylesheet type="text/xsl" href="../org/omegahat/Docs/XSL/Todo.xsl" ?> -->
+<?xml-stylesheet type="text/xsl" href="../../Classes/StatComputing/XDynDocs/inst/XSL/OmegahatXSL/Todo.xsl" ?>
+
+<topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org">
+
+<topic>
+<title>General</title>
+
+<items>
+<item>
+Need a function to give the name of an available temporary variable
+for our function we are compiling.
+</item>
+
+<item>
+Handle no explicit return() in the code
+</item>
+
+<item>
+Add connections to the different blocks, i.e.
+ when generate code for one block and then another
+ add a branch from the first to the next.
+
+    getBlocks() gives us the blocks for a function.
+
+  We probably
+</item>
+
+<item>
+Memory management
+</item>
+</items>
+</topic>
+
+</topics>
+

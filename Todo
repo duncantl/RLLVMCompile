@@ -1,4 +1,0 @@
-Need a function to give the name of an available temporary variable
-for our function we are compiling.
-
-Handle no explicit return()

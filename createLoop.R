@@ -5,8 +5,9 @@ function(call, env, ir)
   var = as.character(call[[2]])
   inn = call[[3]]
   isSeq = isSequence(inn)
+  ans = list(var = var, body = call[[4]])
   if(isSeq) {
-     limits = getLimits(inn)
+     ans$limits = getLimits(inn)
   } else {
        # we have a call to something and so
        # may need to create a temporary variable
@@ -18,12 +19,16 @@ function(call, env, ir)
      if(!is.name(inn)) {
          # create temporary variable by evaluating the call
          # and then create the limits for that.
-        # compile the call and assign to a new variable, then
-        # loop over that.
+         # compile the call and assign to a new variable, then
+         # loop over that.
+         tmpVar = "tmp"
+         ans$tempVar = structure(inn, name = tmpVar)
+         ans$limits = list(from = 1, to = substitute(length(x), list(x = as.name(tmpVar))))
      } else
-         limits
-
+         ans$limits = list(from = 1, to = substitute(length(x), list(x = call[[3]])))
    }
+
+  ans
 }
 
 
@@ -78,7 +83,7 @@ createLoop =
   # This takes a variable, a length variable and bulds a loop.
   #
   #
-function(var, limits, body, fun, ir = IRBuilder(), module = NULL)
+function(var, limits, body, fun, ir = IRBuilder(module), module = NULL)
 {
    entry = Block(fun, "entry")
    cond = Block(fun, "cond")
