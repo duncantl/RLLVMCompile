@@ -89,6 +89,19 @@ function(args, env, ir, nextBlock = NULL) {
    createStore(ir, val, ref)
  }
 
+addHandler =
+function(args, env, ir, ...)  
+{
+  e = lapply(args, function(x)
+                       if(is(x, "numeric"))
+                         x
+                       else {
+                          ir$createLoad(get(as.character(x), env))
+                       })
+  
+  ir$binOp(FAdd, e[[1]], e[[2]])
+}
+
 ## Builtin Types to overload
 OPS <- list('for' = compileForLoop,
             '<-' = assignHandler,
@@ -104,7 +117,8 @@ OPS <- list('for' = compileForLoop,
               
               createReturn(ir, createLoad(ir, findVar(args[[1]], env)[[1]]))
             },
-            '{' = function(args, env, ir, nextBlock = NULL) return(args) # TODO this doesn't work.
+            '{' = function(args, env, ir, nextBlock = NULL) return(args), # TODO this doesn't work.
+            '+' = addHandler
             )
 
 compileExpressions =
@@ -114,28 +128,20 @@ compileExpressions =
   # each expression.
 function(exprs, env, ir, fun = NULL, name = getName(fun))
 {
-#  str = sapply(exprs, deparse)
-#  ids = sprintf("%s.%s", name, str)
-#  blocks = structure(mapply(function(id) Block(fun, id), ids, SIMPLIFY = FALSE), names = ids)
-#  ir$createBr(blocks[[1]])
-  
   for (i in seq_along(exprs)) {
     if (length(exprs) == 1)
       e <- exprs
     else
       e <- exprs[[i]]
 
-#    ir$setInsertPoint(blocks[[i]])
-    compile(e, env, ir, fun, name) # , nextBlock = if(i < length(blocks)) blocks[[i+1]])
-#    if(i < length(exprs))
-#       ir$createBr(blocks[[i + 1]])    
+    compile(e, env, ir, fun, name) 
   }    
 }
 
 compile <-
 function(e, env, ir, fun = NULL, name = getName(fun), nextBlock = NULL)
 {
-    cat("current expression: ", as.character(e), "\n")
+#    cat("current expression: ", as.character(e), "\n")
     
     if (is.call(e)) {
       # Recursively compile arguments
@@ -146,8 +152,10 @@ function(e, env, ir, fun = NULL, name = getName(fun), nextBlock = NULL)
       if(as.character(e[[1]]) == "for")
          call.op(e, env, ir, nextBlock = nextBlock)
       else {
-         call.args <- list(lapply(getArgs(e), function(x) compile(x, env, ir)), env, ir,
-                              nextBlock = nextBlock)
+         call.args <- list(lapply(getArgs(e),
+                                    function(x) compile(x, env, ir)),
+                           env, ir,
+                           nextBlock = nextBlock)
          do.call(call.op, call.args)
       }
     } else if (is.symbol(e)) {

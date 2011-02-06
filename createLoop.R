@@ -23,9 +23,9 @@ function(call, env, ir, nextBlock = NULL)
          # loop over that.
          tmpVar = "tmp"
          ans$tempVar = structure(inn, name = tmpVar)
-         ans$limits = list(from = 1, to = substitute(length(x), list(x = as.name(tmpVar))))
+         ans$limits = list(from = 1L, to = substitute(length(x), list(x = as.name(tmpVar))))
      } else
-         ans$limits = list(from = 1, to = substitute(length(x), list(x = call[[3]])))
+         ans$limits = list(from = 1L, to = substitute(length(x), list(x = call[[3]])))
    }
 
   class(ans) = "ForLoop"
@@ -43,13 +43,14 @@ createLoopCode =
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
           label = ".")
 {
+
      # The caller (compileFunction and compileExpressions) has already created a block
      # for this expression, so we can use it as the entry block and create and initialize
      # variables here.
 
       # We do create blocks for the condition and the body.
    cond = Block(fun, sprintf("cond.%s", label))
-   body = Block(fun, sprintf("body.%s", label))
+   bodyBlock = Block(fun, sprintf("body.%s", label))
    nextBlock = Block(fun, sprintf("next.%s", label))   
   
    iv = ir$createLocalVariable(Int32Type, var)
@@ -62,10 +63,15 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
      a = ir$createLoad(iv)
      b = ir$createLoad(len)
      ok = ir$createICmp(ICMP_SLT, a, b)
-     ir$createCondBr(ok, body, nextBlock)
+     ir$createCondBr(ok, bodyBlock, nextBlock)
 
-   ir$setInsertPoint(body)
-        #XXX have to put the code for the actual  body, not just the incrementing of i
+   ir$setInsertPoint(bodyBlock)
+
+           #XXX have to put the code for the actual  body, not just the incrementing of i
+
+     compile(body, env, ir)
+   
+
      i = ir$createLoad(iv)
      inc = ir$binOp(Add, i, 1L)
      ir$createStore(inc, iv)
@@ -92,20 +98,27 @@ getLimits =
 function(call)
 {
   op = as.character(call[[1]])
-  if(op == ":")
-     list(from = call[[2]], to = call[[3]])
-  else if(op == "seq_along") {
-     tmp = substitute(length(x), list(x = call[[2]]))
-     list(from = 1L, to = tmp)
-  } else if(op == "seq") {
-      k = match.call(seq, call)
-      argNames = names(k)[-1]
-          # formals(seq) returns ...
-      formals = c("from", "to", "by", "length.out", "along.with")
-      i = argNames == ""
-      argNames[i] = formals[which(i)]
-      structure(as.list(call[-1]), names = argNames)
-  }
+
+  ans = if(op == ":") {
+           list(from = call[[2]], to = call[[3]])
+         } else if(op == "seq_along") {
+           tmp = substitute(length(x), list(x = call[[2]]))
+           list(from = 1L, to = tmp)
+         } else if(op == "seq") {
+           k = match.call(seq, call)
+           argNames = names(k)[-1]
+                                        # formals(seq) returns ...
+           formals = c("from", "to", "by", "length.out", "along.with")
+           i = argNames == ""
+           argNames[i] = formals[which(i)]
+           structure(as.list(call[-1]), names = argNames)
+         }
+
+    # how should we get integers when we have, e.g., 1:10 which are
+    # numeric
+  ans = lapply(ans, function(val) if(is.numeric(val) && val == as.integer(val)) as.integer(val) else val)
+
+  ans
 }
 
 

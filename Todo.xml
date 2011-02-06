@@ -10,12 +10,11 @@
 <items>
 
 <item>
-The for loop, like the if, 
-needs to know where to branch to.
-So it needs the next.
-It can create a new Block and refer to it.
-Then the next expression being compiled can just
-write to that without having to even worry.
+The for loop, like the if, needs to know where to branch to.  So it
+needs the next.  It can create a new Block and refer to it.  Then the
+next expression being compiled can just write to that without having
+to even worry.  So we don't need to create the blocks for each
+expression and pass the nextBlock argument.
 </item>
 
 <item>
