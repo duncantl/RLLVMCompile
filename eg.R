@@ -1,4 +1,4 @@
-libary(Rllvm)
+library(Rllvm)
 InitializeNativeTarget()
 
 ptrDouble = pointerType(DoubleType)

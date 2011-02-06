@@ -1,6 +1,6 @@
 
 compileForLoop =
-function(call, env, ir)
+function(call, env, ir, nextBlock = NULL)
 {
   var = as.character(call[[2]])
   inn = call[[3]]
@@ -28,8 +28,49 @@ function(call, env, ir)
          ans$limits = list(from = 1, to = substitute(length(x), list(x = call[[3]])))
    }
 
+  class(ans) = "ForLoop"
+  createLoopCode(ans$var, ans$limits, ans$body, env, ir = ir, nextBlock = nextBlock, label = deparse(call))
   ans
 }
+
+
+
+createLoopCode =
+  #
+  # This takes a variable, a length variable and bulds a loop.
+  #
+  #
+function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
+          label = ".")
+{
+     # The caller (compileFunction and compileExpressions) has already created a block
+     # for this expression, so we can use it as the entry block and create and initialize
+     # variables here.
+
+      # We do create blocks for the condition and the body.
+   cond = Block(fun, sprintf("cond.%s", label))
+   body = Block(fun, sprintf("body.%s", label))
+  
+   iv = ir$createLocalVariable(Int32Type, var)
+   len = ir$createLocalVariable(Int32Type, "len")   
+   ir$createStore(limits[["from"]], iv)
+   ir$createStore(limits[["to"]], len)
+   ir$createBr(cond)
+
+   ir$setInsertPoint(cond)   
+     a = ir$createLoad(iv)
+     b = ir$createLoad(len)
+     ok = ir$createICmp(ICMP_SLT, a, b)
+     ir$createCondBr(ok, body, nextBlock)
+
+   ir$setInsertPoint(body)
+        #XXX have to put the code for the actual  body, not just the incrementing of i
+     i = ir$createLoad(iv)
+     inc = ir$binOp(Add, i, 1L)
+     ir$createStore(inc, iv)
+     ir$createBr(cond)
+}
+
 
 
 getLimits =
@@ -76,30 +117,4 @@ function(expr)
   }
 
   FALSE
-}
-
-createLoop =
-  #
-  # This takes a variable, a length variable and bulds a loop.
-  #
-  #
-function(var, limits, body, fun, ir = IRBuilder(module), module = NULL)
-{
-   entry = Block(fun, "entry")
-   cond = Block(fun, "cond")
-   body = Block(fun, "body")      
-
-   ir$setEntryPoint(entry)
-   iv = ir$createLocalVariable(Int32Type, "i")
-   len = ir$createLocalVariable(Int32Type, "len")   
-   ir$createStore(0L, iv)
-   
-      #XX where does len come from
-   len.ref = params$len
-
-   a = ir$createLoad(iv)
-   b = ir$createLoad(len.ref)
-   ok = ir$createICmp(ICMP_SLT, a, b)
-   ir$createCondBr(ok, body, ret)   
-   
 }

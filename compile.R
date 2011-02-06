@@ -67,29 +67,33 @@ isNumericConstant <- function(expr) {
   return(FALSE)
 }
 
+assignHandler =
+function(args, env, ir, nextBlock = NULL) {
+          # CreateLocalVariable, with a reference in the
+          # environment, and then CreateStore of the value.
+   checkArgs(args, list(c('character', 'symbol'), 'ANY'), '<-')
+   var <- as.character(args[1])
+   val <- args[[2]]
+   if (is.na(findVar(var, env))) {
+     # Create new local store, TODO remove the type here and infer it
+     cat("createLocalVariable for '", var, "'\n", sep='')
+     assign(var, createLocalVariable(ir, DoubleType, var), envir=env) ## Todo fix type
+   }
+   ref <- get(var, envir=env)
+
+   # Now, create store. TODO: how does this work *without*
+   # constants? Where is evaluation handled... probably not
+   # here?
+   cat("createStore for '", var, "'\n", sep='')
+   cat("object:\n"); print(val); cat("\n")
+   createStore(ir, val, ref)
+ }
+
 ## Builtin Types to overload
 OPS <- list('for' = compileForLoop,
-            '<-'=function(args, env, ir) {
-              # CreateLocalVariable, with a reference in the
-              # environment, and then CreateStore of the value.
-              checkArgs(args, list(c('character', 'symbol'), 'ANY'), '<-')
-              var <- as.character(args[1])
-              val <- args[[2]]
-              if (is.na(findVar(var, env))) {
-                # Create new local store, TODO remove the type here and infer it
-                cat("createLocalVariable for '", var, "'\n", sep='')
-                assign(var, createLocalVariable(ir, DoubleType, var), envir=env) ## Todo fix type
-              }
-              ref <- get(var, envir=env)
-
-              # Now, create store. TODO: how does this work *without*
-              # constants? Where is evaluation handled... probably not
-              # here?
-              cat("createStore for '", var, "'\n", sep='')
-              cat("object:\n"); print(val); cat("\n")
-              createStore(ir, val, ref)
-            },
-            'return'=function(args, env, ir) {
+            '<-' = assignHandler,
+            '=' = assignHandler,            
+            'return'=function(args, env, ir, nextBlock = NULL) {
               if (is.null(findVar('ReturnType', env)))
                 stop("returnType must be in environment.")
               rt <- get('returnType', envir=env)
@@ -100,16 +104,37 @@ OPS <- list('for' = compileForLoop,
               
               createReturn(ir, createLoad(ir, findVar(args[[1]], env)[[1]]))
             },
-            '{'=function(args, env, ir) return(args) # TODO this doesn't work.
+            '{' = function(args, env, ir, nextBlock = NULL) return(args) # TODO this doesn't work.
             )
 
-compile <- function(expr, env, ir) {
+compileExpressions =
+  #
+  # This compiles a group of expressions.
+  # It handles moving from block to block with a block for
+  # each expression.
+function(exprs, env, ir, fun = NULL, name = getName(fun))
+{
+  str = sapply(exprs, deparse)
+  ids = sprintf("%s.%s", name, str)
+  blocks = structure(mapply(function(id) Block(fun, id), ids, SIMPLIFY = FALSE), names = ids)
+  ir$createBr(blocks[[1]])
   
-  for (i in seq_along(expr)) {
-    if (length(expr) == 1)
-      e <- expr
+  for (i in seq_along(exprs)) {
+    if (length(exprs) == 1)
+      e <- exprs
     else
-      e <- expr[[i]]
+      e <- exprs[[i]]
+
+    ir$setInsertPoint(blocks[[i]])
+    compile(e, env, ir, fun, name, nextBlock = if(i < length(blocks)) blocks[[i+1]])
+    if(i < length(exprs))
+       ir$createBr(blocks[[i + 1]])    
+  }    
+}
+
+compile <-
+function(e, env, ir, fun = NULL, name = getName(fun), nextBlock = NULL)
+{
     cat("current expression: ", as.character(e), "\n")
     
     if (is.call(e)) {
@@ -119,9 +144,10 @@ compile <- function(expr, env, ir) {
         stop("Cannot compile function '", e[[1]], "'")
 
       if(as.character(e[[1]]) == "for")
-         call.op(e, env, ir)
+         call.op(e, env, ir, nextBlock = nextBlock)
       else {
-         call.args <- list(lapply(getArgs(e), function(x) compile(x, env, ir)), env, ir)
+         call.args <- list(lapply(getArgs(e), function(x) compile(x, env, ir)), env, ir,
+                              nextBlock = nextBlock)
          do.call(call.op, call.args)
       }
     } else if (is.symbol(e)) {
@@ -131,11 +157,12 @@ compile <- function(expr, env, ir) {
       cat("createContant for '", e, "'\n", sep='') # TODO when to use?
       return(as.numeric(e))
     }
-  }
 }
 
 
-compileFunction <- function(fun, returnType, types, mod = Module(name), name = NULL) {
+compileFunction <-
+function(fun, returnType, types, mod = Module(name), name = NULL)
+{
   ftype <- typeof(fun)
   if (ftype == "closure") {
 
@@ -149,18 +176,22 @@ compileFunction <- function(fun, returnType, types, mod = Module(name), name = N
     # Grab types, including return. Set up Function, block, and params.
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, mod)
-    block <- Block(llvm.fun)
+    block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
     ir <- IRBuilder(block)
     
     nenv <- new.env()
+    nenv$.fun = llvm.fun
     
     # store returnType for use with OP$`return`
     assign('returnType', returnType, envir=nenv)    # probably want . preceeding the name.
 
-    # For side effects of building mod
-    compile(fbody[-1], nenv, ir)  # TODO class { should be handled
-                                  # better.
+       # For side effects of building mod
+       # Have to be careful with one line functions with no {
+    bdy = if(is(fbody, "{")) fbody[-1] else  fbody
+
+    compileExpressions(bdy, nenv, ir, llvm.fun, name)    # TODO class { should be handled
+                                              # better.  Can just do it as a separate block.
     return(list(mod=mod, fun=llvm.fun))
     
   } else
