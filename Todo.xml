@@ -24,6 +24,8 @@ for our function we are compiling.
 
 <item>
 Handle no explicit return() in the code
+<br/>
+There is code in the TypeInfo package that does this.
 </item>
 
 <item>
@@ -31,7 +33,7 @@ Add connections to the different blocks, i.e.
  when generate code for one block and then another
  add a branch from the first to the next.
 
-    getBlocks() gives us the blocks for a function.
+    getBlocks() in Rllvm gives us the blocks for a function.
 
 </item>
 
