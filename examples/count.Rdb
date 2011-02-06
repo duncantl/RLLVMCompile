@@ -90,19 +90,26 @@ ll = sapply(N,
                system.time(replicate(B, run(a$fun, n, .ee = ee))))
 </r:code>
 
-
+We can see the ratios in the speed of the two for different 
+number of iterations with
 <r:code>
 rr[3,]/ll[3,]
 <r:output><![CDATA[
 [1]   0.0000   1.0000   9.4000  83.0000 317.0625 462.0935 450.3825
 ]]></r:output>
 </r:code>
-
+and graphically
 
 <r:plot><![CDATA[
 plot(N, rr[3,]/ll[3,], type = 'l')
 ]]></r:plot>
 
+So we are seeing a speed improvement of a factor of 450 
+when we have one hundred million iterations.
+</para>
+
+<para>
+I have to think about why the 
 
 </para>
 
