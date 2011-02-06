@@ -114,10 +114,10 @@ compileExpressions =
   # each expression.
 function(exprs, env, ir, fun = NULL, name = getName(fun))
 {
-  str = sapply(exprs, deparse)
-  ids = sprintf("%s.%s", name, str)
-  blocks = structure(mapply(function(id) Block(fun, id), ids, SIMPLIFY = FALSE), names = ids)
-  ir$createBr(blocks[[1]])
+#  str = sapply(exprs, deparse)
+#  ids = sprintf("%s.%s", name, str)
+#  blocks = structure(mapply(function(id) Block(fun, id), ids, SIMPLIFY = FALSE), names = ids)
+#  ir$createBr(blocks[[1]])
   
   for (i in seq_along(exprs)) {
     if (length(exprs) == 1)
@@ -125,10 +125,10 @@ function(exprs, env, ir, fun = NULL, name = getName(fun))
     else
       e <- exprs[[i]]
 
-    ir$setInsertPoint(blocks[[i]])
-    compile(e, env, ir, fun, name, nextBlock = if(i < length(blocks)) blocks[[i+1]])
-    if(i < length(exprs))
-       ir$createBr(blocks[[i + 1]])    
+#    ir$setInsertPoint(blocks[[i]])
+    compile(e, env, ir, fun, name) # , nextBlock = if(i < length(blocks)) blocks[[i+1]])
+#    if(i < length(exprs))
+#       ir$createBr(blocks[[i + 1]])    
   }    
 }
 

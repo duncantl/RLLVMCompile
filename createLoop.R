@@ -50,6 +50,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
       # We do create blocks for the condition and the body.
    cond = Block(fun, sprintf("cond.%s", label))
    body = Block(fun, sprintf("body.%s", label))
+   nextBlock = Block(fun, sprintf("next.%s", label))   
   
    iv = ir$createLocalVariable(Int32Type, var)
    len = ir$createLocalVariable(Int32Type, "len")   
@@ -69,6 +70,8 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
      inc = ir$binOp(Add, i, 1L)
      ir$createStore(inc, iv)
      ir$createBr(cond)
+
+   ir$setInsertPoint(nextBlock)
 }
 
 
