@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+The idea in this example is to write a very simple R function
+that loops from 1 to <r:var>len</r:var> and adds 1 to a
+variable <r:var>total</r:var> in each loop.
+It then returns the count.
+This is a very simple example as the body of the loop is doing
+a very elementary task, not accessing elements in an R vector.
+The function is
+
+<r:function><![CDATA[
+Sum2 = 
+function(len)
+{
+   total = 0
+   for(i in 1:len)
+      total = total + 1
+
+   return(total)
+}
+]]></r:function>
+
+</para>
+<note>
+<para>
+We might use a while loop to avoid allocating the 1:len
+How would this affect the timings below? 
+</para>
+</note>
+
+
+<para>
+
+<r:code>
+library(Rllvm)
+InitializeNativeTarget()
+</r:code>
+
+
+<r:code>
+a = compileFunction(Sum2, DoubleType, list(Int32Type))
+verifyModule(a$mod)
+</r:code>
+
+
+<r:code>
+ee = ExecutionEngine(a$mod)
+Optimize(a$mod, ee)
+</r:code>
+
+</para>
+</section>
+<section>
+<title>Timing</title>
+<para>
+Let's time the two functions - the R version and the LLVM implementation.
+We'll look at this for different numbers of iterations.
+And we'll repeat the computation B times. 
+
+
+<r:code>
+B = 10
+N = c(100, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8)
+</r:code>
+<r:code id="rr.timing">
+rr = sapply(N,
+             function(n) 
+               system.time(replicate(B, Sum2(n))))
+</r:code>
+<r:code id="ll.timing">
+ll = sapply(N,
+             function(n) 
+               system.time(replicate(B, run(a$fun, n, .ee = ee))))
+</r:code>
+
+
+<r:code>
+rr[3,]/ll[3,]
+<r:output><![CDATA[
+[1]   0.0000   1.0000   9.4000  83.0000 317.0625 462.0935 450.3825
+]]></r:output>
+</r:code>
+
+
+<r:plot><![CDATA[
+plot(N, rr[3,]/ll[3,], type = 'l')
+]]></r:plot>
+
+
+</para>
+
+
+
+<para>
+
+</para>
+
+
+</section>
+</article>
