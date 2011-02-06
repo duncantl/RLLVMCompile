@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Experiments in Compiling R Code</title><link rel="stylesheet" type="text/css" href="/Users/duncan/Classes/StatComputing/XDynDocs/inst/CSS/OmegaTech.css"></link><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"></meta>
+<link xmlns="" rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/tabview/assets/skins/sam/tabview.css">
+<script xmlns="" type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script xmlns="" type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/element/element-min.js"></script>
+<script xmlns="" type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/tabview/tabview-min.js"></script>
+<script xmlns="" type="text/javascript" src="/Users/duncan/Classes/StatComputing/XDynDocs/inst/JavaScript/yahooTabUtils.js"></script>
+<script xmlns="" type="text/javascript" src="http://www.omegahat.org/DynDocs/JavaScript/toggleHidden.js"></script>
+</head><body class="yui-skin-sam">
+<script xmlns="" type="text/javascript"><!--
+var toggleCodeIds = [
+ 
+];
+--></script><p xmlns=""></p>
+<div class="article" title="Experiments in Compiling R Code"><div class="titlepage"><div><div><h2 class="title"><a id="id36047848"></a>Experiments in Compiling R Code</h2></div><div><div class="author"><h3 class="author"><span class="firstname">Vincent</span> <span class="surname">Buffalo</span></h3><div class="affiliation"><span class="orgname">University of California at Davis<br></br></span></div></div></div><div><div class="author"><h3 class="author"><span class="firstname">Duncan</span> <span class="surname">Temple Lang</span></h3><div class="affiliation"><span class="orgname">University of California at Davis<br></br></span> <span class="orgdiv">Department of Statistics<br></br></span></div></div></div></div><hr></hr></div><div class="abstract" title="Abstract"><div class="titlepage"></div><p>
+We describe some experiments and an approach to compiling
+R code to native machine instructions.
+The primary goal is to make R code execute significantly
+faster, e.g. by a factor of 100 or 500 or more.
+
+An important part of our approach is exploiting information
+about the type of R objects. We rely on the caller providing 
+this information at present.
+
+</p></div><div class="section" title="Background"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id36292671"></a>Background</h2></div></div></div><p>
+It is clear that using high-level programming languages such as R,
+MATLAB, Python and Perl lead to improved productivity and use of human
+time.  However, these interpreted languages often lead to code that is
+considerably slower than compiled languages such as C++, C, FORTRAN,
+Java, etc.  This trade-off between development and maintenance time
+and compute time is one that everyone would like to remove by making
+the high-level code run as fast as the low-level code.  This is very
+challenging. However, we believe that there is a continuum between the
+use of high-level languages and low-level languages. Specifically, as
+we interactively develop code, we want the facilities of the
+high-level language - namely no need for type declarations, the
+disruptive compile-load-run cycle, etc.  But after we have finalized
+our script or functions, we want the speed of low-level languages. We
+are prepared to endure compilation times if the code will run
+significantly faster. We further expect that many users of R would be
+willing to provide additional information about their "final" code to
+make it run ten or one hundred times faster.
+Motivated by this expectation, we have developed a prototype system
+for compiling R code to machine code that exploits the types of the
+different R objects to attain significant speed-up in the execution of the code.
+</p><p>
+This paper describes our initial experiments with compiling R code to
+machine instructions by leveraging a third party library - LLVM, the
+Low-Level Virtual Machine.  LLVM is a C++ library that facilitates
+creating intermediate representations of code and then optimizing that
+code and generating machine-level instructions for many different
+target platforms. In this respect, it is a general compiler
+infrastructure that works on many platforms.  It is being used in many
+different applications, including alternatives to the compilers gcc
+and g++.  It is a robust, comprehensive compiler toolkit with a
+dynamic developer and user community.  This is what makes it
+attractive as we can passively leverage the ongoing improvements to
+the code base without squandering resources within our own limited
+community.  The optimization passes of the code this library presents,
+and continues to provide, makes this a promising direction to which we
+can connect compilation of R code.
+
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id36292692"></a></h2></div></div></div><p>
+A very important motivation to us  in this approach
+is that we are building on work of a vibrant, reasonably 
+large community, i.e. the LLVM developers and users, 
+that will continue to maintain,  adapt and improve 
+LLVM to future platforms and opportunities.
+We can develop a compiler ourselves within the R
+or statistics community, but we feel that there are too
+few of us to maintain and develop this successfully in the future.
+We applaud those who are doing this as it is a worthwhile endeavor.
+</p><p>
+We are making extensive use of information of the types of each variable.
+At present, the caller is required to specify this information for every
+variable.  We can make this system a great deal smarter and infer the types
+of intermediate variables in many cases. We may even be able to infer the
+types of [<span class="citation">DiamondRuby</span>]
+
+</p></div><div class="section" title="Future Directions"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id36292714"></a>Future Directions</h2></div></div></div><p>
+We plan to make our compiler handle more R idioms
+and language features.
+</p><p>
+We will provide interfaces to more of the LLVM C++ API from
+within R.
+</p><p>
+We plan to analyze R functions and scripts
+so that we can identify where copying 
+R objects can be avoided, given that we are running
+in a special "optimized" mode.
+The CodeDepends package will help here in identifying
+where variables are no longer used,
+when they are redefined, etc.
+</p></div></div></body></html>
