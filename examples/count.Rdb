@@ -109,13 +109,45 @@ when we have one hundred million iterations.
 </para>
 
 <para>
-I have to think about why the 
+I have to think about why the speedup is plateauing.
 
 </para>
-
-
+</section>
+<section>
+<title>While loop</title>
 
 <para>
+
+
+<r:function><![CDATA[
+Sum3 =
+  # See count.Rdb for analysis of the speedup.
+function(len)
+{
+   total = 0
+   i = 0
+  while(i < len) {
+     i = i + 1
+     total = total + 1
+  }
+
+   return(total)
+}
+]]></r:function>
+
+
+<r:code>
+ee = ExecutionEngine(a$mod)
+Optimize(a$mod, ee)
+</r:code>
+
+
+<r:code>
+run(a$fun, 1000)
+</r:code>
+
+
+
 
 </para>
 

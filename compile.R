@@ -68,7 +68,8 @@ isNumericConstant <- function(expr) {
 }
 
 assignHandler =
-function(args, env, ir, nextBlock = NULL) {
+function(args, env, ir)
+{
           # CreateLocalVariable, with a reference in the
           # environment, and then CreateStore of the value.
    checkArgs(args, list(c('character', 'symbol'), 'ANY'), '<-')
@@ -102,11 +103,38 @@ function(args, env, ir, ...)
   ir$binOp(FAdd, e[[1]], e[[2]])
 }
 
+getVariable =
+function(sym, env)
+{
+  sym = as.character(sym)
+  var = if(exists(sym, env))
+          get(sym, env)
+        else
+          env$.params[[sym]]
+}
+
+logicOpHandler =
+function(call, env, ir, ...)
+{
+    # need to handle the different ops
+    # and the different types, casting
+    # if necessary.
+  op = as.character(call[[1]])
+
+  a = getVariable(call[[2]], env)
+  b = getVariable(call[[3]], env)
+
+  ir$createFCmp(FCMP_UEQ, a, b)
+}
+
+
+
 ## Builtin Types to overload
 OPS <- list('for' = compileForLoop,
             '<-' = assignHandler,
-            '=' = assignHandler,            
-            'return'=function(args, env, ir, nextBlock = NULL) {
+            '=' = assignHandler,
+            'while' = whileHandler,
+            'return'=function(args, env, ir) {
               if (is.null(findVar('ReturnType', env)))
                 stop("returnType must be in environment.")
               rt <- get('returnType', envir=env)
@@ -117,8 +145,9 @@ OPS <- list('for' = compileForLoop,
               
               createReturn(ir, createLoad(ir, findVar(args[[1]], env)[[1]]))
             },
-            '{' = function(args, env, ir, nextBlock = NULL) return(args), # TODO this doesn't work.
-            '+' = addHandler
+            '{' = function(args, env, ir) return(args), # TODO this doesn't work.
+            '+' = addHandler,
+            '<' = logicOpHandler
             )
 
 compileExpressions =
@@ -139,7 +168,7 @@ function(exprs, env, ir, fun = NULL, name = getName(fun))
 }
 
 compile <-
-function(e, env, ir, fun = NULL, name = getName(fun), nextBlock = NULL)
+function(e, env, ir, fun = NULL, name = getName(fun))
 {
 #    cat("current expression: ", as.character(e), "\n")
     
@@ -149,13 +178,14 @@ function(e, env, ir, fun = NULL, name = getName(fun), nextBlock = NULL)
       if (typeof(call.op) != "closure" && is.na(call.op))
         stop("Cannot compile function '", e[[1]], "'")
 
-      if(as.character(e[[1]]) == "for")
-         call.op(e, env, ir, nextBlock = nextBlock)
+      if(as.character(e[[1]]) %in% c("for", "while", "<"))
+         call.op(e, env, ir)
       else {
+            # I think we might want to just pass e and let the op function get the arguments if it wants them.
          call.args <- list(lapply(getArgs(e),
                                     function(x) compile(x, env, ir)),
-                           env, ir,
-                           nextBlock = nextBlock)
+                           env, ir)
+                           
          do.call(call.op, call.args)
       }
     } else if (is.symbol(e)) {
