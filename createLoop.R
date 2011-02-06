@@ -54,9 +54,20 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    nextBlock = Block(fun, sprintf("next.%s", label))   
   
    iv = ir$createLocalVariable(Int32Type, var)
-   len = ir$createLocalVariable(Int32Type, "len")   
-   ir$createStore(limits[["from"]], iv)
-   ir$createStore(limits[["to"]], len)
+   len = ir$createLocalVariable(Int32Type, "len")
+   mapply(function(lim,  to) {
+          if(is.symbol(lim)) {
+            sym = as.character(lim)
+            var = if(exists(sym, env))
+                     get(var, env)
+                  else
+                     env$.params[[sym]]
+            # ir$createLoad(to, get(as.character(lim), env))
+             ir$createStore(var, to)          
+          } else
+             ir$createStore(lim, to)
+          }, limits, list(iv, len))
+
    ir$createBr(cond)
 
    ir$setInsertPoint(cond)   

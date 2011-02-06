@@ -169,13 +169,16 @@ function(e, env, ir, fun = NULL, name = getName(fun), nextBlock = NULL)
 
 
 compileFunction <-
-function(fun, returnType, types, mod = Module(name), name = NULL)
+function(fun, returnType, types = list(), mod = Module(name), name = NULL)
 {
   ftype <- typeof(fun)
   if (ftype == "closure") {
 
     args <- formals(fun) # for checking against types; TODO
     fbody <- body(fun)
+
+    if(length(names(types)) == 0)
+      names(types) = names(args)
     
     # Find the name of the function if not provided
     if (is.null(name))
@@ -188,8 +191,10 @@ function(fun, returnType, types, mod = Module(name), name = NULL)
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
     ir <- IRBuilder(block)
     
-    nenv <- new.env()
+    nenv <- new.env( parent = emptyenv())
     nenv$.fun = llvm.fun
+    nenv$.params = params
+    nenv$.types = types
     
     # store returnType for use with OP$`return`
     assign('returnType', returnType, envir=nenv)    # probably want . preceeding the name.
