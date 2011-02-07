@@ -10,7 +10,9 @@ function(call, env, ir, ..., fun = env$.fun)
    ir$createBr(cond)
     
     ir$setInsertPoint(cond)
-       a = compile(call[[2]], env, ir)
+        # if call[[2]] were something like  length(x) or len
+        # we'd have to make this into an actual comparison
+       a = compile(call[[2]], env, ir)    
        # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))
        ir$createCondBr(a, bodyBlock, nextBlock)    
 

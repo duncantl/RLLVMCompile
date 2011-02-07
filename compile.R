@@ -104,13 +104,14 @@ function(args, env, ir, ...)
 }
 
 getVariable =
-function(sym, env)
+function(sym, env, ir)
 {
   sym = as.character(sym)
   var = if(exists(sym, env))
           get(sym, env)
-        else
+        else {
           env$.params[[sym]]
+        }
 }
 
 logicOpHandler =
@@ -121,8 +122,8 @@ function(call, env, ir, ...)
     # if necessary.
   op = as.character(call[[1]])
 
-  a = getVariable(call[[2]], env)
-  b = getVariable(call[[3]], env)
+  a = getVariable(call[[2]], env, ir)
+  b = getVariable(call[[3]], env, ir)
 
   ir$createFCmp(FCMP_UEQ, a, b)
 }
