@@ -2,12 +2,24 @@
 <!-- <?xml-stylesheet type="text/xsl" href="../org/omegahat/Docs/XSL/Todo.xsl" ?> -->
 <?xml-stylesheet type="text/xsl" href="../../Classes/StatComputing/XDynDocs/inst/XSL/OmegahatXSL/Todo.xsl" ?>
 
-<topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org">
+<topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org"
+	xmlns:r="http://www.r-project.org">
 
 <topic>
 <title>General</title>
 
 <items>
+
+<item>
+Handle cases where R doesn't return anything explicitly, i.e. just NULL implicitly, but we need
+a particular type, e.g. an integer in 
+
+<r:code>
+foo = function(x) if(x < 10) 100L
+</r:code>
+At least identify these for the person calling compile and ask for a default
+value. <r:na/> can work for certain types.
+</item>
 
 <item>
 Create temporary variable for if statements 

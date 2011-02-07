@@ -1,9 +1,11 @@
-
 ifHandler =
-function(call, env, ir, ..., continue = FALSE)
+  #
+  # Generate code for an if statement
+  #
+function(call, env, ir, ..., fun = env$.fun, continue = FALSE)
 {
     label = deparse(call)
-
+browser()
          # create blocks for evaluating the condition
          # the body and then where to jump to when we are finished
          # We'll make the nextBlock the location where subsequent
@@ -11,12 +13,14 @@ function(call, env, ir, ..., continue = FALSE)
     if(!continue) {
        cond = Block(fun, sprintf("cond.%s", label))
        ir$createBr(cond)
+       ir$setInsertPoint(cond)
     }
     
     bodyBlock = Block(fun, sprintf("body.%s", label))
     nb = Block(fun, sprintf("next.%s", label))
 
     if(length(call) == 4) {
+           #  we have an else or an else if()
         nextBlock = altBlock = Block(fun, sprintf("else.%s", label))
     } else
       nextBlock = nb
@@ -31,7 +35,8 @@ function(call, env, ir, ..., continue = FALSE)
     compileExpressions(call[[3]], env, ir)
 
     if(length(call) == 4) {
-       ifHandler(call[[4]], env, ir, ..., continue = TRUE)
+       #ifHandler(call[[4]], env, ir, ..., continue = TRUE)
+       compile(call[[4]], env, ir, continue = TRUE)
     }
      
     ir$setInsertPoint(nextBlock)

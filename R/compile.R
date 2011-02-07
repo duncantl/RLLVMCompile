@@ -103,6 +103,7 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
+   #??? We may want to compile first and then determine types and then coerce.
      # Compute the type of each, returning the LLVM type objects, e.g. DoubleType
   types = lapply(call[-1], getTypes, env)
      # Collapse these two types to the "common" type
@@ -161,10 +162,26 @@ function(call, env, ir, ...)
     # if necessary.
   op = as.character(call[[1]])
 
-  a = getVariable(call[[2]], env, ir)
-  b = getVariable(call[[3]], env, ir)
+  types = lapply(call[-1], getTypes, env)
+  targetType = getMathOpType(types)
+  isIntType = identical(targetType, Int32Type)  
 
-  ir$createFCmp(FCMP_ULT, a, b)
+  a = compile(call[[2]], env, ir)   # getVariable(call[[2]], env, ir)
+  b = compile(call[[3]], env, ir)   # getVariable(call[[3]], env, ir)
+
+  if(isIntType)
+     codes = c("==" = ICMP_EQ, "!=" = ICMP_NE, ">" = ICMP_SGT, "<" = ICMP_SLT, ">=" = ICMP_SGE, "<=" = ICMP_SLE)
+  else
+     codes = c("==" = FCMP_UEQ, "!=" = FCMP_UNE, ">" = FCMP_UGT, "<" = FCMP_ULT, ">=" = FCMP_UGE, "<=" = FCMP_ULE)    
+  
+  op = codes[ as.character(call[[1]]) ]
+  if(is.na(op))
+     stop("Unhandled logical operator")
+
+  if(isIntType)
+    ir$createICmp(op, a, b)    
+  else
+     ir$createFCmp(op, a, b)
 }
 
 
@@ -192,18 +209,37 @@ function(exprs, env, ir, fun = NULL, name = getName(fun))
 }
 
 compile <-
-function(e, env, ir, fun = NULL, name = getName(fun), ...)
+function(e, env, ir, ..., fun = NULL, name = getName(fun))
    UseMethod("compile")
 
 compile.name <-
-function(e, env, ir, fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = NULL, name = getName(fun))  
 {
    getVariable(e, env, ir)
 }
 
+compile.integer <-
+function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+{
+   if(length(e) == 1)
+      createIntegerConstant(e)
+   else
+     stop("not compiling integer vector for now")
+}
+
+compile.numeric <-
+function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+{
+  if(length(e) == 1)
+     createDoubleConstant(e)
+  else
+     stop("not compiling numeric vector for now")
+}
+
+
 compile.Value <-
   # This is just an LLVM value
-function(e, env, ir, fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = NULL, name = getName(fun))  
   e
 
 
