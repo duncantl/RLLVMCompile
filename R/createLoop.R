@@ -1,6 +1,6 @@
 
 compileForLoop =
-function(call, env, ir, nextBlock = NULL)
+function(call, env, ir, ..., nextBlock = NULL)
 {
   var = as.character(call[[2]])
   inn = call[[3]]
@@ -55,8 +55,11 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
   
    iv = ir$createLocalVariable(Int32Type, var)
    assign(var, iv, env)
+   env$.types[[var]] = Int32Type
    len = ir$createLocalVariable(Int32Type, "len")
-   assign("len", len, env)   
+   assign("len", len, env)
+   env$.types[["len"]] = Int32Type
+   
    mapply(function(lim,  to) {
           if(is.symbol(lim)) {
             sym = as.character(lim)

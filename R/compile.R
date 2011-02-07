@@ -85,49 +85,69 @@ function(call, env, ir, ...)
    if(is.name(args[[1]]))
       ref <- getVariable(var, env, ir)
    else {
-      ref = compile(args[[1]], env, ir, ...)
+      ref = compile(args[[1]], env, ir, ..., load = FALSE)
    }
    
    ans = ir$createStore(val, ref)
    ans
 }
 
+
 MathOps = c("+", "-", "*", "/", "%/%")
 mathHandler =
-function(call, env, ir, ...)  
+  #
+  # This currently (Feb 7, 2pm) attempts to do a little bit
+  # of figuring about the types of the two operands.
+  # It just handles integer and numeric types for now.
+  # 
+  #
+function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
-browser()  
+     # Compute the type of each, returning the LLVM type objects, e.g. DoubleType
+  types = lapply(call[-1], getTypes, env)
+     # Collapse these two types to the "common" type
+  targetType = getMathOpType(types)
+  isIntType = identical(targetType, Int32Type)
   e = lapply(call[-1], function(x)
-                       if(is(x, "numeric") || is(x, "Value"))
-                          createDoubleConstant(x)
-                       else if(is.name(x)) {
-                          # ir$createLoad()
+                       if(is(x, "numeric")) {
+                          if(isIntType)
+                             createIntegerConstant(x)
+                          else
+                             createDoubleConstant(x)
+                       } else if(is.name(x)) {
+                            # Potentially have to cast based on the target type
                          getVariable(x, env, ir)
                        } else
                          compile(x, env, ir, ...))
 
     # XXX Have to deal with different types.
-  op = switch(as.character(call[[1]]),
-               "+" = FAdd,
-                "-" = FSub,
-                "*" = FMul,
-                "-" = FDiv,
-                "%/%" = FRem,         
-                stop("math operator not recognized yet"))
+  if(isIntType)
+     codes = c("+" = Add, "-" = Sub, "*" = Mul, "-" = SDiv, "%/%" = SRem)
+  else
+     codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "-" = FDiv, "%/%" = FRem)
+
+  
+
+  op = codes[ as.character(call[[1]]) ]
+
   
   ins = ir$binOp(op, e[[1]], e[[2]])
   ins
 }
 
 getVariable =
-function(sym, env, ir)
+function(sym, env, ir = NULL)
 {
   sym = as.character(sym)
   var = if(exists(sym, env)) {
                # The local variables we create in the function
                # are alloc'ed and so are pointers. They need to be
                # loaded to use their values.
-          ir$createLoad(get(sym, env))
+          tmp = get(sym, env)
+          if(!is.null(ir))
+             ir$createLoad(tmp)
+          else
+            tmp
         } else {
           env$.params[[sym]]
         }
@@ -188,7 +208,7 @@ function(e, env, ir, fun = NULL, name = getName(fun))
 
 
 compile.default <-
-function(e, env, ir, fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = NULL, name = getName(fun))  
 {
 #    cat("current expression: ", as.character(e), "\n")
     
@@ -199,7 +219,7 @@ function(e, env, ir, fun = NULL, name = getName(fun))
         stop("Cannot compile function '", e[[1]], "'")
 
       if(as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps))
-         call.op(e, env, ir)
+         call.op(e, env, ir, ...)
       else {
             # I think we might want to just pass e and let the op function get the arguments if it wants them.
          call.args <- list(lapply(getArgs(e),
