@@ -1,0 +1,8 @@
+Package: RLLVMCompile
+Version: 0.1-0
+Description: A prototype for a compiler for R code
+  that uses LLVM to generate machine code.
+Author: Vince Buffalo, Duncan Temple Lang
+Maintainer: Duncan Temple Lang
+License: GPL
+
