@@ -10,11 +10,44 @@
 <items>
 
 <item>
+Create temporary variable for if statements 
+when we assign the value to a variable in R, e.g.
+
+<r:code>
+x = if(a < 1) "abc" else "def"
+</r:code>
+Need to store the value from the expressions
+in the bodies of the if statement.
+</item>
+
+<item>
+Handle implicit return.
+</item>
+
+<item>
+[ operator for simple vectors.
+<br/>
+Have to be aware of factor, Date and POSIXt types.
+</item>
+<item>
+[ operator for matrices
+</item>
+
+<item>
+[ for data frame.
+<br/>
+Get the variable then [] on the vector.
+We can hope the LLVM optimizer will 
+
+</item>
+
+<item>
 Consolidate the 2 getLimits functions.
 </item>
 
 <item>
-
+May want to simplify compile() and not call getArgs() and pass them to
+the handler funcition - call.op. Many of the handlers will need the entire call.
 </item>
 
 <item>

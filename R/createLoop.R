@@ -54,11 +54,13 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    nextBlock = Block(fun, sprintf("next.%s", label))   
   
    iv = ir$createLocalVariable(Int32Type, var)
+   assign(var, iv, env)
    len = ir$createLocalVariable(Int32Type, "len")
+   assign("len", len, env)   
    mapply(function(lim,  to) {
           if(is.symbol(lim)) {
             sym = as.character(lim)
-            var = getVariable(sym, env)
+            var = getVariable(sym, env, ir)
             # ir$createLoad(to, get(as.character(lim), env))
              ir$createStore(var, to)          
           } else

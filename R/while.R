@@ -19,13 +19,7 @@ function(call, env, ir, ..., fun = env$.fun)
    ir$createBr(cond)
     
     ir$setInsertPoint(cond)
-        # if call[[2]] were something like  length(x) or len
-        # we'd have to make this into an actual comparison
-       a = compile(call[[2]], env, ir)
-          # We don't need to compare the value of a to 1 but can
-          # expect that a is a logical value. 
-       # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))
-       ir$createCondBr(a, bodyBlock, nextBlock)    
+    createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock)
 
      ir$setInsertPoint(bodyBlock)
          # If there is a single expression in the body and no { we need
@@ -35,4 +29,17 @@ function(call, env, ir, ..., fun = env$.fun)
        ir$createBr(cond)
 
     ir$setInsertPoint(nextBlock)    
+}
+
+
+
+createConditionCode =
+function(call, env, ir, bodyBlock, nextBlock)
+{
+          # Same as in while() so consolidate
+       a = compile(call, env, ir)
+          # We don't need to compare the value of a to 1 but can
+          # expect that a is a logical value. 
+       # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))
+       ir$createCondBr(a, bodyBlock, nextBlock)    
 }

@@ -45,39 +45,78 @@ isNumericConstant <- function(expr) {
 }
 
 assignHandler =
-function(args, env, ir)
+function(call, env, ir)
 {
+   args = call[-1]
+
+   val = compile(args[[2]], env, ir)
+
           # CreateLocalVariable, with a reference in the
           # environment, and then CreateStore of the value.
    checkArgs(args, list(c('character', 'symbol'), 'ANY'), '<-')
-   var <- as.character(args[1])
+     # XXX may not be a variable
+   if(is.name(var))
+      var <- as.character(args[1])
+   
    val <- args[[2]]
    if (is.na(findVar(var, env))) {
      # Create new local store, TODO remove the type here and infer it
      cat("createLocalVariable for '", var, "'\n", sep='')
      assign(var, createLocalVariable(ir, DoubleType, var), envir=env) ## Todo fix type
    }
-   ref <- get(var, envir=env)
+   
+   ref <- get(var, envir = env)
 
-   # Now, create store. TODO: how does this work *without*
-   # constants? Where is evaluation handled... probably not
-   # here?
+      # Now, create store. TODO: how does this work *without*
+      # constants? Where is evaluation handled... probably not
+      # here?
    cat("createStore for '", var, "'\n", sep='')
    cat("object:\n"); print(val); cat("\n")
    createStore(ir, val, ref)
  }
 
-addHandler =
-function(args, env, ir, ...)  
+
+assignHandler =
+  # Second version here so I don't mess the other one up.
+function(call, env, ir, ...)
 {
-  e = lapply(args, function(x)
-                       if(is(x, "numeric"))
-                         x
-                       else {
-                          ir$createLoad(get(as.character(x), env))
-                       })
+   args = call[-1]  # drop the =
+   val = compile(args[[2]], env, ir)
+   if(is.name(args[[1]]))
+      ref <- getVariable(var, env, ir)
+   else {
+      ref = compile(args[[1]], env, ir, ...)
+   }
+   
+   ans = ir$createStore(val, ref)
+   ans
+}
+
+MathOps = c("+", "-", "*", "/", "%/%")
+mathHandler =
+function(call, env, ir, ...)  
+{
+browser()  
+  e = lapply(call[-1], function(x)
+                       if(is(x, "numeric") || is(x, "Value"))
+                          createDoubleConstant(x)
+                       else if(is.name(x)) {
+                          # ir$createLoad()
+                         getVariable(x, env, ir)
+                       } else
+                         compile(x, env, ir, ...))
+
+    # XXX Have to deal with different types.
+  op = switch(as.character(call[[1]]),
+               "+" = FAdd,
+                "-" = FSub,
+                "*" = FMul,
+                "-" = FDiv,
+                "%/%" = FRem,         
+                stop("math operator not recognized yet"))
   
-  ir$binOp(FAdd, e[[1]], e[[2]])
+  ins = ir$binOp(op, e[[1]], e[[2]])
+  ins
 }
 
 getVariable =
@@ -110,26 +149,6 @@ function(call, env, ir, ...)
 
 
 
-## Builtin Types to overload
-OPS <- list('for' = compileForLoop,
-            '<-' = assignHandler,
-            '=' = assignHandler,
-            'while' = whileHandler,
-            'return'=function(args, env, ir) {
-              if (is.null(findVar('ReturnType', env)))
-                stop("returnType must be in environment.")
-              rt <- get('returnType', envir=env)
-              # TODO check types -- how?
-              checkArgs(args, list('ANY'), 'return')
-              cat("createReturn for '", args[[1]], "'\n", sep='')
-              cat("object:\n"); print(findVar(args[[1]], env)[[1]]); cat("\n")
-              
-              createReturn(ir, createLoad(ir, findVar(args[[1]], env)[[1]]))
-            },
-            '{' = function(args, env, ir) return(args), # TODO this doesn't work.
-            '+' = addHandler,
-            '<' = logicOpHandler
-            )
 
 compileExpressions =
   #
@@ -138,18 +157,38 @@ compileExpressions =
   # each expression.
 function(exprs, env, ir, fun = NULL, name = getName(fun))
 {
-  for (i in seq_along(exprs)) {
-    if (length(exprs) == 1)
-      e <- exprs
-    else
-      e <- exprs[[i]]
+  if(as.character(exprs[[1]]) != "{")
+        compile(exprs, env, ir, fun, name)
+  else
+    for (i in seq_along(exprs)) {
+         # Need to rationalize this 
+      if (length(exprs) == 1)
+        e <- exprs
+      else
+        e <- exprs[[i]]
 
-    compile(e, env, ir, fun, name) 
-  }    
+      compile(e, env, ir, fun, name) 
+    }    
 }
 
 compile <-
-function(e, env, ir, fun = NULL, name = getName(fun))
+function(e, env, ir, fun = NULL, name = getName(fun), ...)
+   UseMethod("compile")
+
+compile.name <-
+function(e, env, ir, fun = NULL, name = getName(fun))  
+{
+   getVariable(e, env, ir)
+}
+
+compile.Value <-
+  # This is just an LLVM value
+function(e, env, ir, fun = NULL, name = getName(fun))  
+  e
+
+
+compile.default <-
+function(e, env, ir, fun = NULL, name = getName(fun))  
 {
 #    cat("current expression: ", as.character(e), "\n")
     
@@ -159,7 +198,7 @@ function(e, env, ir, fun = NULL, name = getName(fun))
       if (typeof(call.op) != "closure" && is.na(call.op))
         stop("Cannot compile function '", e[[1]], "'")
 
-      if(as.character(e[[1]]) %in% c("for", "while", "<"))
+      if(as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps))
          call.op(e, env, ir)
       else {
             # I think we might want to just pass e and let the op function get the arguments if it wants them.
@@ -175,8 +214,10 @@ function(e, env, ir, fun = NULL, name = getName(fun))
     } else if (isNumericConstant(e)) {
       cat("createContant for '", e, "'\n", sep='') # TODO when to use?
       return(as.numeric(e))
-    }
+    } else
+      stop("can't compile objects of class ", class(e))
 }
+
 
 
 compileFunction <-
@@ -212,7 +253,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL)
 
        # For side effects of building mod
        # Have to be careful with one line functions with no {
-    bdy = if(is(fbody, "{")) fbody[-1] else  fbody
+#    bdy = if(is(fbody, "{")) fbody[-1] else  fbody
+    bdy = fbody
 
     compileExpressions(bdy, nenv, ir, llvm.fun, name)    # TODO class { should be handled
                                               # better.  Can just do it as a separate block.
