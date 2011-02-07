@@ -139,7 +139,7 @@ function(code, params, len, var) {
     # case works.
     call <- call[[1]] # TODO fix this
     
-    is.safe = examineArgDepends(call, params) && call.name %in% names(vectorFunctions)
+    is.safe <- examineArgDepends(call, params) && call.name %in% names(vectorFunctions)
     browser()
     # Are we not vectorizing?
     # (offset by one because of call name (not just args))
@@ -150,18 +150,93 @@ function(code, params, len, var) {
       # replace the call with a subset.
       cat("Recommended: code motion\n") # better warnings framework?
       cat("  old call:", as.character(call), "\n")
-      call[[vectorFunctions[call.name] + 1]] <- quote(NNN) # needs to be unique name
+      
+      # needs to be unique name
+      new.call <- call
+      new.call[[vectorFunctions[call.name] + 1]] <- len
       cat("  new (to be moved) call:", as.character(call), "\n")
 
       # Now, figure out replacement. This is a rough pass; not robust
-      replace.var <- as.name(paste("__", call.name, "__", sep=""))
-      replaced <- substitute(rv[i], list(rv=replace.var, i=var))
-      cat("  call no to be replaced with:", as.character(replaced), "\n")      
+      replace.var <- as.symbol(paste("_", call.name, "_vector_", sep=""))
+      replaced <- list(call, substitute(rv[i], list(rv=replace.var, i=var)))
+      cat("  call no to be replaced with:", as.character(replaced), "\n")
+      replace <- TRUE
+      # We break now, because better handling for multiple call
+      # replaces is needed
+      break()
     }
   }
+  if (replace)
+    return(list(new.call, replaced))
+  return(FALSE)
 }
 
-checkVectorizedCodeMotion(body(ex.wrong)[[4]][[4]], names(formals(ex.wrong)), 'l', 'i')
+checkVectorizedCodeMotion(body(ex.wrong)[[4]][[4]], names(formals(ex.wrong)),
+                          quote(len), quote(i))
+
+
+
+getLimits =
+# See comments in createLoop.R - this is duplicated. TODO remove duplication
+function(call)
+{
+  op = as.character(call[[1]])
+
+  ans = if(op == ":") {
+           list(from = call[[2]], to = call[[3]])
+         } else if(op == "seq_along") {
+           tmp = substitute(length(x), list(x = call[[2]]))
+           list(from = 1L, to = tmp)
+         } else if(op == "seq") {
+           k = match.call(seq, call)
+           argNames = names(k)[-1]
+                                        # formals(seq) returns ...
+           formals = c("from", "to", "by", "length.out", "along.with")
+           i = argNames == ""
+           argNames[i] = formals[which(i)]
+           structure(as.list(call[-1]), names = argNames)
+         }
+
+    # how should we get integers when we have, e.g., 1:10 which are
+    # numeric
+  ans = lapply(ans, function(val) if(is.numeric(val) && val == as.integer(val)) as.integer(val) else val)
+
+  ans
+}
+
+
+replaceCalls =
+# Replace all calls with varied code. Right now this is recursive which
+# breaks the code replacement. TODO - non-recursive version?
+function(code, call, replace) {
+  for (i in seq_along(code)) {
+    if (is.call(code[[i]])) {
+      if (code[[i]] == call) {
+        cat("replacing:", as.character(code[[i]]), "with:", as.character(call), "\n")
+        code[[i]] <- replace
+      }
+      replaceCalls(code[[i]][-1], call, replace)      
+    }
+  }
+  return(code)
+}
+
+
+replaceVectorizedCodeMotion =
+# After checking for possible code motion, replace if necessary
+function(for.code, params) {
+  var <- for.code[[2]]
+  len <- getLimits(for.code[[3]])$to # consider from?
+  motion <- checkVectorizedCodeMotion(for.code, params, len, var)
+  if (motion != FALSE) {
+    # Code motion needed, unpack results
+    move.out <- motion[[1]]
+    call.search <- motion[[2]][[1]]
+    call.replace <- motion[[2]][[2]]
+  }
+  
+  
+}
 
 
 
