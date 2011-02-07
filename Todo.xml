@@ -10,6 +10,14 @@
 <items>
 
 <item>
+Consolidate the 2 getLimits functions.
+</item>
+
+<item>
+
+</item>
+
+<item>
 The for loop, like the if, needs to know where to branch to.  So it
 needs the next.  It can create a new Block and refer to it.  Then the
 next expression being compiled can just write to that without having

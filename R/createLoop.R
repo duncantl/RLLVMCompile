@@ -58,7 +58,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    mapply(function(lim,  to) {
           if(is.symbol(lim)) {
             sym = as.character(lim)
-            getVariable(sym, env)
+            var = getVariable(sym, env)
             # ir$createLoad(to, get(as.character(lim), env))
              ir$createStore(var, to)          
           } else
