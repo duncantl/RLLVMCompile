@@ -107,9 +107,12 @@ getVariable =
 function(sym, env, ir)
 {
   sym = as.character(sym)
-  var = if(exists(sym, env))
-          get(sym, env)
-        else {
+  var = if(exists(sym, env)) {
+               # The local variables we create in the function
+               # are alloc'ed and so are pointers. They need to be
+               # loaded to use their values.
+          ir$createLoad(get(sym, env))
+        } else {
           env$.params[[sym]]
         }
 }
@@ -125,7 +128,7 @@ function(call, env, ir, ...)
   a = getVariable(call[[2]], env, ir)
   b = getVariable(call[[3]], env, ir)
 
-  ir$createFCmp(FCMP_UEQ, a, b)
+  ir$createFCmp(FCMP_ULT, a, b)
 }
 
 
