@@ -1,2 +1,16 @@
 # For now export everything.
-exportPattern(".*")
+#exportPattern(".*")
+
+export(compileFunction) #, compile)
+# Need to export the compile methods to make things work.
+# Otherwise, we get an error about compile.call not found.
+S3method(compile,default)
+S3method(compile,"if")
+S3method(compile,integer)
+S3method(compile,numeric)
+S3method(compile,logical)
+S3method(compile,name)
+S3method(compile,Value)
+S3method(compile,"{")
+         
+

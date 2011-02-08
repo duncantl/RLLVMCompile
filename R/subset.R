@@ -14,10 +14,12 @@ browser()
 
 
 subsetAssignHandler =
+  #
+  # Never used!
+  #
 function(call, env, ir, ...)
 {
-  browser()
   ll = subsetHandler(call, env, ir, load = FALSE)
-  ir$createStore(tmp, ans.i)
+#  ir$createStore(tmp, ans.i)
 }
   

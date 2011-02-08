@@ -10,6 +10,10 @@
 
 <items>
 
+<item>
+Implement switch
+</item>
+
 <item status="done">
 Have the supportFunctionInfo split for external routines
 and one that we compile ourselves.
@@ -86,7 +90,7 @@ Unary logical operator !
 <item status="note">
 We just return the function now and not the module
 as we can get the module from the function with 
-<r:expr>as(fun, "Module").</r:expr>
+<r:code>as(fun, "Module")</r:code>
 Also, <r:expr>showModule(fun) </r:expr> works without any
 need to explicitly coerce the function to a module.
 </item>
@@ -94,7 +98,7 @@ need to explicitly coerce the function to a module.
 <item status="done">
 The type of the logical in the branch is wrong.
 See the rep function
-<r:expr>a = compileFunction(rep, Int32Type)</r:expr>
+<r:code>a = compileFunction(rep, Int32Type)</r:code>
 </item>
 
 <item status="check">
@@ -153,12 +157,12 @@ We can hope the LLVM optimizer will
 Consolidate the 2 getLimits functions.
 </item>
 
-<item>
+<item status="done">
 May want to simplify compile() and not call getArgs() and pass them to
 the handler funcition - call.op. Many of the handlers will need the entire call.
 </item>
 
-<item>
+<item status="done">
 The for loop, like the if, needs to know where to branch to.  So it
 needs the next.  It can create a new Block and refer to it.  Then the
 next expression being compiled can just write to that without having
@@ -181,17 +185,17 @@ function() {
   x + y
 }
 </r:code>
-where the last expression is the return value
+where the last expression is the return value.
+See the <r:pkg>TypeInfo</r:pkg> package for how we do this.
 </item>
 
-<item>
+<item status="done">
 Add connections to the different blocks, i.e.
  when generate code for one block and then another
  add a branch from the first to the next.
 
     getBlocks() gives us the blocks for a function.
 
-  We probably
 </item>
 
 

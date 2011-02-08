@@ -151,9 +151,10 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 compileFunction <-
 function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFunction = FALSE,
-          ...,
+         optimize = TRUE, ...,
          .functionInfo = list(...),
-         .routineInfo = list()
+         .routineInfo = list(),
+         .compilerHandlers = OPS  # ignored for now
          )
 {
   ftype <- typeof(fun)
@@ -204,6 +205,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
 
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
+    if(optimize)
+       Optimize(mod)
      
 #   return(list(mod=mod, fun=llvm.fun, env = nenv))
     if(asFunction) {

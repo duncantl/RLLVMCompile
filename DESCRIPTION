@@ -6,6 +6,6 @@ Description: A prototype for a compiler for R code
 Author: Vince Buffalo, Duncan Temple Lang
 Maintainer: Duncan Temple Lang <duncan@r-project.org>
 License: GPL
-Depends: Rllvm
-Collate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R
+Depends: codetools, Rllvm
+xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R
 
