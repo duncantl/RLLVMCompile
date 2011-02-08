@@ -31,9 +31,9 @@ run(b, 4, 5)
 ##
 # Now we'll attach type information to the functions and let compileFunction
 # figure things out.
-attr(foo, "llvmTypes") = list(returnType = DoubleType, parms = c(DoubleType, DoubleType))
-attr(bar, "llvmTypes") = list(returnType = DoubleType, parms = c(DoubleType, DoubleType))
-attr(foobar, "llvmTypes") = list(returnType = DoubleType, parms = c(DoubleType, DoubleType))
+attr(foo, "llvmTypes") = list(returnType = DoubleType, params = c(DoubleType, DoubleType))
+attr(bar, "llvmTypes") = list(returnType = DoubleType, params = c(DoubleType, DoubleType))
+attr(foobar, "llvmTypes") = list(returnType = DoubleType, params = c(DoubleType, DoubleType))
 
 fb = compileFunction(foobar, sqrt = list(DoubleType, DoubleType))
 
@@ -41,6 +41,17 @@ run(fb, 4, 5) # 3
 
 b = compileFunction(bar, sqrt = list(DoubleType, DoubleType))
 run(b, 4, 5)  # 19
+
+
+
+# Here we don't use the llvmTypes attribute but specify the information for foo
+# as an argument to compileFunction()
+fb = compileFunction(foobar, DoubleType, list(DoubleType, DoubleType),
+                     .routineInfo = list( sqrt = list(DoubleType, DoubleType) ),
+                      foo = list(returnType = DoubleType,
+                                 params = c(DoubleType, DoubleType)))
+
+run(fb, 4, 5)
 
 
 

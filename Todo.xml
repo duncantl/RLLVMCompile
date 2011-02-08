@@ -10,10 +10,21 @@
 
 <items>
 
-<item>
+<item status="done">
 Have the supportFunctionInfo split for external routines
 and one that we compile ourselves.
+<br/>
+If the called functions have type information, then we can compile
+them. But allow this to be specified by the caller of compileFunction.
+<br/>
+Or do type inference.
 </item>
+
+<item status="check">
+Compiling other R functions we reference.
+Compile function tries to do this.
+</item>
+
 
 <item status="done">
 Process the .supportFunctionInfo in compileFunction.
@@ -32,10 +43,11 @@ See test.R and the example loop.next and printi
 An R object (function probably) that
 can arrange to load the external symbols before calling run,
 i.e. the functions we call that we don't compile.
-</item>
-
-<item>
-Compiling other R functions we reference.
+<br/>
+asFunction in compileFunction causes the return of a function.
+We can add the names of the external routines to the environment
+and arrange to load those when the function is invoked, even
+just the first time..
 </item>
 
 

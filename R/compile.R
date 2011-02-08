@@ -130,27 +130,13 @@ compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
     if (is.call(e)) {
-         # Recursively compile arguments
+           # Recursively compile arguments
       call.op <- findCall(e[[1]])
-      if (typeof(call.op) != "closure" && is.na(call.op)) {
-        # stop("Cannot compile function '", e[[1]], "'")
+      if (typeof(call.op) != "closure" && is.na(call.op)) 
         call.op = findCall("call")
-        direct = TRUE
-      } else
-        direct = FALSE
 
-      if(direct ||
-          (as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps, "break", "next",
-                                      "repeat", "call")))
-         call.op(e, env, ir, ...)
-      else {
-            # I think we might want to just pass e and let the op function get the arguments if it wants them.
-         call.args <- list(lapply(getArgs(e),
-                                    function(x) compile(x, env, ir)),
-                           env, ir)
-                           
-         do.call(call.op, call.args)
-      }
+      call.op(e, env, ir, ...)
+
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
@@ -164,8 +150,11 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 
 compileFunction <-
-function(fun, returnType, types = list(), mod = Module(name), name = NULL,
-          ..., .externalFunctionInfo = list(...))
+function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFunction = FALSE,
+          ...,
+         .functionInfo = list(...),
+         .routineInfo = list()
+         )
 {
   ftype <- typeof(fun)
   if (ftype == "closure") {
@@ -193,11 +182,11 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, mod)
 
-    if(length(.externalFunctionInfo))
-        processExternalFunctions(mod, .funcs = .externalFunctionInfo)
+    if(length(.routineInfo))
+        processExternalRoutines(mod, .funcs = .routineInfo)
 
     globals = findGlobals(fun, merge = FALSE)
-    compileCalledFuncs(globals, mod)
+    compileCalledFuncs(globals, mod, .functionInfo)
     
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
@@ -211,13 +200,16 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.module = mod
     
         # store returnType for use with OP$`return`
-    assign('returnType', returnType, envir = nenv)    # probably want . preceeding the name.
+    assign('.returnType', returnType, envir = nenv)    # probably want . preceeding the name.
 
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
      
 #   return(list(mod=mod, fun=llvm.fun, env = nenv))
-    llvm.fun
+    if(asFunction) {
+       makeFunction(fun, llvm.fun)
+    } else
+       llvm.fun
     
   } else
      stop("compileFunction can only handle closures")
@@ -233,7 +225,7 @@ function()
 }
 
 
-processExternalFunctions =
+processExternalRoutines =
 function(mod, ..., .funcs = list(...), .lookup = TRUE)
 {
   ans = mapply(declareFunction, .funcs, names(.funcs), MoreArgs = list(mod))
@@ -251,9 +243,14 @@ function(def, name, mod)
 {
    # For now, just treat the def as list of returnType, parm1, parm2, ...
    # But want to handle if they split them into separate elements, e.g
-   # list(name = "bob", returnType = .., parms = ...)
-  ret = def[[1]]
-  parms = def[-1]
+   # list(name = "bob", returnType = .., params = ...)
+  if("returnType" %in% names(def)) {
+     ret = def$returnType
+     parms = def$params
+  } else {
+     ret = def[[1]]
+     parms = def[-1]
+  }
   fun = Function(name, ret, parms, module = mod)
   setLinkage(fun, ExternalLinkage)
   fun
@@ -263,9 +260,11 @@ function(def, name, mod)
 ExcludeCompileFuncs = c("{", "sqrt", "return", "+") # for now
 
 compileCalledFuncs =
-function(globalInfo, mod)
+  #
+  #  The .functionInfo
+  #
+function(globalInfo, mod, .functionInfo = list())
 {
-browser()
   funs = setdiff(globalInfo$functions, ExcludeCompileFuncs)
 
      # Skip the ones we already have in the module.
@@ -275,5 +274,31 @@ browser()
   funs = structure(lapply(funs, get), names = funs)
 
 
-  lapply(names(funs),  function(id) compileFunction(funs[[id]], mod = mod, name = id))
+  lapply(names(funs),
+           function(id) {
+             if(id %in% names(.functionInfo)) {
+               types = .functionInfo[[id]]
+               compileFunction(funs[[id]],
+                                types$returnType,
+                                types = types$params,
+                                mod = mod, name = id
+                               )
+             } else
+               compileFunction(funs[[id]], mod = mod, name = id)             
+           })
+}
+
+
+
+makeFunction =
+function(fun, compiledFun)
+{
+  e = new.env()
+  e$.fun = compiledFun
+  args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
+  k = call('run')
+  k[2:(length(args) + 1)] = args
+  body(fun) = k
+  environment(fun) = e
+  fun
 }

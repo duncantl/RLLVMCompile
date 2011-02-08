@@ -27,11 +27,15 @@ checkArgs <- function(args, types, fun) {
   }
 }
 
-getArgs <- function(expr) {
+getArgs <- function(expr, env = NULL, ir = NULL) {
   # Converts to list
-  if (typeof(expr) != "language")
-    stop("expr must be of type 'language' in getArgs")
-  return(sapply(expr[-1], function(x) x))
+  if(typeof(expr) != "language")
+     stop("expr must be of type 'language' in getArgs")
+  ans = sapply(expr[-1], function(x) x)
+  if(!is.null(env))
+    lapply(ans, compile, env, ir)
+  else
+    ans
 }
 
 isNumericConstant <- function(expr) {
