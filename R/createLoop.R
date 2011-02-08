@@ -81,7 +81,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    ir$setInsertPoint(cond)   
      a = ir$createLoad(iv)
      b = ir$createLoad(len)
-     ok = ir$createICmp(ICMP_SLT, a, b)
+     ok = ir$createICmp(ICMP_SLE, a, b)
      ir$createCondBr(ok, bodyBlock, nextBlock)
 
    ir$setInsertPoint(bodyBlock)

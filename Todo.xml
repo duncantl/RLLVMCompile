@@ -3,7 +3,7 @@
 <?xml-stylesheet type="text/xsl" href="../../Classes/StatComputing/XDynDocs/inst/XSL/OmegahatXSL/Todo.xsl" ?>
 
 <topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org"
-	xmlns:r="http://www.r-project.org">
+	>
 
 <topic>
 <title>General</title>
@@ -11,23 +11,55 @@
 <items>
 
 <item>
+Have the supportFunctionInfo split for external routines
+and one that we compile ourselves.
+</item>
+
+<item status="done">
 Process the .supportFunctionInfo in compileFunction.
 </item>
 
-<item>
+<item status="partial">
 Calls to other functions, e.g. log or printf.
 <br/>
 Use codetools to find these before we start compiling.
 Get their types. Allow as parameter in compileFunction.
+<br/>
+See test.R and the example loop.next and printi
+</item>
+
+<item>
+An R object (function probably) that
+can arrange to load the external symbols before calling run,
+i.e. the functions we call that we don't compile.
+</item>
+
+<item>
+Compiling other R functions we reference.
 </item>
 
 
 <item>
 Returning R objects.
-Write values into R objects ?
+<br/>
+We strip away the SEXP and pass the data to our new routines.
+How do we return these as SEXPs, e.g. put them back into
+a (new) SEXP.  Rllvm does this for us. But we may want to
+take this over as we can.
+<br/>
+We might want to allocate the space before the call and have
+our new routine write into that. Need to avoid duplicating
+in the call to run.
+<br/>
+See how we can do this with a special object with  class
+that we return from compileFunction.
 </item>
 
 <item>
+Memory management
+</item>
+
+<item status="done">
 Split the incrementing in a loop into its own condition so that
 we can jump to that block of code for a continue.
 <br/>
@@ -39,26 +71,28 @@ See loop.next
 Unary logical operator !
 </item>
 
-<item>
+<item status="note">
 We just return the function now and not the module
 as we can get the module from the function with 
 <r:expr>as(fun, "Module").</r:expr>
+Also, <r:expr>showModule(fun) </r:expr> works without any
+need to explicitly coerce the function to a module.
 </item>
 
-<item>
+<item status="done">
 The type of the logical in the branch is wrong.
 See the rep function
 <r:expr>a = compileFunction(rep, Int32Type)</r:expr>
 </item>
 
-<item>
+<item status="check">
 Finish off next and break handlers.
 Specifically, have the while and for loops 
 register then .nextBlock and .continueBlock.
 Put these on a stack.
 </item>
 
-<item>
+<item status="check">
 Implement repeat
 </item>
 
@@ -66,9 +100,9 @@ Implement repeat
 Handle cases where R doesn't return anything explicitly, i.e. just NULL implicitly, but we need
 a particular type, e.g. an integer in 
 
-<r:code>
+<r:code><![CDATA[
 foo = function(x) if(x < 10) 100L
-</r:code>
+]]></r:code>
 At least identify these for the person calling compile and ask for a default
 value. <r:na/> can work for certain types.
 </item>
@@ -77,16 +111,14 @@ value. <r:na/> can work for certain types.
 Create temporary variable for if statements 
 when we assign the value to a variable in R, e.g.
 
-<r:code>
+<r:code><![CDATA[
 x = if(a < 1) "abc" else "def"
-</r:code>
+]]></r:code>
 Need to store the value from the expressions
 in the bodies of the if statement.
 </item>
 
-<item>
-Handle implicit return.
-</item>
+
 
 <item>
 [ operator for simple vectors.
@@ -129,6 +161,15 @@ for our function we are compiling.
 
 <item>
 Handle no explicit return() in the code
+i.e. 
+<r:code>
+function() { 
+  x = 1
+  y = 2
+  x + y
+}
+</r:code>
+where the last expression is the return value
 </item>
 
 <item>
@@ -141,9 +182,7 @@ Add connections to the different blocks, i.e.
   We probably
 </item>
 
-<item>
-Memory management
-</item>
+
 </items>
 </topic>
 

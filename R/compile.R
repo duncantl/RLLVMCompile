@@ -2,48 +2,6 @@
 # Some of this is inspired by Tierney's compiler package.
 
  
-## Compiler ##
-findVar <- function(var, env) {
-  return(mget(var, envir=env, ifnotfound=NA))
-}
-
-# Make this a generic and have this as the default.
-# Allow other people to provide their own.
-findCall <- function(call)
-{
-  op <- match(as.character(call), names(OPS))
-  if (is.na(op))
-    return(NA) # TODO Some (specified) builtins need to be passed directly,
-               # i.e. as.double()
-  return(OPS[[op]])
-}
-
-checkArgs <- function(args, types, fun) {
-  # for side-effect of stop() when wrong arg type
-  # encountered. TypeInfo will replace this probably.
-  if (length(args) != length(types))
-    stop("Wrong number of args provided.")
-  for (i in seq_along(args)) {
-    if (types[[i]] != 'ANY' && !(typeof(args[[i]]) %in% types[[i]]))
-      stop(fun, " received an argument of the wrong type\n",
-           "expected any of:\n", paste(types[[i]], sep=', ', collapse=', '),
-           "\ngot: ", typeof(args[[i]]))
-  }
-}
-
-getArgs <- function(expr) {
-  # Converts to list
-  if (typeof(expr) != "language")
-    stop("expr must be of type 'language' in getArgs")
-  return(sapply(expr[-1], function(x) x))
-}
-
-isNumericConstant <- function(expr) {
-  # TODO no complex cases yet
-  if (class(expr) %in% c('numeric', 'integer'))
-    return(TRUE)
-  return(FALSE)
-}
 
 assignHandler =
 function(call, env, ir)
@@ -273,10 +231,8 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
-#    cat("current expression: ", as.character(e), "\n")
-    
     if (is.call(e)) {
-      # Recursively compile arguments
+         # Recursively compile arguments
       call.op <- findCall(e[[1]])
       if (typeof(call.op) != "closure" && is.na(call.op)) {
         # stop("Cannot compile function '", e[[1]], "'")
@@ -302,7 +258,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
       return(var) ## TODO: lookup here, or in OP function?
     } else if (isNumericConstant(e)) {
       cat("createContant for '", e, "'\n", sep='') # TODO when to use?
-      return(as.numeric(e))
+      return(as.numeric(e))  # that's not an llvm object !?
     } else
       stop("can't compile objects of class ", class(e))
 }
@@ -311,12 +267,10 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 compileFunction <-
 function(fun, returnType, types = list(), mod = Module(name), name = NULL,
-          ..., .supportFunctionInfo = list(...))
+          ..., .externalFunctionInfo = list(...))
 {
   ftype <- typeof(fun)
   if (ftype == "closure") {
-
-    #XXX Process the .supportFunctionInfo and add it to the module.
 
     args <- formals(fun) # for checking against types; TODO
     fbody <- body(fun)
@@ -331,6 +285,10 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     # Grab types, including return. Set up Function, block, and params.
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, mod)
+
+    if(length(.externalFunctionInfo))
+        processExternalFunctions(mod, .funcs = .externalFunctionInfo)
+    
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
     ir <- IRBuilder(block)
@@ -367,26 +325,29 @@ function()
    nenv
 }
 
-## mod <- Module('testDumbAssign')
-## fun <- Function('dumbAssign', Int32PtrType, c(), mod)
-## block <- Block(fun)
-## ir <- IRBuilder(block)
-## #e <- new.env()
-## #a <- OPS$`<-`(getArgs(body(dumbAssign)[[2]]), e, ir)
-## #createReturn(ir, get('x', envir=e))
-## x <- createLocalVariable(ir, Int32Type, "x")
-## createStore(ir, createLoad(ir, createConstant(ir, 3L)), x)
-## createReturn(ir, x)
-## verifyModule(mod)
 
+processExternalFunctions =
+function(mod, ..., .funcs = list(...), .lookup = TRUE)
+{
+  ans = mapply(declareFunction, .funcs, names(.funcs), MoreArgs = list(mod))
 
-##
-if(FALSE) {
-mod <- Module('testDumbAssign')
-m <- compileFunction(dumbAssign, mod, types=c(returnType=DoubleType))
-verifyModule(m$mod)  # compileFunction should take care of this.
-run(m$fun)
-
-Optimize(m$fun)
+  if(.lookup) {
+    syms = lapply(names(.funcs),
+                    function(x) getNativeSymbolInfo(x)$address)
+    llvmAddSymbol(.syms = structure( syms, names = names(.funcs)))
+  }
+  ans
 }
 
+declareFunction =
+function(def, name, mod)
+{
+   # For now, just treat the def as list of returnType, parm1, parm2, ...
+   # But want to handle if they split them into separate elements, e.g
+   # list(name = "bob", returnType = .., parms = ...)
+  ret = def[[1]]
+  parms = def[-1]
+  fun = Function(name, ret, parms, module = mod)
+  setLinkage(fun, ExternalLinkage)
+  fun
+}

@@ -4,14 +4,18 @@ a = compileFunction(fi.return, Int32Type)
 
 a = compileFunction(loop.break, Int32Type)
 
-a = compileFunction(loop.next, Int32Type)
+#a = compileFunction(loop.next, Int32Type)
 
-mod = Module("loopContinue")
-printi = Function("printi", VoidType, list(Int32Type), module = mod)
-setLinkage(printi, ExternalLinkage)
-llvmAddSymbol(printi = getNativeSymbolInfo("printi")$address)
-a = compileFunction(loop.next, Int32Type, mod = mod)
+if(FALSE) { # now in compileFunction
+  mod = Module("loopContinue")
+  printi = Function("printi", VoidType, list(Int32Type), module = mod)
+  setLinkage(printi, ExternalLinkage)
+  llvmAddSymbol(printi = getNativeSymbolInfo("printi")$address)
+  a = compileFunction(loop.next, Int32Type, mod = mod)
+} else {
 
+  a = compileFunction(loop.next, Int32Type, printi = list(VoidType, Int32Type))
+}
 run(a)
 
 
