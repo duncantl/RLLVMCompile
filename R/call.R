@@ -15,5 +15,8 @@ findFun =
 function(id, env)
 {
   funcs = getModuleFunctions(env$.module)
-  funcs[[id]]
+  if(id %in% names(funcs))
+     funcs[[id]]
+  else
+    stop("Can't reference function ", id, " in module ") #, getName(env$.module))
 }

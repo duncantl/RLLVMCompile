@@ -1,8 +1,6 @@
 ## compile.R - compile R functions
 # Some of this is inspired by Tierney's compiler package.
 
- 
-
 assignHandler =
 function(call, env, ir)
 {
@@ -172,6 +170,15 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
   ftype <- typeof(fun)
   if (ftype == "closure") {
 
+     .typeInfo = attr(fun, "llvmTypes")
+     if( (missing(returnType) || missing(types)) && !is.null(.typeInfo)) {
+       if(missing(types))
+          types = .typeInfo$parms
+       if(missing(returnType))
+          returnType = .typeInfo$returnType
+     }
+     
+
     args <- formals(fun) # for checking against types; TODO
     fbody <- body(fun)
 
@@ -188,6 +195,9 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
 
     if(length(.externalFunctionInfo))
         processExternalFunctions(mod, .funcs = .externalFunctionInfo)
+
+    globals = findGlobals(fun, merge = FALSE)
+    compileCalledFuncs(globals, mod)
     
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
@@ -200,20 +210,17 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.types = types
     nenv$.module = mod
     
-    # store returnType for use with OP$`return`
+        # store returnType for use with OP$`return`
     assign('returnType', returnType, envir = nenv)    # probably want . preceeding the name.
 
-       # For side effects of building mod
-       # Have to be careful with one line functions with no {
-    bdy = fbody
+    compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
-    compileExpressions(bdy, nenv, ir, llvm.fun, name)    # TODO class { should be handled
-                                              # better.  Can just do it as a separate block.
-#    return(list(mod=mod, fun=llvm.fun, env = nenv))
+     
+#   return(list(mod=mod, fun=llvm.fun, env = nenv))
     llvm.fun
     
   } else
-  stop("compileFunction can only handle closures")
+     stop("compileFunction can only handle closures")
 }
 
 makeCompileEnv =
@@ -250,4 +257,23 @@ function(def, name, mod)
   fun = Function(name, ret, parms, module = mod)
   setLinkage(fun, ExternalLinkage)
   fun
+}
+
+
+ExcludeCompileFuncs = c("{", "sqrt", "return", "+") # for now
+
+compileCalledFuncs =
+function(globalInfo, mod)
+{
+browser()
+  funs = setdiff(globalInfo$functions, ExcludeCompileFuncs)
+
+     # Skip the ones we already have in the module.
+     # Possibly have different types!
+  funs = funs[!(funs %in% names(getModuleFunctions(mod))) ]
+  
+  funs = structure(lapply(funs, get), names = funs)
+
+
+  lapply(names(funs),  function(id) compileFunction(funs[[id]], mod = mod, name = id))
 }
