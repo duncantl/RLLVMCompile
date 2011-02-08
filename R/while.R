@@ -41,5 +41,6 @@ function(call, env, ir, bodyBlock, nextBlock)
           # We don't need to compare the value of a to 1 but can
           # expect that a is a logical value. 
        # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))
+
        ir$createCondBr(a, bodyBlock, nextBlock)    
 }

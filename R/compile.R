@@ -82,9 +82,12 @@ function(call, env, ir, ...)
 {
    args = call[-1]  # drop the =
    val = compile(args[[2]], env, ir)
-   if(is.name(args[[1]]))
+   if(is.name(args[[1]])) {
+      var = as.character(args[[1]])
       ref <- getVariable(var, env, ir)
-   else {
+      if(is.null(ref))
+         assign(var, ref <- createLocalVariable(ir, Int32Type, var), envir=env) ## Todo fix type and put into env$.types
+   } else {
       ref = compile(args[[1]], env, ir, ..., load = FALSE)
    }
    
@@ -254,7 +257,7 @@ function(e, env, ir, ..., fun = NULL, name = getName(fun))
       if (typeof(call.op) != "closure" && is.na(call.op))
         stop("Cannot compile function '", e[[1]], "'")
 
-      if(as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps))
+      if(as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps, "break", "next"))
          call.op(e, env, ir, ...)
       else {
             # I think we might want to just pass e and let the op function get the arguments if it wants them.

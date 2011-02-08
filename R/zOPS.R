@@ -23,7 +23,9 @@ OPS <- list('for' = compileForLoop,
             '<' = logicOpHandler,
             '[' = subsetHandler,
             '[<-' = subsetAssignHandler,
-            '(' = function(args, env, ir) compile(args[[1]], env, ir)
+            '(' = function(args, env, ir) compile(args[[1]], env, ir),
+            "call" = breakHandler,
+            "next" = nextHandler,            
             )
 
 LogicOps = c("<", ">", "<=", ">=", "!=", "==")
