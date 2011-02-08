@@ -1,48 +1,3 @@
-ifHandler =
-  #
-  # Generate code for an if statement
-  #
-function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
-{
-    label = deparse(call)
-browser()
-         # create blocks for evaluating the condition
-         # the body and then where to jump to when we are finished
-         # We'll make the nextBlock the location where subsequent
-         # instructions are added to continue on from this while() command
-#   if(!continue) {
-#      cond = Block(fun, sprintf("cond.%s", label))
-#      ir$createBr(cond)
-#      ir$setInsertPoint(cond)
-#   }
-    
-    bodyBlock = Block(fun, sprintf("body.%s", label))
-    if(length(call) == 4) {
-           #  we have an else or an else if()
-        nextBlock = altBlock = Block(fun, sprintf("else.%s", label))
-    } else
-      nextBlock = Block(fun, sprintf("next.%s", label))
-    
-    
-#XXX handle series of else if ... here (iteratively) or recursively?
-# Need to do it here so we can branch to the correct place
-
-     createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock)
-
-    ir$setInsertPoint(bodyBlock)
-    compile(call[[3]], env, ir)
-    ir$createBr(nextBlock)
-
-    if(length(call) == 4) {
-       #ifHandler(call[[4]], env, ir, ..., continue = TRUE)
-       compile(call[[4]], env, ir, continue = TRUE)
-    }
-     
-    ir$setInsertPoint(nextBlock)
-}
-
-
-
 compile.if = ifHandler =
   #
   # Generate code for an if statement
@@ -71,7 +26,8 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
     bodyBlocks = list()
     condBlocks = list()
     cur = call
-    
+
+    hasTrailingElse = FALSE
     while(TRUE) {
          if(is(cur, "if")) {
             tmp = paste(deparse(cur[[2]]), collapse = "")
@@ -81,15 +37,24 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
             tmp = "body.last"
          bodyBlocks[[tmp]] =  Block(fun, tmp)
 
-         if(!is(cur, "if"))
+         if(!is(cur, "if")) {
+           hasTrailingElse = TRUE
            break
-         cur = cur[[4]]
+         }
+
+         if(length(cur) == 4)
+            cur = cur[[4]]
+         else
+           break
     }
 
-
+      # This is the block that all branches of the if statement
+      # will end up in. This is where start the code for the next statement
+      # after the if statement.
     nextBlock = Block(fun, sprintf("next.%s", label))
-    condBlocks[["final"]] = nextBlock
+    condBlocks[["final"]] = if(hasTrailingElse) bodyBlocks[[length(bodyBlocks)]] else nextBlock
 
+      # Jump to the first condition block
     ir$createBr(condBlocks[[1]])
 
     #??? Does this code end up jumping to the trailing else ?
@@ -104,6 +69,7 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
       
       if(is(cur, "if")) {
            ir$setInsertPoint(alt)
+
            createConditionCode(cur[[2]], env, ir, body, condBlocks[[ctr + 1]])
            ir$setInsertPoint(body)
            compile(cur[[3]], env, ir)           
@@ -111,9 +77,10 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
            ir$setInsertPoint(body)
            compile(cur, env, ir)                      
        }
-      ir$createBr(nextBlock)  # jump to the end of the entire if statement           
+      if(length(getTerminator(ir$getInsertBlock())) == 0)
+         ir$createBr(nextBlock)  # jump to the end of the entire if statement           
 
-      if(!is(cur, "if"))
+      if(!is(cur, "if") || length(cur) < 4)
            break
       cur = cur[[4]]
       ctr = ctr + 1

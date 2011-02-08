@@ -11,6 +11,58 @@
 <items>
 
 <item>
+Process the .supportFunctionInfo in compileFunction.
+</item>
+
+<item>
+Calls to other functions, e.g. log or printf.
+<br/>
+Use codetools to find these before we start compiling.
+Get their types. Allow as parameter in compileFunction.
+</item>
+
+
+<item>
+Returning R objects.
+Write values into R objects ?
+</item>
+
+<item>
+Split the incrementing in a loop into its own condition so that
+we can jump to that block of code for a continue.
+<br/>
+Done, but giving wrong result for continue.
+See loop.next
+</item>
+
+<item>
+Unary logical operator !
+</item>
+
+<item>
+We just return the function now and not the module
+as we can get the module from the function with 
+<r:expr>as(fun, "Module").</r:expr>
+</item>
+
+<item>
+The type of the logical in the branch is wrong.
+See the rep function
+<r:expr>a = compileFunction(rep, Int32Type)</r:expr>
+</item>
+
+<item>
+Finish off next and break handlers.
+Specifically, have the while and for loops 
+register then .nextBlock and .continueBlock.
+Put these on a stack.
+</item>
+
+<item>
+Implement repeat
+</item>
+
+<item>
 Handle cases where R doesn't return anything explicitly, i.e. just NULL implicitly, but we need
 a particular type, e.g. an integer in 
 

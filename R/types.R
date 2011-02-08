@@ -3,6 +3,8 @@ function(obj, env, elementType = FALSE)
 {
    if(is(obj, "integer"))
       Int32Type
+   else if(is(obj, "numeric"))
+      DoubleType   
    else if(is.name(obj)) { 
      ans = env$.types[[as.character(obj)]]
      if(elementType)
@@ -43,4 +45,31 @@ function(type)
       return(DoubleType)
    else
       stop("Need more implementation of the type of a pointer type")
+}
+
+
+getType =
+function(val, env)
+  UseMethod("getType")
+
+getType.character =
+function(val, env)
+{
+  env$.types[[val]]
+}
+
+getType.name =
+function(val, env)
+  getType(as.character(val), env)
+
+getType.ConstantInt =
+function(val, env)  
+{
+  Int32Type
+}
+
+getType.ConstantFP =
+function(val, env)    
+{
+  DoubleType
 }

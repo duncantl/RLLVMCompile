@@ -14,6 +14,11 @@ function(call, env, ir, ..., fun = env$.fun)
     bodyBlock = Block(fun, sprintf("body.%s", label))
     nextBlock = Block(fun, sprintf("next.%s", label))
 
+   pushNextBlock(env, nextBlock)
+   on.exit(popNextBlock(env))
+   pushContinueBlock(env, cond)
+   on.exit(popContinueBlock(env))       
+
           # We have to explicitly jump from the current block
           # before the while() loop to our condition code.
    ir$createBr(cond)

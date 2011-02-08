@@ -3,6 +3,8 @@ function()
 {
    if( 1L < 3L)
       return(10L)
+
+   return(11L)
 }
 
 fi.return =

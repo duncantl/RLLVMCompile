@@ -63,7 +63,9 @@ function(call, env, ir)
    if (is.na(findVar(var, env))) {
      # Create new local store, TODO remove the type here and infer it
      cat("createLocalVariable for '", var, "'\n", sep='')
-     assign(var, createLocalVariable(ir, DoubleType, var), envir=env) ## Todo fix type
+     type = getType(val, env)
+     assign(var, createLocalVariable(ir, type, var), envir=env) ## Todo fix type
+     env$.types[[var]] = type
    }
    
    ref <- get(var, envir = env)
@@ -86,8 +88,11 @@ function(call, env, ir, ...)
    if(is.name(args[[1]])) {
       var = as.character(args[[1]])
       ref <- getVariable(var, env, ir, load = FALSE)
-      if(is.null(ref))
-         assign(var, ref <- createLocalVariable(ir, Int32Type, var), envir=env) ## Todo fix type and put into env$.types
+      if(is.null(ref)) {
+         type = getType(val, env)
+         assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
+         env$.types[[var]] = type
+       }
    } else {
       ref = compile(args[[1]], env, ir, ..., load = FALSE)
    }
@@ -107,18 +112,26 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
-   #??? We may want to compile first and then determine types and then coerce.
+     # Need to hadle the case where we have a literal and we can convert it to the
+     # target type.
+
+  if(any( lit <- sapply(call[-1], is.numeric))) { # literals
+     targetType = getTypes(as.list(call[-1])[!lit][[1]], env)
+  } else {
+  
+     #??? We may want to compile first and then determine types and then coerce.
      # Compute the type of each, returning the LLVM type objects, e.g. DoubleType
-  types = lapply(call[-1], getTypes, env)
+    types = lapply(call[-1], getTypes, env)
      # Collapse these two types to the "common" type
-  targetType = getMathOpType(types)
+    targetType = getMathOpType(types)
+  }
   isIntType = identical(targetType, Int32Type)
   e = lapply(call[-1], function(x)
                        if(is(x, "numeric")) {
                           if(isIntType)
-                             createIntegerConstant(x)
+                             createIntegerConstant(as.integer(x))
                           else
-                             createDoubleConstant(x)
+                             createDoubleConstant(as.numeric(x))
                        } else if(is.name(x)) {
                             # Potentially have to cast based on the target type
                          getVariable(x, env, ir)
@@ -191,7 +204,7 @@ function(call, env, ir, ...)
 
 
 compile <-
-function(e, env, ir, ..., fun = NULL, name = getName(fun))
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
    UseMethod("compile")
 
 
@@ -200,26 +213,32 @@ function(e, env, ir, ..., fun = NULL, name = getName(fun))
   # This compiles a group of expressions.
   # It handles moving from block to block with a block for
   # each expression.
-function(exprs, env, ir, fun = NULL, name = getName(fun))
+function(exprs, env, ir, fun = env$.fun, name = getName(fun))
 {
   if(as.character(exprs[[1]]) != "{")
       compile(exprs, env, ir, fun = fun, name = name)
   else {
     exprs = exprs[-1]
-    for (i in seq_along(exprs)) 
-        compile(exprs[[i]], env, ir, fun = fun, name = name) 
+    for (i in seq_along(exprs)) {
+        cur = ir$getInsertBlock()
+        if(length(getTerminator(cur))) {
+           browser()
+            break
+         }
+        compile(exprs[[i]], env, ir, fun = fun, name = name)
+    }
   }
 }
 
 
 compile.name <-
-function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
    getVariable(e, env, ir, ...)
 }
 
 compile.integer <-
-function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
    if(length(e) == 1)
       createIntegerConstant(e)
@@ -227,8 +246,16 @@ function(e, env, ir, ..., fun = NULL, name = getName(fun))
      stop("not compiling integer vector for now")
 }
 
+compile.logical <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+{
+ # compile(as(e, "integer"), env, ir, ..., fun = fun, name = name)
+  createLogicalConstant(e)
+}
+
+
 compile.numeric <-
-function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
   if(length(e) == 1)
      createDoubleConstant(e)
@@ -239,22 +266,28 @@ function(e, env, ir, ..., fun = NULL, name = getName(fun))
 
 compile.Value <-
   # This is just an LLVM value
-function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
   e
 
 
 compile.default <-
-function(e, env, ir, ..., fun = NULL, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
 #    cat("current expression: ", as.character(e), "\n")
     
     if (is.call(e)) {
       # Recursively compile arguments
       call.op <- findCall(e[[1]])
-      if (typeof(call.op) != "closure" && is.na(call.op))
-        stop("Cannot compile function '", e[[1]], "'")
+      if (typeof(call.op) != "closure" && is.na(call.op)) {
+        # stop("Cannot compile function '", e[[1]], "'")
+        call.op = findCall("call")
+        direct = TRUE
+      } else
+        direct = FALSE
 
-      if(as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps, "break", "next"))
+      if(direct ||
+          (as.character(e[[1]]) %in% c("for", "while", "<", "if", "[", "[<-", MathOps, "=", "<-", LogicOps, "break", "next",
+                                      "repeat", "call")))
          call.op(e, env, ir, ...)
       else {
             # I think we might want to just pass e and let the op function get the arguments if it wants them.
@@ -277,10 +310,13 @@ function(e, env, ir, ..., fun = NULL, name = getName(fun))
 
 
 compileFunction <-
-function(fun, returnType, types = list(), mod = Module(name), name = NULL)
+function(fun, returnType, types = list(), mod = Module(name), name = NULL,
+          ..., .supportFunctionInfo = list(...))
 {
   ftype <- typeof(fun)
   if (ftype == "closure") {
+
+    #XXX Process the .supportFunctionInfo and add it to the module.
 
     args <- formals(fun) # for checking against types; TODO
     fbody <- body(fun)
@@ -298,26 +334,37 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL)
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
     ir <- IRBuilder(block)
-    
-    nenv <- new.env( parent = emptyenv())
+
+    nenv = makeCompileEnv()
+
     nenv$.fun = llvm.fun
     nenv$.params = params
     nenv$.types = types
+    nenv$.module = mod
     
     # store returnType for use with OP$`return`
-    assign('returnType', returnType, envir=nenv)    # probably want . preceeding the name.
+    assign('returnType', returnType, envir = nenv)    # probably want . preceeding the name.
 
        # For side effects of building mod
        # Have to be careful with one line functions with no {
-#    bdy = if(is(fbody, "{")) fbody[-1] else  fbody
     bdy = fbody
 
     compileExpressions(bdy, nenv, ir, llvm.fun, name)    # TODO class { should be handled
                                               # better.  Can just do it as a separate block.
-    return(list(mod=mod, fun=llvm.fun))
+#    return(list(mod=mod, fun=llvm.fun, env = nenv))
+    llvm.fun
     
   } else
   stop("compileFunction can only handle closures")
+}
+
+makeCompileEnv =
+function()
+{
+   nenv <- new.env( parent = emptyenv())
+   nenv$.continueBlock = list()
+   nenv$.nextBlock = list()   
+   nenv
 }
 
 ## mod <- Module('testDumbAssign')
@@ -342,3 +389,4 @@ run(m$fun)
 
 Optimize(m$fun)
 }
+

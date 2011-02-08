@@ -29,7 +29,7 @@ function(call, env, ir, ..., nextBlock = NULL)
    }
 
   class(ans) = "ForLoop"
-  createLoopCode(ans$var, ans$limits, ans$body, env, ir = ir, nextBlock = nextBlock, label = deparse(call))
+  createLoopCode(ans$var, ans$limits, ans$body, env, , ir = ir, nextBlock = nextBlock, label = deparse(call))
   ans
 }
 
@@ -50,8 +50,14 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
 
       # We do create blocks for the condition and the body.
    cond = Block(fun, sprintf("cond.%s", label))
+   incrBlock = Block(fun, sprintf("incr.%s", label))   
    bodyBlock = Block(fun, sprintf("body.%s", label))
-   nextBlock = Block(fun, sprintf("next.%s", label))   
+   nextBlock = Block(fun, sprintf("next.%s", label))
+
+   pushNextBlock(env, nextBlock)
+   on.exit(popNextBlock(env))
+   pushContinueBlock(env, incrBlock)
+   on.exit(popContinueBlock(env))   
   
    iv = ir$createLocalVariable(Int32Type, var)
    assign(var, iv, env)
@@ -83,7 +89,9 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
            #XXX have to put the code for the actual  body, not just the incrementing of i
 
      compile(body, env, ir)
-   
+     ir$createBr(incrBlock)
+
+   ir$setInsertPoint(incrBlock)
 
      i = ir$createLoad(iv)
      inc = ir$binOp(Add, i, 1L)
@@ -146,4 +154,29 @@ function(expr)
   }
 
   FALSE
+}
+
+
+pushNextBlock =
+function(env, block)
+{
+  env$.nextBlock = c(block, env$.nextBlock)
+}
+
+popNextBlock =
+function(env)
+{
+  env$.nextBlock = env$.nextBlock[-1]
+}
+
+pushContinueBlock =
+function(env, block)
+{
+  env$.continueBlock = c(block, env$.continueBlock)
+}
+
+popContinueBlock =
+function(env)
+{
+  env$.continueBlock = env$.continueBlock[-1]
 }
