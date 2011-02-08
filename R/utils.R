@@ -40,3 +40,23 @@ isNumericConstant <- function(expr) {
     return(TRUE)
   return(FALSE)
 }
+
+
+getVariable =
+function(sym, env, ir = NULL, load = TRUE, ...)
+{
+
+  sym = as.character(sym)
+  var = if(exists(sym, env)) {
+               # The local variables we create in the function
+               # are alloc'ed and so are pointers. They need to be
+               # loaded to use their values.
+          tmp = get(sym, env)
+          if(load && !is.null(ir))
+             ir$createLoad(tmp)
+          else
+            tmp
+        } else {
+          env$.params[[sym]]
+        }
+}

@@ -20,7 +20,6 @@ function(call, env, ir)
    val <- args[[2]]
    if (is.na(findVar(var, env))) {
      # Create new local store, TODO remove the type here and infer it
-     cat("createLocalVariable for '", var, "'\n", sep='')
      type = getType(val, env)
      assign(var, createLocalVariable(ir, type, var), envir=env) ## Todo fix type
      env$.types[[var]] = type
@@ -31,8 +30,6 @@ function(call, env, ir)
       # Now, create store. TODO: how does this work *without*
       # constants? Where is evaluation handled... probably not
       # here?
-   cat("createStore for '", var, "'\n", sep='')
-   cat("object:\n"); print(val); cat("\n")
    createStore(ir, val, ref)
  }
 
@@ -60,105 +57,8 @@ function(call, env, ir, ...)
 }
 
 
-MathOps = c("+", "-", "*", "/", "%/%")
-mathHandler =
-  #
-  # This currently (Feb 7, 2pm) attempts to do a little bit
-  # of figuring about the types of the two operands.
-  # It just handles integer and numeric types for now.
-  # 
-  #
-function(call, env, ir, ..., isSubsetIndex = FALSE)  
-{
-     # Need to hadle the case where we have a literal and we can convert it to the
-     # target type.
 
-  if(any( lit <- sapply(call[-1], is.numeric))) { # literals
-     targetType = getTypes(as.list(call[-1])[!lit][[1]], env)
-  } else {
-  
-     #??? We may want to compile first and then determine types and then coerce.
-     # Compute the type of each, returning the LLVM type objects, e.g. DoubleType
-    types = lapply(call[-1], getTypes, env)
-     # Collapse these two types to the "common" type
-    targetType = getMathOpType(types)
-  }
-  isIntType = identical(targetType, Int32Type)
-  e = lapply(call[-1], function(x)
-                       if(is(x, "numeric")) {
-                          if(isIntType)
-                             createIntegerConstant(as.integer(x))
-                          else
-                             createDoubleConstant(as.numeric(x))
-                       } else if(is.name(x)) {
-                            # Potentially have to cast based on the target type
-                         getVariable(x, env, ir)
-                       } else
-                         compile(x, env, ir, ...))
 
-    # XXX Have to deal with different types.
-  if(isIntType)
-     codes = c("+" = Add, "-" = Sub, "*" = Mul, "-" = SDiv, "%/%" = SRem)
-  else
-     codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "-" = FDiv, "%/%" = FRem)
-
-  
-
-  op = codes[ as.character(call[[1]]) ]
-
-  
-  ins = ir$binOp(op, e[[1]], e[[2]])
-  ins
-}
-
-getVariable =
-function(sym, env, ir = NULL, load = TRUE, ...)
-{
-
-  sym = as.character(sym)
-  var = if(exists(sym, env)) {
-               # The local variables we create in the function
-               # are alloc'ed and so are pointers. They need to be
-               # loaded to use their values.
-          tmp = get(sym, env)
-          if(load && !is.null(ir))
-             ir$createLoad(tmp)
-          else
-            tmp
-        } else {
-          env$.params[[sym]]
-        }
-}
-
-logicOpHandler =
-function(call, env, ir, ...)
-{
-    # need to handle the different ops
-    # and the different types, casting
-    # if necessary.
-  op = as.character(call[[1]])
-
-  types = lapply(call[-1], getTypes, env)
-  targetType = getMathOpType(types)
-  isIntType = identical(targetType, Int32Type)  
-
-  a = compile(call[[2]], env, ir)   # getVariable(call[[2]], env, ir)
-  b = compile(call[[3]], env, ir)   # getVariable(call[[3]], env, ir)
-
-  if(isIntType)
-     codes = c("==" = ICMP_EQ, "!=" = ICMP_NE, ">" = ICMP_SGT, "<" = ICMP_SLT, ">=" = ICMP_SGE, "<=" = ICMP_SLE)
-  else
-     codes = c("==" = FCMP_UEQ, "!=" = FCMP_UNE, ">" = FCMP_UGT, "<" = FCMP_ULT, ">=" = FCMP_UGE, "<=" = FCMP_ULE)    
-  
-  op = codes[ as.character(call[[1]]) ]
-  if(is.na(op))
-     stop("Unhandled logical operator")
-
-  if(isIntType)
-    ir$createICmp(op, a, b)    
-  else
-     ir$createFCmp(op, a, b)
-}
 
 
 compile <-
