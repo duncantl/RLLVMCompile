@@ -22,10 +22,7 @@ function(call, env, ir, ..., fun = env$.fun)
     createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock)
 
      ir$setInsertPoint(bodyBlock)
-         # If there is a single expression in the body and no { we need
-         # to call compile() rather than compileExpressions. We'll reduce
-         # these two into one function soon.
-       compileExpressions(call[[3]], env, ir)
+       compile(call[[3]], env, ir)
        ir$createBr(cond)
 
     ir$setInsertPoint(nextBlock)    

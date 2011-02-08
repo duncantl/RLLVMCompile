@@ -9,7 +9,8 @@ findVar <- function(var, env) {
 
 # Make this a generic and have this as the default.
 # Allow other people to provide their own.
-findCall <- function(call) {
+findCall <- function(call)
+{
   op <- match(as.character(call), names(OPS))
   if (is.na(op))
     return(NA) # TODO Some (specified) builtins need to be passed directly,
@@ -84,7 +85,7 @@ function(call, env, ir, ...)
    val = compile(args[[2]], env, ir)
    if(is.name(args[[1]])) {
       var = as.character(args[[1]])
-      ref <- getVariable(var, env, ir)
+      ref <- getVariable(var, env, ir, load = FALSE)
       if(is.null(ref))
          assign(var, ref <- createLocalVariable(ir, Int32Type, var), envir=env) ## Todo fix type and put into env$.types
    } else {
@@ -140,15 +141,16 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 }
 
 getVariable =
-function(sym, env, ir = NULL)
+function(sym, env, ir = NULL, load = TRUE, ...)
 {
+
   sym = as.character(sym)
   var = if(exists(sym, env)) {
                # The local variables we create in the function
                # are alloc'ed and so are pointers. They need to be
                # loaded to use their values.
           tmp = get(sym, env)
-          if(!is.null(ir))
+          if(load && !is.null(ir))
              ir$createLoad(tmp)
           else
             tmp
@@ -188,9 +190,12 @@ function(call, env, ir, ...)
 }
 
 
+compile <-
+function(e, env, ir, ..., fun = NULL, name = getName(fun))
+   UseMethod("compile")
 
 
-compileExpressions =
+`compile.{` = compileExpressions =
   #
   # This compiles a group of expressions.
   # It handles moving from block to block with a block for
@@ -198,27 +203,19 @@ compileExpressions =
 function(exprs, env, ir, fun = NULL, name = getName(fun))
 {
   if(as.character(exprs[[1]]) != "{")
-        compile(exprs, env, ir, fun, name)
-  else
-    for (i in seq_along(exprs)) {
-         # Need to rationalize this 
-      if (length(exprs) == 1)
-        e <- exprs
-      else
-        e <- exprs[[i]]
-
-      compile(e, env, ir, fun, name) 
-    }    
+      compile(exprs, env, ir, fun = fun, name = name)
+  else {
+    exprs = exprs[-1]
+    for (i in seq_along(exprs)) 
+        compile(exprs[[i]], env, ir, fun = fun, name = name) 
+  }
 }
 
-compile <-
-function(e, env, ir, ..., fun = NULL, name = getName(fun))
-   UseMethod("compile")
 
 compile.name <-
 function(e, env, ir, ..., fun = NULL, name = getName(fun))  
 {
-   getVariable(e, env, ir)
+   getVariable(e, env, ir, ...)
 }
 
 compile.integer <-

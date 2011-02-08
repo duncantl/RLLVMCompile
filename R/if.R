@@ -30,7 +30,7 @@ browser()
      createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock)
 
     ir$setInsertPoint(bodyBlock)
-    compileExpressions(call[[3]], env, ir)
+    compile(call[[3]], env, ir)
     ir$createBr(nextBlock)
 
     if(length(call) == 4) {
