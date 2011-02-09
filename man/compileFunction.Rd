@@ -18,6 +18,21 @@
   provide information that can be used directly to compile the function.
   We plan to also support the \code{TypeInfo} package's annotation of
   functions with type information.
+
+  This function attempts to compile other R functions that this
+  function calls.  To do this, we need the type information.
+  The signatures can be specified in the call via \code{.functionInfo}
+  as a named list with an element for each function.
+  The form of the element is a list with an element named returnType
+  and another named params.
+
+  Some of the functions this R function calls are already available in C
+  libraries and we might want to use those directly, e.g. sqrt.
+  To do this, we need to specify the name of the routine and
+  its signature. We do this via the \code{.routineInfo}
+  argument. This is a named list with the names identifying the
+  routines.
+  Each element is of the form returnType and params.
 }
 \usage{
 compileFunction(fun, returnType, types = list(), mod = Module(name),

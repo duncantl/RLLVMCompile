@@ -1,4 +1,4 @@
-invisible({library(Rllvm); invisible(sapply(list.files("R", pattern = ".R$", full.names = TRUE), source)); InitializeNativeTarget() ; sapply(sprintf("examples/%s", c("total.R", "if.R", "loop1.R", "mult.R", "break.R", "types.R", "repeat.R", "loopBreak.R", "callToOther.R")), source)})
+invisible({library(Rllvm); invisible(sapply(list.files("R", pattern = ".R$", full.names = TRUE), source)); InitializeNativeTarget() ; sapply(sprintf("inst/examples/%s", c("total.R", "if.R", "loop1.R", "mult.R", "break.R", "types.R", "repeat.R", "loopBreak.R", "callToOther.R")), source)})
  
 
 a = compileFunction(fi.return, Int32Type)

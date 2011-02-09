@@ -46,3 +46,24 @@ function(rtype)
 {
   AtomicTypes[[rtype]]   
 }
+
+
+inferTypeOfCall =
+  #
+  # inferTypeOfCall(  )
+  #
+function(call, inputs, .catalog, ...)
+{
+
+
+}
+
+buildCatalog =
+function(..., .funs = list(...))
+{
+  fun.types = lapply(.funs, attr, "llvmTypes")
+  fun.types
+}
+
+  
+
