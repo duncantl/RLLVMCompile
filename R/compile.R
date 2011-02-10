@@ -81,7 +81,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun))
     for (i in seq_along(exprs)) {
         cur = ir$getInsertBlock()
         if(length(getTerminator(cur))) {
-           browser()
+
             break
          }
         compile(exprs[[i]], env, ir, fun = fun, name = name)

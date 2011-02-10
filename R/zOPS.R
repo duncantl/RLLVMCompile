@@ -6,11 +6,6 @@ function(call, env, ir, ...)
 
 CompilerHandlers <-
        list(
-            # 'for' = compileForLoop, 
-            # 'if' = ifHandler,
-            # '<-' = assignHandler,
-            # '=' = assignHandler,
-            #'while' = whileHandler,
             'return'= function(call, env, ir, ...) {
               args = getArgs(call, env, ir)
               if (is.null(findVar('.returnType', env)))
@@ -26,15 +21,14 @@ CompilerHandlers <-
               
               ir$createReturn(val)
             },
-#            '{' = function(call, env, ir) return(args), # TODO this doesn't work.
             '[' = subsetHandler,
             '[<-' = subsetAssignHandler,
-           # '(' = function(call, env, ir, ...) compile(getArgs(call, env, ir)[[1]], env, ir),
             "break" = breakHandler,
             "next" = nextHandler,
             'repeat' = repeatHandler,
             'call' = callHandler
-            )
+           )
+
 
 LogicOps = c("<", ">", "<=", ">=", "!=", "==")
 CompilerHandlers[LogicOps] = replicate(length(LogicOps), logicOpHandler, simplify = FALSE)

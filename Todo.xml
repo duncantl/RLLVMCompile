@@ -9,6 +9,10 @@
 
 <items>
 
+<item>
+Does run() in Rllvm return the mutable parameters?
+</item>
+
 <item status="note">
 The OPS table/list is now called CompilerHandlers
 and it can be customized for a call to 
@@ -249,6 +253,17 @@ Add connections to the different blocks, i.e.
 <title>Type Inference</title>
 <item>
 Identify const variables.
+</item>
+
+<item>
+When compiling a function
+and we are given its types,
+follow those through the expressions to determine
+the types of local variables
+and also then follow calls to other functions
+and determine the types of those calls
+and so recursively follow the expressions in those other
+functions.
 </item>
 
 <item>

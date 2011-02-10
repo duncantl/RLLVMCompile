@@ -3,6 +3,14 @@
 # we do not need to copy it
 # Same in R.
 
+inplace =
+function(x) {
+  for(i in 2:len) 
+     x[i] = 2 * i
+
+  return(x)
+}  
+
 b1 =
   # Leaving len as a parameter so that we don't have to call
   # Rf_length() on x, especially since we have already unpeeled it from the SEXP
@@ -11,7 +19,7 @@ function(x, len) {
   for(i in 2:len) 
      x[i] = 2 * i
 
-  return(10)
+  return(x)
 }
 
 b =
