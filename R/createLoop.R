@@ -43,7 +43,7 @@ createLoopCode =
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
           label = ".")
 {
-
+browser()
      # The caller (compileFunction and compileExpressions) has already created a block
      # for this expression, so we can use it as the entry block and create and initialize
      # variables here.
@@ -62,9 +62,9 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    iv = ir$createLocalVariable(Int32Type, var)
    assign(var, iv, env)
    env$.types[[var]] = Int32Type
-   len = ir$createLocalVariable(Int32Type, "len")
-   assign("len", len, env)
-   env$.types[["len"]] = Int32Type
+   len = ir$createLocalVariable(Int32Type, ".llen")
+   assign(".llen", len, env)
+   env$.types[[".llen"]] = Int32Type
    
    mapply(function(lim,  to) {
           if(is.symbol(lim)) {

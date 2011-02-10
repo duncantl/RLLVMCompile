@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- <?xml-stylesheet type="text/xsl" href="../org/omegahat/Docs/XSL/Todo.xsl" ?> -->
-<?xml-stylesheet type="text/xsl" href="../../Classes/StatComputing/XDynDocs/inst/XSL/OmegahatXSL/Todo.xsl" ?>
+<?xml-stylesheet type="text/xsl" href="../OmegahatXSL/Todo.xsl" ?>
 
 <topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org"
 	>
@@ -11,7 +10,13 @@
 <items>
 
 <item>
-Implement switch
+Implement the for loop of the form for(i in x) 
+by introducing a loop counter, say, .i
+and add a new instruction to load x[i].
+</item>
+
+<item>
+Implement switch.
 </item>
 
 <item status="done">
@@ -87,8 +92,8 @@ See loop.next
 Unary logical operator !
 </item>
 
-<item status="note">
-We just return the function now and not the module
+<item status="done">
+We just return the compiled function or the R function now and not the module
 as we can get the module from the function with 
 <r:code>as(fun, "Module")</r:code>
 Also, <r:expr>showModule(fun) </r:expr> works without any
@@ -200,6 +205,17 @@ Add connections to the different blocks, i.e.
 
 
 </items>
+</topic>
+<topic>
+<title>Type Inference</title>
+<item>
+Identify const variables.
+</item>
+
+<item>
+Figure out the output from a function based on its inputs
+and the functions it calls.
+</item>
 </topic>
 
 </topics>

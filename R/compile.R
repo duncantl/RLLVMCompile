@@ -1,6 +1,9 @@
 ## compile.R - compile R functions
 # Some of this is inspired by Tierney's compiler package.
 
+
+MathOps = c("+", "-", "*", "/", "%/%")
+
 assignHandler =
 function(call, env, ir)
 {
@@ -260,7 +263,7 @@ function(def, name, mod)
 }
 
 
-ExcludeCompileFuncs = c("{", "sqrt", "return", "+") # for now
+ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, ":", "=", "<-", "[<-", "for", "if", "while", "repeat") # for now
 
 compileCalledFuncs =
   #

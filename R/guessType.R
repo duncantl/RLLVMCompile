@@ -52,7 +52,7 @@ inferTypeOfCall =
   #
   # inferTypeOfCall(  )
   #
-function(call, inputs, .catalog, ...)
+function(call, inputs, .catalog = buildCatalog(), ...)0
 {
 
 

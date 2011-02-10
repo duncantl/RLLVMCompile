@@ -8,10 +8,10 @@ b1 =
   # Rf_length() on x, especially since we have already unpeeled it from the SEXP
   # and so don't know the length
 function(x, len) {
-  for(i in 2:len) {
+  for(i in 2:len) 
      x[i] = 2 * i
-  }
-  return(x)
+
+  return(10)
 }
 
 b =
