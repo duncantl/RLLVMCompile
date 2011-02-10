@@ -1,5 +1,5 @@
 
-compileForLoop =
+compile.for = compileForLoop =
 function(call, env, ir, ..., nextBlock = NULL)
 {
   var = as.character(call[[2]])

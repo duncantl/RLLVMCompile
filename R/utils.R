@@ -5,7 +5,7 @@ findVar <- function(var, env) {
 
 # Make this a generic and have this as the default.
 # Allow other people to provide their own.
-findCall <- function(call)
+findCall <- function(call, OPS)
 {
   op <- match(as.character(call), names(OPS))
   if (is.na(op))

@@ -38,7 +38,8 @@
 compileFunction(fun, returnType, types = list(), mod = Module(name),
                 name = NULL, asFunction = FALSE, optimize = TRUE, ...,
                 .functionInfo = list(...), .routineInfo = list(),
-               .compilerHandlers = OPS)
+               .compilerHandlers = OPS,
+               .globals =  findGlobals(fun, merge = FALSE))
 }
 \arguments{
   \item{fun}{the R function to be compiled.}
@@ -69,9 +70,23 @@ compileFunction(fun, returnType, types = list(), mod = Module(name),
     optimized before being returned. This has the potential to make the
     functions faster.
   }
-  \item{.compilerHandlers}{currently ignored, but intended to be a means
-  to customizing the collection of specific handler functions for
-  different language elements, i.e. to replace \code{OPS} in the package.}
+  \item{.compilerHandlers}{a named list of functions.
+    This is used to find a handler for generating
+    code for different language constructs and for calls
+    to particular R functions.
+    Expressions are compiled using methods of the \code{compile}
+    function. But not all expressions have a class that identifies
+    their purpose, e.g. return which appears as a regular call.
+    So in these cases, we use this named list to find an element
+    for the particular call.  This allows the caller
+    to customize how we generate code for a call to a particular
+    R function.  The basic idea is that one makes a copy of the
+    default handlers and replaces or adds entries to that and passes
+    the modified list to \code{compileFunction}.
+  }
+  \item{.globals}{a character vector giving the names of functions
+    which are to be compiled also in this module. These are typically
+    the names of functions that are called within the body of this function.}
 }
 \details{
 }
@@ -133,6 +148,35 @@ function(x, y)
                       asFunction = TRUE)
 
  fb(4, 5)
+
+
+
+ #  Here we show how to override how an expression is called
+ # by providing our own .compilerHandlers. Here we change
+ # any call to Sys.Date() to a constant.
+myDate = function() {
+        return(Sys.Date())
+     }
+
+myOPS[["Sys.Date"]] =
+   function(call, env, ir, ...) {
+       cat("In Sys.Date handler\n")
+       ir$createConstant(15015L)
+   }
+
+
+  # Note we specify .functionInfo so that we don't
+  # try to create a Function object in the module for Sys.Date which
+  # we won't end up calling.
+f = compileFunction(myDate, Int32Type, optimize = FALSE,
+                     .compilerHandlers = myOPS, .globals = NULL)
+
+
+myPlus = function() {
+          return(1L + x)
+     }
+
+myOPS = CompilerHandlers
 
 }
 \keyword{programming}

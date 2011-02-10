@@ -4,7 +4,7 @@
 
 MathOps = c("+", "-", "*", "/", "%/%")
 
-assignHandler =
+XXXX.assignHandler =
 function(call, env, ir)
 {
    args = call[-1]
@@ -35,7 +35,7 @@ function(call, env, ir)
  }
 
 
-assignHandler =
+`compile.=` = `compile.<-`  = assignHandler =
   # Second version here so I don't mess the other one up.
 function(call, env, ir, ...)
 {
@@ -134,9 +134,9 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
     if (is.call(e)) {
            # Recursively compile arguments
-      call.op <- findCall(e[[1]])
+      call.op <- findCall(e[[1]], env$.compilerHandlers)
       if (typeof(call.op) != "closure" && is.na(call.op)) 
-        call.op = findCall("call")
+        call.op = findCall("call", env$.compilerHandlers)
 
       call.op(e, env, ir, ...)
 
@@ -157,7 +157,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
          optimize = TRUE, ...,
          .functionInfo = list(...),
          .routineInfo = list(),
-         .compilerHandlers = OPS  # ignored for now
+         .compilerHandlers = CompilerHandlers,
+         .globals = findGlobals(fun, merge = FALSE)
          )
 {
   ftype <- typeof(fun)
@@ -189,8 +190,9 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
     if(length(.routineInfo))
         processExternalRoutines(mod, .funcs = .routineInfo)
 
-    globals = findGlobals(fun, merge = FALSE)
-    compileCalledFuncs(globals, mod, .functionInfo)
+    if(length(.globals)) { #  missing(.functionInfo) || length(.functionInfo)) {
+       compileCalledFuncs(.globals, mod, .functionInfo)
+    }
     
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
@@ -202,6 +204,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
     nenv$.params = params
     nenv$.types = types
     nenv$.module = mod
+    nenv$.compilerHandlers = .compilerHandlers
     
         # store returnType for use with OP$`return`
     assign('.returnType', returnType, envir = nenv)    # probably want . preceeding the name.

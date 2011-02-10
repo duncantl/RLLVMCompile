@@ -1,4 +1,4 @@
-whileHandler =
+compile.while = whileHandler =
   #
   # This generates the code corresponding to an while() {} loop in R.
   #

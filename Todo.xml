@@ -9,6 +9,45 @@
 
 <items>
 
+<item status="note">
+The OPS table/list is now called CompilerHandlers
+and it can be customized for a call to 
+compileFunction by copying that object and
+inserting new elements or replacing existing ones.
+</item>
+
+<item status="note">
+One can control which functions are compiled
+by specifying <r:arg>.globals</r:arg>.
+</item>
+
+<item>
+Handle default values for parameters.
+<br/>
+We can compile the code just before the first 
+expression at which that parameter is referenced.
+</item>
+
+<item>
+Handle named arguments and match them during compilation
+and reorder. Don't worry about
+any assignments  in the expressions which might
+make the order important
+e.g.
+<r:code><![CDATA[
+  foo(b = (num <- sum(x)), a = integer(num))
+]]></r:code>
+This is suicidal code anyhow and 
+there is no guarantee b will be evaluated before a
+due to lazy evaluation.
+</item>
+
+<item status="done">
+Allow the caller of compileFunction to specify their own
+version of .compilerHandlers to customize how the
+code generation operates.
+</item>
+
 <item>
 Implement the for loop of the form for(i in x) 
 by introducing a loop counter, say, .i
