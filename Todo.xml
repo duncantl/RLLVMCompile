@@ -89,7 +89,8 @@ See loop.next
 </item>
 
 <item>
-Unary logical operator !
+Unary logical operator !. A good way to do this would be use LLVM's
+XOR op with 1.
 </item>
 
 <item status="done">
