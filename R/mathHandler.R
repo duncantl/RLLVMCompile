@@ -1,4 +1,3 @@
-MathOps = c("+", "-", "*", "/", "%/%")
 mathHandler =
   #
   # This currently (Feb 7, 2pm) attempts to do a little bit
