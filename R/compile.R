@@ -1,153 +1,307 @@
-## compile.R - compile R code into native LLVM code
+## compile.R - compile R functions
+# Some of this is inspired by Tierney's compiler package.
 
-library(Rllvm)
-InitializeNativeTarget()
+assignHandler =
+function(call, env, ir)
+{
+   args = call[-1]
 
-## Test functions ##
-# Basic op detection
-add <- function(x, y) {
-  xy.sum <- x+y # local var
-  return(xy.sum)
+   val = compile(args[[2]], env, ir)
+
+          # CreateLocalVariable, with a reference in the
+          # environment, and then CreateStore of the value.
+   checkArgs(args, list(c('character', 'symbol'), 'ANY'), '<-')
+     # XXX may not be a variable
+   if(is.name(var))
+      var <- as.character(args[1])
+   
+   val <- args[[2]]
+   if (is.na(findVar(var, env))) {
+     # Create new local store, TODO remove the type here and infer it
+     type = getType(val, env)
+     assign(var, createLocalVariable(ir, type, var), envir=env) ## Todo fix type
+     env$.types[[var]] = type
+   }
+   
+   ref <- get(var, envir = env)
+
+      # Now, create store. TODO: how does this work *without*
+      # constants? Where is evaluation handled... probably not
+      # here?
+   createStore(ir, val, ref)
+ }
+
+
+assignHandler =
+  # Second version here so I don't mess the other one up.
+function(call, env, ir, ...)
+{
+   args = call[-1]  # drop the =
+   val = compile(args[[2]], env, ir)
+   if(is.name(args[[1]])) {
+      var = as.character(args[[1]])
+      ref <- getVariable(var, env, ir, load = FALSE)
+      if(is.null(ref)) {
+         type = getType(val, env)
+         assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
+         env$.types[[var]] = type
+       }
+   } else {
+      ref = compile(args[[1]], env, ir, ..., load = FALSE)
+   }
+   
+   ans = ir$createStore(val, ref)
+   ans
 }
 
-EVALRULES <- list('<-'=c(var=FALSE, val=TRUE),
-                  '+'=c(x=TRUE, y=TRUE),
-                  'return'=c(rtrn=TRUE))
-
-OPS <- list(
-            '<-'=function(var, val, other) {
-              # Arg types:
-              #  x=character, val=quoted expression, type=array of Rllvm types
-              #  Grabbed from parent environment: ir=IRBuilder object, env=environment
-              #
-              # Assignment will create a local variable if there is no
-              # such variable in the environment. Otherwise, it will
-              # give this variable the new value.
-              #
-              # The argument 'type' should disappear at some point, and
-              # be inferred
-              #
-              # 'val' must be evaluated, but var must be *not* evaluated. 
-              subs <- list(x=var, ir=other$ir, type=DoubleType) ## TODO type is static for testing
-              if (!(var %in% ls(envir=other$env))) {
-                # Create local store; the eval(substitute()) non-sense
-                # is to maybe allow future compiled code printing via
-                # wrapping substitute.
-                assign(var, eval(substitute(createLocalVariable(ir, type, var), subs)), envir=other$env)
-              }
-              # Now, store value
-              substitute(createStore(ir, val, ptr), list(ir=other$ir, val=val, ptr=get(var, envir=other$eval)))
-            },
-            '+'=function(x, y, other) {
-              # Grabbed from parent environment: ir=IRBuilder object, env=environment
-              return(substitute(binOp(ir, Add, x, y), list=c(ir=other$ir, x=x, y=y)))
-            },
-            'return'=function(rtrn, other) {
-              # Grabbed from parent environment: ir=IRBuilder object
-              return(createReturn(other$ir, rtrn))
-            }
-            )
 
 
-evalArgs <- function(args, fun, other) {
-  #args.to.eval <- cb.args[!is.na(EVALRULES[[as.character(cb[[1]])]])] # only eval relevant args
-  env <- other$env
-  
-  # Evaluate (some) args of a function, depending on EVALRULES.
-  evald.args <- vector('list', length(args))
-  rules <- EVALRULES[[fun]]
 
-  # If no special rule, evaluate all.
-  if (is.null(rules)) {
-    #cat("no eval rules for: "); print(fun)
-    return(args, function(a) eval(a, envir=env))
-  }
-      
-  #cat("eval rules:\n"); print(rules)
 
-  # naive positional argument matching *only*
-  for (i in seq_along(args)) {
-    print(rules[i])
-    if (!is.na(rules[i]) & rules[i]) { ## TODO handle NA cause.
-      #cat("evaluating argument: "); print(args[i])
-      evald.args[[i]] <- eval(args[[i]], envir=env)
-    } else {
-      #cat("not evaluating argument: "); print(args[i])
-      if (is.na(rules[i])) {
-        evald.args[[i]] <- args[[i]]
-      } else {
-        #cat("symbol: "); print(as.character(as.symbol(args[[i]])))
-        evald.args[[i]] <- as.character(as.symbol(args[[i]]))
-      }
+
+compile <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
+   UseMethod("compile")
+
+
+`compile.{` = compileExpressions =
+  #
+  # This compiles a group of expressions.
+  # It handles moving from block to block with a block for
+  # each expression.
+function(exprs, env, ir, fun = env$.fun, name = getName(fun))
+{
+  if(as.character(exprs[[1]]) != "{")
+      compile(exprs, env, ir, fun = fun, name = name)
+  else {
+    exprs = exprs[-1]
+    for (i in seq_along(exprs)) {
+        cur = ir$getInsertBlock()
+        if(length(getTerminator(cur))) {
+           browser()
+            break
+         }
+        compile(exprs[[i]], env, ir, fun = fun, name = name)
     }
   }
-  evald.args[[i+1]] <- other
-  #cat("evaluated arguments: "); print(evald.args)
-  return(evald.args)
 }
 
-compileFun <- function(fun, mod, types, name=NULL) {
-  stack <- list() # not used yet; maybe wrapper around substitute will
-                  # push compiled instructions here for debugging.
 
-  args <- formals(fun) # for checking against types; TODO
-  fbody <- body(fun)
+compile.name <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+{
+   getVariable(e, env, ir, ...)
+}
 
-  # Find the name of the function if not provided
-  if (is.null(name))
-    name <- deparse(substitute(fun))
+compile.integer <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+{
+   if(length(e) == 1)
+      createIntegerConstant(e)
+   else
+     stop("not compiling integer vector for now")
+}
 
-  # Grab types, including return. Set up Function, block, and params.
-  argTypes <- types[-c(which(names(types) == 'returnType'))]
-  llvm.fun <- Function(name, types[['returnType']], argTypes, mod)
-  block <- Block(llvm.fun)
-  params <- getParameters(llvm.fun)
-  ir <- IRBuilder(block)
+compile.logical <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+{
+ # compile(as(e, "integer"), env, ir, ..., fun = fun, name = name)
+  createLogicalConstant(e)
+}
 
-  eval.env <- new.env()
-  
-  cmp <- function(code.blocks) {
-    ## Loop over code blocks, recursively compiling each call.
-    tmp <- sapply(code.blocks, function(cb) {
-      cat("current code block: "); print(cb)
-      if (is.call(cb)) {
-        call.parts <- cmp(cb[-1])  # ignore the function part of the call for now
 
-        # Find the matching function in OPS, otherwise error out.
-        call.op <- match(as.character(cb[[1]]), names(OPS))
-        if (is.na(call.op))
-          stop("Operation '", as.character(cb[[1]]), "' not supported.\n")
+compile.numeric <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+{
+  if(length(e) == 1)
+     createDoubleConstant(e)
+  else
+     stop("not compiling numeric vector for now")
+}
 
-        # *Very* naive argument matching
-        cb.args <- c(call.parts)
-        cb.call <- OPS[[call.op]]
-        cat("Code block call: "); print(cb.call)
 
-        other <- list(ir=ir, env=eval.env)
-          browser()
-        return(do.call(cb.call, evalArgs(cb.args, as.character(cb[[1]]), other), eval.env))
-      } else {
-        cat("non-call:", as.character(cb), "\n")
+compile.Value <-
+  # This is just an LLVM value
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+  e
 
-        # Search for variable in parameters first
-        var <- params[[as.character(cb)]]
-        if (is.null(var)) {
-          # Not found in params; search for in local stores
-          if (as.character(cb) %in% ls(envir=eval.env)) {
-            return(get(as.character(cb), envir=eval.env))
-          }
-        } else {
-          return(var)
-        }
-        return(as.symbol(as.character(cb)))
-        # Could not find var anywhere else; error out
-        #stop("Could not find object '", as.character(cb), "'\n")
-      }
-    })
+
+compile.default <-
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+{
+    if (is.call(e)) {
+           # Recursively compile arguments
+      call.op <- findCall(e[[1]])
+      if (typeof(call.op) != "closure" && is.na(call.op)) 
+        call.op = findCall("call")
+
+      call.op(e, env, ir, ...)
+
+    } else if (is.symbol(e)) {
+      var <- as.character(e)
+      return(var) ## TODO: lookup here, or in OP function?
+    } else if (isNumericConstant(e)) {
+      cat("createContant for '", e, "'\n", sep='') # TODO when to use?
+      return(as.numeric(e))  # that's not an llvm object !?
+    } else
+      stop("can't compile objects of class ", class(e))
+}
+
+
+
+compileFunction <-
+function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFunction = FALSE,
+         optimize = TRUE, ...,
+         .functionInfo = list(...),
+         .routineInfo = list(),
+         .compilerHandlers = OPS  # ignored for now
+         )
+{
+  ftype <- typeof(fun)
+  if (ftype == "closure") {
+
+     .typeInfo = attr(fun, "llvmTypes")
+     if( (missing(returnType) || missing(types)) && !is.null(.typeInfo)) {
+       if(missing(types))
+          types = .typeInfo$parms
+       if(missing(returnType))
+          returnType = .typeInfo$returnType
+     }
+     
+
+    args <- formals(fun) # for checking against types; TODO
+    fbody <- body(fun)
+
+    if(length(names(types)) == 0)
+      names(types) = names(args)
+    
+    # Find the name of the function if not provided
+    if (is.null(name))
+      name <- deparse(substitute(fun))
+
+    # Grab types, including return. Set up Function, block, and params.
+    argTypes <- types
+    llvm.fun <- Function(name, returnType, argTypes, mod)
+
+    if(length(.routineInfo))
+        processExternalRoutines(mod, .funcs = .routineInfo)
+
+    globals = findGlobals(fun, merge = FALSE)
+    compileCalledFuncs(globals, mod, .functionInfo)
+    
+    block <- Block(llvm.fun, "entry")
+    params <- getParameters(llvm.fun)  # TODO need to load these into nenv
+    ir <- IRBuilder(block)
+
+    nenv = makeCompileEnv()
+
+    nenv$.fun = llvm.fun
+    nenv$.params = params
+    nenv$.types = types
+    nenv$.module = mod
+    
+        # store returnType for use with OP$`return`
+    assign('.returnType', returnType, envir = nenv)    # probably want . preceeding the name.
+
+    compileExpressions(fbody, nenv, ir, llvm.fun, name)
+
+    if(optimize)
+       Optimize(mod)
+     
+#   return(list(mod=mod, fun=llvm.fun, env = nenv))
+    if(asFunction) {
+       makeFunction(fun, llvm.fun)
+    } else
+       llvm.fun
+    
+  } else
+     stop("compileFunction can only handle closures")
+}
+
+makeCompileEnv =
+function()
+{
+   nenv <- new.env( parent = emptyenv())
+   nenv$.continueBlock = list()
+   nenv$.nextBlock = list()   
+   nenv
+}
+
+
+processExternalRoutines =
+function(mod, ..., .funcs = list(...), .lookup = TRUE)
+{
+  ans = mapply(declareFunction, .funcs, names(.funcs), MoreArgs = list(mod))
+
+  if(.lookup) {
+    syms = lapply(names(.funcs),
+                    function(x) getNativeSymbolInfo(x)$address)
+    llvmAddSymbol(.syms = structure( syms, names = names(.funcs)))
   }
-  
-  return(cmp(fbody[-1]))
+  ans
 }
 
-mod <- Module('testAdd')
-compileFun(add, mod, c(returnType=DoubleType, x=DoubleType, y=DoubleType))
+declareFunction =
+function(def, name, mod)
+{
+   # For now, just treat the def as list of returnType, parm1, parm2, ...
+   # But want to handle if they split them into separate elements, e.g
+   # list(name = "bob", returnType = .., params = ...)
+  if("returnType" %in% names(def)) {
+     ret = def$returnType
+     parms = def$params
+  } else {
+     ret = def[[1]]
+     parms = def[-1]
+  }
+  fun = Function(name, ret, parms, module = mod)
+  setLinkage(fun, ExternalLinkage)
+  fun
+}
+
+
+ExcludeCompileFuncs = c("{", "sqrt", "return", "+") # for now
+
+compileCalledFuncs =
+  #
+  #  The .functionInfo
+  #
+function(globalInfo, mod, .functionInfo = list())
+{
+  funs = setdiff(globalInfo$functions, ExcludeCompileFuncs)
+
+     # Skip the ones we already have in the module.
+     # Possibly have different types!
+  funs = funs[!(funs %in% names(getModuleFunctions(mod))) ]
+  
+  funs = structure(lapply(funs, get), names = funs)
+
+
+  lapply(names(funs),
+           function(id) {
+             if(id %in% names(.functionInfo)) {
+               types = .functionInfo[[id]]
+               compileFunction(funs[[id]],
+                                types$returnType,
+                                types = types$params,
+                                mod = mod, name = id
+                               )
+             } else
+               compileFunction(funs[[id]], mod = mod, name = id)             
+           })
+}
+
+
+
+makeFunction =
+function(fun, compiledFun)
+{
+  e = new.env()
+  e$.fun = compiledFun
+  args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
+  k = call('run')
+  k[2:(length(args) + 1)] = args
+  body(fun) = k
+  environment(fun) = e
+  fun
+}
