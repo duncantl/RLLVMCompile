@@ -204,6 +204,14 @@ Add connections to the different blocks, i.e.
 
 </item>
 
+<item> 
+  Handle vectorized operations of ==, +, !, etc.
+</item>
+
+<item> 
+  Handle unary "-".
+</item>
+
 
 </items>
 </topic>

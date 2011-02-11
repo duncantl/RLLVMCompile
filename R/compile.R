@@ -129,25 +129,30 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
   e
 
 
+SPECIAL.UNARY <- c('-') # TODO
+
 compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
-    if (is.call(e)) {
-           # Recursively compile arguments
-      call.op <- findCall(e[[1]])
-      if (typeof(call.op) != "closure" && is.na(call.op)) 
-        call.op = findCall("call")
-
-      call.op(e, env, ir, ...)
-
-    } else if (is.symbol(e)) {
-      var <- as.character(e)
-      return(var) ## TODO: lookup here, or in OP function?
-    } else if (isNumericConstant(e)) {
-      cat("createContant for '", e, "'\n", sep='') # TODO when to use?
-      return(as.numeric(e))  # that's not an llvm object !?
-    } else
-      stop("can't compile objects of class ", class(e))
+  isSpecialUnary <- as.character(e[1]) %in% SPECIAL.UNARY && length(e) == 2
+  if (is.call(e) && !isSpecialUnary) {
+    # Recursively compile arguments
+    call.op <- findCall(e[[1]])
+    if (typeof(call.op) != "closure" && is.na(call.op)) 
+      call.op = findCall("call")
+    
+    call.op(e, env, ir, ...)
+    
+  } else if (is.symbol(e)) {
+    var <- as.character(e)
+    return(var) ## TODO: lookup here, or in OP function?
+  } else if (isNumericConstant(e) || isSpecialUnary) {
+    #cat("createContant for '", e, "'\n", sep='') # TODO when to use?
+    if (isSpecialUnary)
+      e <- eval(e)
+    return(as.numeric(e))  # that's not an llvm object !?
+  } else
+  stop("can't compile objects of class ", class(e))
 }
 
 
@@ -263,7 +268,7 @@ function(def, name, mod)
 }
 
 
-ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, ":", "=", "<-", "[<-", "for", "if", "while", "repeat") # for now
+ExcludeCompileFuncs = c("!", "{", "sqrt", "return", MathOps, ":", "=", "<-", "[<-", "for", "if", "while", "repeat") # for now
 
 compileCalledFuncs =
   #

@@ -25,5 +25,5 @@ function(call, env, ir, ...)
   if(isIntType)
     ir$createICmp(op, a, b)    
   else
-     ir$createFCmp(op, a, b)
+    ir$createFCmp(op, a, b)
 }
