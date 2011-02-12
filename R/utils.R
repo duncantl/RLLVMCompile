@@ -1,6 +1,6 @@
 ## Compiler ##
 findVar <- function(var, env) {
-  return(mget(var, envir=env, ifnotfound=NA))
+  return(mget(as.character(var), envir=env, ifnotfound=NA))
 }
 
 # Make this a generic and have this as the default.

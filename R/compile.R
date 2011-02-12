@@ -161,9 +161,6 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
-    } else if (isNumericConstant(e)) {
-      cat("createConstant for '", e, "'\n", sep='') # TODO when to use?
-      return(as.numeric(e))  # that's not an llvm object !?
     } else
       stop("can't compile objects of class ", class(e))
 }
@@ -171,7 +168,8 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 
 compileFunction <-
-function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFunction = FALSE,
+function(fun, returnType, types = list(), mod = Module(name), name = NULL,
+         asFunction = FALSE, asList = FALSE,
          optimize = TRUE, ...,
          .functionInfo = list(...),
          .routineInfo = list(),
@@ -243,10 +241,11 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
     if(optimize)
        Optimize(mod)
      
-#   return(list(mod=mod, fun=llvm.fun, env = nenv))
     if(asFunction) {
        makeFunction(fun, llvm.fun)
-    } else
+    } else if (asList)
+      return(list(mod=mod, fun=llvm.fun, env = nenv))
+    else
        llvm.fun
     
   } else
