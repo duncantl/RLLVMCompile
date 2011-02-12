@@ -99,7 +99,6 @@ function(expr, nested = FALSE, ...)
 `insertReturn.call` =
 function(expr, nested = FALSE, ...)
 {
-  browser()
   if(nested || expr[[1]] != as.name('return')) {
     if(nested) {
         # create .ret = expr

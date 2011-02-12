@@ -10,6 +10,14 @@
 <items>
 
 <item>
+Identify const variables
+</item>
+
+<item>
+Handle x[1:10], i.e. x[vector] and x[vector] = value(s).
+</item>
+
+<item>
 Compile the not() function to test the ! operator.
 </item>
 
