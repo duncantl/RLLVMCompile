@@ -147,7 +147,8 @@ See loop.next
 </item>
 
 <item>
-Unary logical operator !
+Unary logical operator !. A good way to do this would be use LLVM's
+XOR op with 1.
 </item>
 
 <item status="done">
@@ -265,6 +266,14 @@ Add connections to the different blocks, i.e.
 
     getBlocks() gives us the blocks for a function.
 
+</item>
+
+<item> 
+  Handle vectorized operations of ==, +, !, etc.
+</item>
+
+<item> 
+  Handle unary "-".
 </item>
 
 

@@ -10,6 +10,7 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
+<<<<<<< HEAD
 
    if(length(call) == 2)  {
          # unary operator - most likely -
@@ -22,9 +23,9 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   
      # Need to hadle the case where we have a literal and we can convert it to the
      # target type.
-
+  
   if(any( lit <- sapply(call[-1], is.numeric))) { # literals
-     targetType = getTypes(as.list(call[-1])[!lit][[1]], env)
+    targetType = getTypes(as.list(call[-1])[!lit][[1]], env)
   } else {
        #??? We may want to compile first and then determine types and then coerce.
        # Compute the type of each, returning the LLVM type objects, e.g. DoubleType
@@ -52,7 +53,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "-" = FDiv, "%/%" = FRem)
 
   op = codes[ as.character(call[[1]]) ]
-  
+
   ins = ir$binOp(op, e[[1]], e[[2]])
   ins
 }

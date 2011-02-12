@@ -1,26 +1,19 @@
-<?xml version="1.0"?>
-<article xmlns:r="http://www.r-project.org"
-         xmlns:xi="http://www.w3.org/2003/XInclude">
-
-<articleinfo>
-
-<title>Experiments in Compiling R Code</title>
-
-<author><firstname>Vincent</firstname><surname>Buffalo</surname>
-  <affiliation><orgname>University of California at Davis</orgname>
-  </affiliation>
-</author>
-
-<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
-  <affiliation><orgname>University of California at Davis</orgname>
-               <orgdiv>Department of Statistics</orgdiv>
-  </affiliation>
-</author>
-</articleinfo>
-
-<abstract>
-
-<para>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Experiments in Compiling R Code</title><link rel="stylesheet" type="text/css" href="/Users/duncan/Classes/StatComputing/XDynDocs/inst/CSS/OmegaTech.css"></link><meta name="generator" content="DocBook XSL Stylesheets V1.76.1"></meta>
+<link xmlns="" rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/tabview/assets/skins/sam/tabview.css">
+<script xmlns="" type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script xmlns="" type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/element/element-min.js"></script>
+<script xmlns="" type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/tabview/tabview-min.js"></script>
+<script xmlns="" type="text/javascript" src="/Users/duncan/Classes/StatComputing/XDynDocs/inst/JavaScript/yahooTabUtils.js"></script>
+<script xmlns="" type="text/javascript" src="http://www.omegahat.org/DynDocs/JavaScript/toggleHidden.js"></script>
+</head><body class="yui-skin-sam">
+<script xmlns="" type="text/javascript"><!--
+var toggleCodeIds = [
+ 
+];
+--></script><p xmlns=""></p>
+<div class="article" title="Experiments in Compiling R Code"><div class="titlepage"><div><div><h2 class="title"><a id="id36047848"></a>Experiments in Compiling R Code</h2></div><div><div class="author"><h3 class="author"><span class="firstname">Vincent</span> <span class="surname">Buffalo</span></h3><div class="affiliation"><span class="orgname">University of California at Davis<br></br></span></div></div></div><div><div class="author"><h3 class="author"><span class="firstname">Duncan</span> <span class="surname">Temple Lang</span></h3><div class="affiliation"><span class="orgname">University of California at Davis<br></br></span> <span class="orgdiv">Department of Statistics<br></br></span></div></div></div></div><hr></hr></div><div class="abstract" title="Abstract"><div class="titlepage"></div><p>
 We describe some experiments and an approach to compiling
 R code to native machine instructions.
 The primary goal is to make R code execute significantly
@@ -30,13 +23,7 @@ An important part of our approach is exploiting information
 about the type of R objects. We rely on the caller providing 
 this information at present.
 
-</para>
-
-</abstract>
-
-<section>
-<title>Background</title>
-<para>
+</p></div><div class="section" title="Background"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id36292671"></a>Background</h2></div></div></div><p>
 It is clear that using high-level programming languages such as R,
 MATLAB, Python and Perl lead to improved productivity and use of human
 time.  However, these interpreted languages often lead to code that is
@@ -57,8 +44,7 @@ make it run ten or one hundred times faster.
 Motivated by this expectation, we have developed a prototype system
 for compiling R code to machine code that exploits the types of the
 different R objects to attain significant speed-up in the execution of the code.
-</para>
-<para>
+</p><p>
 This paper describes our initial experiments with compiling R code to
 machine instructions by leveraging a third party library - LLVM, the
 Low-Level Virtual Machine.  LLVM is a C++ library that facilitates
@@ -75,83 +61,30 @@ community.  The optimization passes of the code this library presents,
 and continues to provide, makes this a promising direction to which we
 can connect compilation of R code.
 
-</para>
-
-</section>
-<section>
-<title></title>
-
-
-
-<para>
-A very important motivation to us in this approach is that we are
-building on work of a vibrant, reasonably large community, i.e. the
-LLVM developers and users, that will continue to maintain, adapt and
-improve LLVM to future platforms and opportunities.  We can develop a
-compiler ourselves within the R or statistics community, but we feel
-that there are too few of us to maintain and develop this successfully
-in the future.  We applaud those who are doing this as it is a
-worthwhile endeavor.  However, there is a great deal of expertise in
-the community studying compiler construction and optimization.  There
-are numerous optimization stages/phases in a compiler ranging from
-constant foding to dead-code elimination to register allocation to
-cache coherency and many more.  As the state of the art in this area
-continues to develop, we want to passively benefit from these
-advances.  We do not want to have to manually import the results of
-this research into our work but rather update versions of software
-that implement them for us.  Furthermore, developing a new virtual
-machine which is optimal for the R language requires that we maintain
-and enhance that.  By leveraging the generic virtual machine (LLVM)
-that is mapped to actual machine instructions on various different
-platforms, we gain performance and lack of responsibility for
-implementing, maintaining and importantly documenting the virtual
-machine.  Many people can contribute to the virtual machine and the
-compiler from many different communities and we reap the benefit of
-this cumulative effort.  So our work represents an experiment in
-adjoining our work to that of an ongoing community. We give up control
-of the compiler and virtual machine, but gain the work of others, the
-standardized approach.  In many respects, this is the Open Source
-model. Unfortunately, it is one that we do not regularly embrace in
-the statistical computing community. We might do well to be more eager
-to use the ongoing work of others rather than simply re-implement it
-ourselves.
-</para>
-
-
-
-<para>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id36292692"></a></h2></div></div></div><p>
+A very important motivation to us  in this approach
+is that we are building on work of a vibrant, reasonably 
+large community, i.e. the LLVM developers and users, 
+that will continue to maintain,  adapt and improve 
+LLVM to future platforms and opportunities.
+We can develop a compiler ourselves within the R
+or statistics community, but we feel that there are too
+few of us to maintain and develop this successfully in the future.
+We applaud those who are doing this as it is a worthwhile endeavor.
+</p><p>
 We are making extensive use of information of the types of each variable.
 At present, the caller is required to specify this information for every
 variable.  We can make this system a great deal smarter and infer the types
 of intermediate variables in many cases. We may even be able to infer the
-types of <citation>DiamondRuby</citation>
-</para>
+types of [<span class="citation">DiamondRuby</span>]
 
-<para>
-Our work is greatly simplified by the LLVM framework as our task is
-mostly to translate R expressions into LLVM instructions. Much of this
-is quite straightforward.  There are several aspects of the R language
-that complicate this but many can be dealt with quite easily.  We can
-rewrite the R expressions via relatively simple analysis of the R
-expressions and some simple manipulation of these same expressions.
-</para>
-
-
-</section>
-<section>
-<title>Future Directions</title>
-
-<para>
+</p></div><div class="section" title="Future Directions"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id36292714"></a>Future Directions</h2></div></div></div><p>
 We plan to make our compiler handle more R idioms
 and language features.
-</para>
-
-<para>
+</p><p>
 We will provide interfaces to more of the LLVM C++ API from
 within R.
-</para>
-
-<para>
+</p><p>
 We plan to analyze R functions and scripts
 so that we can identify where copying 
 R objects can be avoided, given that we are running
@@ -159,10 +92,4 @@ in a special "optimized" mode.
 The CodeDepends package will help here in identifying
 where variables are no longer used,
 when they are redefined, etc.
-</para>
-
-
-
-
-</section>
-</article>
+</p></div></div></body></html>

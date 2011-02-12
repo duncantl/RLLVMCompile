@@ -28,7 +28,8 @@ checkArgs <- function(args, types, fun) {
 }
 
 getArgs <- function(expr, env = NULL, ir = NULL) {
-  # Converts to list
+  # Converts to list; TODO this is no longer used by any code -
+  # candidate for removal
   if(typeof(expr) != "language")
      stop("expr must be of type 'language' in getArgs")
   ans = sapply(expr[-1], function(x) x)

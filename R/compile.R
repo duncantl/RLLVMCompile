@@ -142,6 +142,8 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
   e
 
 
+SPECIAL.UNARY <- c('-') # TODO
+
 compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
@@ -297,8 +299,10 @@ BuiltInRoutines  =
   list(exp = list(DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType))
 
+
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, LogicOps, ":", "=", "<-", "[<-",
                         "for", "if", "while", "repeat", "(", "!") # for now
+
 
 compileCalledFuncs =
   #
