@@ -1,0 +1,9 @@
+<notes>
+<note>
+The compile function for an LLVM Instruction or Value object
+is a no-op. It just returns the input value.
+This allows us to examine types on the R expression and
+then compile the expression if we cannot determine the type 
+and see what we get from the LLVM object.
+</note>
+</notes>

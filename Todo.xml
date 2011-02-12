@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<?xml-stylesheet type="text/xsl" href="../OmegahatXSL/Todo.xsl" ?>
+<?xml-stylesheet type="text/xsl" href="../OmegahatXSL/XSL/OmegahatXSL/Todo.xsl" ?>
 
 <topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org"
 	>
@@ -9,6 +9,13 @@
 
 <items>
 
+<item>
+Compile the not() function to test the ! operator.
+</item>
+
+<item>
+Logical data type
+</item>
 <item>
 Does run() in Rllvm return the mutable parameters?
 </item>
@@ -169,6 +176,12 @@ foo = function(x) if(x < 10) 100L
 ]]></r:code>
 At least identify these for the person calling compile and ask for a default
 value. <r:na/> can work for certain types.
+<br/>
+See insertReturn in utils.R.
+This will work for simple cases. But not for  cases with if, while,
+for. Here we will have to jump out of those local blocks and then return
+from the routine.  So we will need to change the code that would return to assign to a
+fixed variable (e.g. .return) and then jump to the end block
 </item>
 
 <item>
@@ -251,6 +264,7 @@ Add connections to the different blocks, i.e.
 </topic>
 <topic>
 <title>Type Inference</title>
+<items>
 <item>
 Identify const variables.
 </item>
@@ -270,7 +284,7 @@ functions.
 Figure out the output from a function based on its inputs
 and the functions it calls.
 </item>
+</items>
 </topic>
-
 </topics>
 

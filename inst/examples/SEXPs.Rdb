@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude"
+	xmlns:c="http://www.C.org">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+Consider the following simple R function
+
+<r:function><![CDATA[
+inplace =
+function(x) {
+  for(i in 2:length(x)) 
+     x[i] = 2 * i
+
+  return(x)
+}
+]]></r:function>
+(The return is currently here to simplify the work of our compiler.)
+
+We could compile this to a routine that takes a  double* and a length
+and returns a double*.
+The problem is the return value. When it is returned to R,
+somebody has to turn it into a regular numeric SEXP.
+We don't know that the memory is owned by another SEXP,
+and we don't know the length of the array, i.e. the number
+of elements.
+</para>
+<para>
+We could turn the double * into a numeric vector via the R C-level API.
+But perhaps a better alternative is to define two routines:
+one which takes the R SEXP object, and then calls the second routine
+which is given the double* and the length.
+This requires a little more analysis than simple translation of 
+each expression into LLVM instructions.
+</para>
+<para>
+The result would look something like (in C code)
+
+<c:code>
+SEXP inplace(SEXP x)
+{
+  inplace_helper(REAL(x), Rf_length(x));
+  return(x);
+}
+</c:code>
+The inplace_helper routine would be
+<c:code><![CDATA[
+double *
+inplace_helper(double *, int len)
+{
+   for(int i = 0; i < len; i++)
+     x[i] = 2 * i;
+   return(x)
+}
+]]></c:code>
+</para>
+<para>
+Let's try to implement this with the existing 
+compiler code. (As of Thu Feb 13.)
+Let's introduce a type for an SEXP with the R variable
+<r:var>SEXPType</r:var>.
+We do this in Rllvm.
+For the moment, we
+
+<r:code>
+
+</r:code>
+
+</para>
+<para>
+What does this involve in our translation/compilation steps?
+Firstly, we have to 
+When we see length(x)
+
+
+
+</para>
+
+</section>
+</article>

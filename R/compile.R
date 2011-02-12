@@ -2,7 +2,8 @@
 # Some of this is inspired by Tierney's compiler package.
 
 
-MathOps = c("+", "-", "*", "/", "%/%")
+MathOps = c("+", "-", "*", "/", "%/%", "^")
+LogicOps = c("<", ">", "<=", ">=", "!=", "==", "!")
 
 XXXX.assignHandler =
 function(call, env, ir)
@@ -74,18 +75,30 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
   # each expression.
 function(exprs, env, ir, fun = env$.fun, name = getName(fun))
 {
+  insertReturn(exprs)
   if(as.character(exprs[[1]]) != "{")
       compile(exprs, env, ir, fun = fun, name = name)
   else {
     exprs = exprs[-1]
-    for (i in seq_along(exprs)) {
+    idx = seq_along(exprs)
+    for (i in idx) {
         cur = ir$getInsertBlock()
         if(length(getTerminator(cur))) {
 
             break
          }
-        compile(exprs[[i]], env, ir, fun = fun, name = name)
-    }
+         compile(exprs[[i]], env, ir, fun = fun, name = name)
+#        # One approach to handling the lack of an explicit return is to
+#        # create the return instruction ourselves, or to add a return
+#        # around the call before we compile. The advantage of the latter
+#        # is that any code generation that we write to ensure the correct
+#        # return type on the expressions e.g. return(x + 1) will do the correct
+#        # thing on the x + 1 part, not later converting the value.
+#      if(i == idx[length(idx)] && !is.call(exprs[[i]]) || exprs[[i]][[1]] != as.name('return')) { # last one
+#        ir$createReturn(val)
+#      } else
+#        val
+      }
   }
 }
 
@@ -132,6 +145,9 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
+    if(is(e, "Value") || is(e, "Instruction"))
+      return(e)
+    
     if (is.call(e)) {
            # Recursively compile arguments
       call.op <- findCall(e[[1]], env$.compilerHandlers)
@@ -144,7 +160,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
     } else if (isNumericConstant(e)) {
-      cat("createContant for '", e, "'\n", sep='') # TODO when to use?
+      cat("createConstant for '", e, "'\n", sep='') # TODO when to use?
       return(as.numeric(e))  # that's not an llvm object !?
     } else
       stop("can't compile objects of class ", class(e))
@@ -187,12 +203,23 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, mod)
 
+
+    if(any(.globals$functions %in% names(BuiltInRoutines))) {
+       i = match(.globals$functions, names(BuiltInRoutines), 0)
+       .routineInfo = BuiltInRoutines[ i ]
+       .globals$functions = .globals$functions[i == 0]
+    }
+
+
     if(length(.routineInfo))
         processExternalRoutines(mod, .funcs = .routineInfo)
 
-    if(length(.globals)) { #  missing(.functionInfo) || length(.functionInfo)) {
+    if(length(.globals$functions)) {
        compileCalledFuncs(.globals, mod, .functionInfo)
     }
+
+    if(length(.globals$variables))
+       compileGlobalVariables(.globals$variables, mod, env, ir)
     
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
@@ -221,7 +248,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
        llvm.fun
     
   } else
-     stop("compileFunction can only handle closures")
+     stop("compileFunction can only handle closures. Failing on ", name)
 }
 
 makeCompileEnv =
@@ -265,8 +292,13 @@ function(def, name, mod)
   fun
 }
 
+BuiltInRoutines  =
+        # These should be understood to be vectorized also.
+  list(exp = list(DoubleType, DoubleType),
+       sqrt = list(DoubleType, DoubleType))
 
-ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, ":", "=", "<-", "[<-", "for", "if", "while", "repeat") # for now
+ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, LogicOps, ":", "=", "<-", "[<-",
+                        "for", "if", "while", "repeat", "(", "!") # for now
 
 compileCalledFuncs =
   #
@@ -310,4 +342,31 @@ function(fun, compiledFun)
   body(fun) = k
   environment(fun) = e
   fun
+}
+
+
+isMutableRObject =
+function(var)
+{
+   where = sapply(var, function(x) find(x)[1])
+   if(any(is.na(where)))
+     stop("Cannot find variables ", paste(var[is.na(where)], collapse = ", "))
+
+   var %in% ".GlobalEnv"
+}
+
+compileGlobalVariables =
+function(varNames, mod, env, ir,
+          mutable = sapply(varNames, isMutableRObject))
+{
+
+   ctx = getGlobalContext()
+   sapply(varNames[!mutable],
+           function(var) {
+             val = createConstant(ir, get(var), context = ctx)   
+             createGlobalVariable(var, val, mod, constant = TRUE)
+           })
+
+#
+   #XX create variables for the mutable ones.
 }

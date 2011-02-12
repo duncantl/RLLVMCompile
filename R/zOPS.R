@@ -30,7 +30,6 @@ CompilerHandlers <-
            )
 
 
-LogicOps = c("<", ">", "<=", ">=", "!=", "==")
 CompilerHandlers[LogicOps] = replicate(length(LogicOps), logicOpHandler, simplify = FALSE)
 CompilerHandlers[MathOps] = replicate(length(MathOps), mathHandler, simplify = FALSE)
 
