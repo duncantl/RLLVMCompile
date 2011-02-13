@@ -3,3 +3,6 @@
 
 %.llcpp: %.bc
 	llc -march=cpp $< -o $@
+
+# TODO make a target for something like 
+# llvm-gcc -emit-llvm not.c -S -o not.s

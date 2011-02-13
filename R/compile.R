@@ -232,10 +232,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.types = types
     nenv$.module = mod
     nenv$.compilerHandlers = .compilerHandlers
-    
-        # store returnType for use with OP$`return`
-    assign('.returnType', returnType, envir = nenv)    # probably want . preceeding the name.
-
+    nenv$.returnType = returnType
+     
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
     if(optimize)

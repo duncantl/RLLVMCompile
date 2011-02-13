@@ -1,4 +1,38 @@
-## Compiler ##
+
+basic.types = substitute(c(Int16Type, Int1Type, Int32PtrType,
+  Int32Type, Int64Type, Int8Type, VoidType,
+  FloatPtrType, FloatType, DoublePtrType, DoubleType))
+
+btnames = sapply(basic.types[-1], deparse)
+basic.types = sapply(basic.types[-1], eval)
+names(basic.types) = btnames
+
+reverseLookupType =
+# Given an external pointer, find the corresponding name for this
+# type. This is useful for debugging when Rllvm crashes and printing
+# everything in an environment.
+function(type) {
+  n <- which(sapply(basic.types, function(x) identical(x, type)))
+  if (!length(n))
+    return(NA)
+  names(n)
+}
+
+prettyEnv =
+# Print all the goodies in an environment. Maybe give compile
+# environments a class and make this a method.
+function(env) {
+  cat(sprintf("Return type: %s\n", reverseLookupType(env$.returnType)))
+
+  cat("Parameters:\n") # no way to get type
+  cat(paste(names(env$.params), collapse=", "), "\n")
+
+  cat("Types:\n")
+  for (i in seq_along(env$.types)) {
+    cat(sprintf(" %s: %s\n", names(env$.types)[[i]], reverseLookupType(env$.types[[i]])))
+  }
+}
+
 findVar <- function(var, env) {
   return(mget(as.character(var), envir=env, ifnotfound=NA))
 }
@@ -39,12 +73,13 @@ getArgs <- function(expr, env = NULL, ir = NULL) {
     ans
 }
 
-isNumericConstant <- function(expr) {
-  # TODO no complex cases yet
-  if (class(expr) %in% c('numeric', 'integer'))
-    return(TRUE)
-  return(FALSE)
-}
+
+## isNumericConstant <- function(expr) {
+##   # TODO no complex cases yet
+##   if (class(expr) %in% c('numeric', 'integer'))
+##     return(TRUE)
+##   return(FALSE)
+## }
 
 
 getVariable =

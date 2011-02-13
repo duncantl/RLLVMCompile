@@ -18,7 +18,7 @@ CompilerHandlers <-
               checkArgs(args, list('ANY'), 'return')
 
               if(is.name(args[[1]]))
-                val = createLoad(ir, findVar(args[[1]], env)[[1]])
+                val = getVariable(args[[1]], env, ir, load=TRUE, ...)
               else if (is.call(args[[1]]))
                 val = compile(args[[1]], env, ir)
               else if (is.numeric(args[[1]])) {
