@@ -68,8 +68,12 @@ function(val, env)
   Int32Type
 }
 
-getType.ConstantFP =
+getType.ConstantFP = 
 function(val, env)    
 {
   DoubleType
 }
+
+getType.default =
+function(val, env)
+  return(NULL)

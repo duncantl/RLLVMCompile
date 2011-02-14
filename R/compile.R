@@ -45,9 +45,14 @@ function(call, env, ir, ...)
    if(is.name(args[[1]])) {
       var = as.character(args[[1]])
       ref <- getVariable(var, env, ir, load = FALSE)
-      browser()
       if(is.null(ref)) {
-         type = getType(val, env)
+        type = getType(val, env) ## Do we want to do this here? what about x = c + x
+        if (is.null(type)) {
+          # can we infer the type from the nested calls?
+          type = inferType(call[[3]], env) ## deeper inspection
+                                           ## needed; for now just
+                                           ## assuming this is 1 call
+        }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
