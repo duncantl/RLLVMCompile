@@ -45,6 +45,7 @@ function(call, env, ir, ...)
    if(is.name(args[[1]])) {
       var = as.character(args[[1]])
       ref <- getVariable(var, env, ir, load = FALSE)
+      browser()
       if(is.null(ref)) {
          type = getType(val, env)
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
@@ -236,7 +237,10 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
-    if(optimize)
+    ## This may ungracefully cause R to exit, but it's still
+    ## preferably to the crash Optimize() on an unverified module
+    ## creates.
+    if(optimize && verifyModule(mod))
        Optimize(mod)
      
     if(asFunction) {

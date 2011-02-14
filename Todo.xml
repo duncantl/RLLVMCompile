@@ -301,6 +301,13 @@ functions.
 Figure out the output from a function based on its inputs
 and the functions it calls.
 </item>
+
+
+<item status="done">
+Add returning correct Null in R_Module_getGlobalVariable in Rllvm so
+assignHandler gets to second condition.
+</item>
+
 </items>
 </topic>
 </topics>
