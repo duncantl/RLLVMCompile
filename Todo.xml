@@ -275,6 +275,10 @@ Add connections to the different blocks, i.e.
   Handle unary "-".
 </item>
 
+<item status="done">
+Add returning correct Null in R_Module_getGlobalVariable in Rllvm so
+assignHandler gets to second condition.
+</item>
 
 </items>
 </topic>
@@ -300,6 +304,9 @@ functions.
 Figure out the output from a function based on its inputs
 and the functions it calls.
 </item>
+
+
+
 </items>
 </topic>
 </topics>

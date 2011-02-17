@@ -46,7 +46,13 @@ function(call, env, ir, ...)
       var = as.character(args[[1]])
       ref <- getVariable(var, env, ir, load = FALSE)
       if(is.null(ref)) {
-         type = getType(val, env)
+        type = getType(val, env) ## Do we want to do this here? what about x = c + x
+        if (is.null(type)) {
+          # can we infer the type from the nested calls?
+          type = inferType(call[[3]], env) ## deeper inspection
+                                           ## needed; for now just
+                                           ## assuming this is 1 call
+        }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
@@ -161,9 +167,6 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
-    } else if (isNumericConstant(e)) {
-      cat("createConstant for '", e, "'\n", sep='') # TODO when to use?
-      return(as.numeric(e))  # that's not an llvm object !?
     } else
       stop("can't compile objects of class ", class(e))
 }
@@ -171,7 +174,8 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 
 compileFunction <-
-function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFunction = FALSE,
+function(fun, returnType, types = list(), mod = Module(name), name = NULL,
+         asFunction = FALSE, asList = FALSE,
          optimize = TRUE, ...,
          .functionInfo = list(...),
          .routineInfo = list(),
@@ -234,19 +238,21 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL, asFun
     nenv$.types = types
     nenv$.module = mod
     nenv$.compilerHandlers = .compilerHandlers
-    
-        # store returnType for use with OP$`return`
-    assign('.returnType', returnType, envir = nenv)    # probably want . preceeding the name.
-
+    nenv$.returnType = returnType
+     
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
-    if(optimize)
+    ## This may ungracefully cause R to exit, but it's still
+    ## preferably to the crash Optimize() on an unverified module
+    ## creates.
+    if(optimize && verifyModule(mod))
        Optimize(mod)
      
-#   return(list(mod=mod, fun=llvm.fun, env = nenv))
     if(asFunction) {
        makeFunction(fun, llvm.fun)
-    } else
+    } else if (asList)
+      return(list(mod=mod, fun=llvm.fun, env = nenv))
+    else
        llvm.fun
     
   } else
