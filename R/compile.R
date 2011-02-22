@@ -46,12 +46,10 @@ function(call, env, ir, ...)
       var = as.character(args[[1]])
       ref <- getVariable(var, env, ir, load = FALSE)
       if(is.null(ref)) {
-        type = getType(val, env) ## Do we want to do this here? what about x = c + x
+        type = getType(val, env)
         if (is.null(type)) {
-          # can we infer the type from the nested calls?
-          type = inferType(call[[3]], env) ## deeper inspection
-                                           ## needed; for now just
-                                           ## assuming this is 1 call
+          # Variable not found in env or global environments; get type via Rllvm
+          type = Rllvm::getType(val)
         }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
