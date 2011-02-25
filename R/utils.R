@@ -83,7 +83,7 @@ getArgs <- function(expr, env = NULL, ir = NULL) {
 
 
 getVariable =
-function(sym, env, ir = NULL, load = TRUE, ...)
+function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
 {
 
   sym = as.character(sym)
@@ -96,7 +96,7 @@ function(sym, env, ir = NULL, load = TRUE, ...)
              ir$createLoad(tmp)
           else
             tmp
-        } else if(sym %in% names(env$.params)) {
+        } else if(search.params && sym %in% names(env$.params)) {
           env$.params[[sym]]
         } else
             # find in the module.

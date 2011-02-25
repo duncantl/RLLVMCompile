@@ -41,14 +41,21 @@ function(call, env, ir)
 function(call, env, ir, ...)
 {
    args = call[-1]  # drop the =
+
    val = compile(args[[2]], env, ir)
+
    if(is.name(args[[1]])) {
       var = as.character(args[[1]])
-      ref <- getVariable(var, env, ir, load = FALSE)
+
+      # We don't search parameters for the var name, since we don't
+      # want to try to assign over a parameter name.
+      ref <- getVariable(var, env, ir, load = FALSE, search.params=FALSE)
       if(is.null(ref)) {
         type = getType(val, env)
         if (is.null(type)) {
           # Variable not found in env or global environments; get type via Rllvm
+          if (is(val, "StoreInst"))
+            val = getVariable(var, env, ir, load=FALSE)
           type = Rllvm::getType(val)
         }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
@@ -57,7 +64,7 @@ function(call, env, ir, ...)
    } else {
       ref = compile(args[[1]], env, ir, ..., load = FALSE)
    }
-   
+
    ans = ir$createStore(val, ref)
    ans
 }
