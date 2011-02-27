@@ -54,7 +54,6 @@ CompilerHandlers <-
                 ## fun = casters[[i]]
                 ## val = fun(ir, val, Int32Type)
               }
-              print(val)
               ir$createReturn(val)
             },
             '[' = subsetHandler,

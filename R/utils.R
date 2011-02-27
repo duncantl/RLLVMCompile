@@ -191,7 +191,6 @@ function(ir, toType, fromType, val) {
 
   ## checking needed here
   fun = casters[[i]]
-  print(fun)
   ins = fun(builder=ir, val=val, type=toType)
   return(ins)
 }
