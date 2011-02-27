@@ -17,20 +17,44 @@ CompilerHandlers <-
                     # TODO check types -- how?
               checkArgs(args, list('ANY'), 'return')
 
-              if(is.name(args[[1]]))
+              argType = NULL
+              if(is.name(args[[1]])) {
                 val = getVariable(args[[1]], env, ir, load=TRUE, ...)
-              else if (is.call(args[[1]]))
+                argType = getTypes(args[[1]], env)@ref
+              } else if (is.call(args[[1]])) {
                 val = compile(args[[1]], env, ir)
-              else if (is.numeric(args[[1]])) {
+              } else if (is.numeric(args[[1]])) {
                 if (is.integer(args[[1]]))
                   val = createIntegerConstant(as.integer(args[[1]]))
-                if (is.double(args[[1]])) ## This still doesn't handle
-                                          ## special unary types, so
-                                          ## return(-1L) doesn't work.
+                if (is.double(args[[1]]))
                   val = createDoubleConstant(as.double(args[[1]]))
               } else
                  val = args[[1]]
-              
+
+              # What's the current type of the arugment?
+
+              if (is.null(argType)) {
+                argType = Rllvm::getType(val)
+                if (is(argType, "Type"))
+                  argType = argType@ref ## get externalptr
+                else
+                  stop("Could not getType.")
+              }
+
+              if (!identical(argType, env$.returnType)) {
+                message("Coercing type of return!")
+                # We need to coerce types
+
+                val = createCast(ir, env$.returnType, argType, val)
+                ## toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType)
+                ## fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type)
+                ## casters = c(CreateSIntToFPInst, CreateFPToSIInst)
+                
+                ## i <- which(sapply(fromTypes, function(x) identical(argType, x)))
+                ## fun = casters[[i]]
+                ## val = fun(ir, val, Int32Type)
+              }
+              print(val)
               ir$createReturn(val)
             },
             '[' = subsetHandler,

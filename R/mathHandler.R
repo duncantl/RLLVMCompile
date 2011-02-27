@@ -46,13 +46,14 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   e = lapply(call[-1], function(x)
                        if(is(x, "numeric")) {
                           if(isIntType)
-                             createIntegerConstant(as.integer(x))
+                            createIntegerConstant(as.integer(x))
                           else
                              createDoubleConstant(as.numeric(x))
                        } else if(is.name(x)) {
                          if (!is.null(toCast) && x == toCast) {
                            # Casting to double needed
-                           return(ir$CreateSIntToFPInst(getVariable(x, env, ir), DoubleType))
+                           return(createCast(ir, DoubleType, Int32Type,
+                                             getVariable(x, env, ir)))
                          } else 
                            getVariable(x, env, ir)
                        } else

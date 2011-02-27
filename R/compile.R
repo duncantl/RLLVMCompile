@@ -54,7 +54,7 @@ function(call, env, ir, ...)
         type = getType(val, env)
         if (is.null(type)) {
           # Variable not found in env or global environments; get type via Rllvm
-          if (is(val, "StoreInst"))
+          if (is(val, "StoreInst")) ## TODO: make method?
             val = getVariable(var, env, ir, load=FALSE)
           type = Rllvm::getType(val)
         }
@@ -151,9 +151,6 @@ compile.Value <-
   # This is just an LLVM value
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
   e
-
-
-SPECIAL.UNARY <- c('-') # TODO
 
 compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  

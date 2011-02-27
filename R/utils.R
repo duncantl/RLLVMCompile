@@ -173,3 +173,25 @@ function(expr, nested = FALSE, ...)
   expr[[3]] = insertReturn(expr[[3]], nested = TRUE)
   expr
 }
+
+
+createCast =
+# Add a cast instruction; should this be in Rllvm?
+# So far this only works with Int32Type and DoubleType
+function(ir, toType, fromType, val) {
+  if (identical(toType, fromType))
+    stop("No need to cast: toType and fromType are same.")
+
+  #browser()
+  toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType)
+  fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type)
+  casters = c(CreateFPToSIInst, CreateSIntToFPInst)
+
+  i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
+
+  ## checking needed here
+  fun = casters[[i]]
+  print(fun)
+  ins = fun(builder=ir, val=val, type=toType)
+  return(ins)
+}
