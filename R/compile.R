@@ -41,7 +41,6 @@ function(call, env, ir)
 function(call, env, ir, ...)
 {
    args = call[-1]  # drop the =
-
    val = compile(args[[2]], env, ir)
 
    if(is.name(args[[1]])) {
@@ -51,12 +50,21 @@ function(call, env, ir, ...)
       # want to try to assign over a parameter name.
       ref <- getVariable(var, env, ir, load = FALSE, search.params=FALSE)
       if(is.null(ref)) {
+        # No existing variable; detect type and create one.
         type = getType(val, env)
         if (is.null(type)) {
           # Variable not found in env or global environments; get type via Rllvm
-          if (is(val, "StoreInst")) ## TODO: make method?
-            val = getVariable(var, env, ir, load=FALSE)
-          type = Rllvm::getType(val)
+          if (is(val, "StoreInst")) {
+            # This is from the val = compile(); probably from a
+            # statement like: y <- 4L; x <- y. When args[[2]] is
+            # compiled above, getVariable returns an object of class
+            # StoreInst. We ignore the current val, and instead query
+            # the type from the variable.
+            type = getType(args[[2]], env)
+          }
+
+          if (is(val, "Value"))
+            type = Rllvm::getType(val)
         }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
@@ -66,7 +74,10 @@ function(call, env, ir, ...)
    }
 
    ans = ir$createStore(val, ref)
-   ans
+   val  # return value - I changed this to val from ans. There seems
+        # to be very little we can do with the object of class
+        # StoreInst. Note: this seems to be the way it's done here
+        # too: http://llvm.org/docs/tutorial/LangImpl7.html
 }
 
 
@@ -307,9 +318,10 @@ BuiltInRoutines  =
   list(exp = list(DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType))
 
-
-ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, LogicOps, ":", "=", "<-", "[<-",
-                        "for", "if", "while", "repeat", "(", "!") # for now
+# Should this just be names of CompilerHandlers
+ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, LogicOps, ":",
+                        "=", "<-", "[<-", '[', "for", "if", "while",
+                        "repeat", "(", "!") # for now
 
 
 compileCalledFuncs =
@@ -337,7 +349,7 @@ function(globalInfo, mod, .functionInfo = list())
                                 mod = mod, name = id
                                )
              } else
-               compileFunction(funs[[id]], mod = mod, name = id)             
+               compileFunction(funs[[id]], mod = mod, name = id)
            })
 }
 

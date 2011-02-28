@@ -176,21 +176,23 @@ function(expr, nested = FALSE, ...)
 
 
 createCast =
-# Add a cast instruction; should this be in Rllvm?
-# So far this only works with Int32Type and DoubleType
+# Add a cast instruction; should this be in Rllvm?  So far this only
+# works with Int32Type, DoubleType, and DoublePtrType.  createLoad is
+# used to dereference pointers (of single values - this is temporary
+# and unsafe in some cases). 
 function(ir, toType, fromType, val) {
   if (identical(toType, fromType))
     stop("No need to cast: toType and fromType are same.")
 
-  #browser()
-  toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType)
-  fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type)
-  casters = c(CreateFPToSIInst, CreateSIntToFPInst)
+  toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType, DoubleType=DoubleType)
+  fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type, DoubleType=DoublePtrType)
+  casters = c(CreateFPToSIInst, CreateSIntToFPInst,
+    function(ir, val, ...) createLoad(ir, val))
 
   i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
 
   ## checking needed here
   fun = casters[[i]]
-  ins = fun(builder=ir, val=val, type=toType)
+  ins = fun(ir, val, toType)
   return(ins)
 }

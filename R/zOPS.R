@@ -20,7 +20,11 @@ CompilerHandlers <-
               argType = NULL
               if(is.name(args[[1]])) {
                 val = getVariable(args[[1]], env, ir, load=TRUE, ...)
-                argType = getTypes(args[[1]], env)@ref
+
+                argType = getType(args[[1]], env)
+                if (is(argType, "Type"))
+                  argType = argType@ref
+                
               } else if (is.call(args[[1]])) {
                 val = compile(args[[1]], env, ir)
               } else if (is.numeric(args[[1]])) {
@@ -45,14 +49,7 @@ CompilerHandlers <-
                 message("Coercing type of return!")
                 # We need to coerce types
 
-                val = createCast(ir, env$.returnType, argType, val)
-                ## toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType)
-                ## fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type)
-                ## casters = c(CreateSIntToFPInst, CreateFPToSIInst)
-                
-                ## i <- which(sapply(fromTypes, function(x) identical(argType, x)))
-                ## fun = casters[[i]]
-                ## val = fun(ir, val, Int32Type)
+                val = createCast(ir, env$.returnType, argType, val)                
               }
               ir$createReturn(val)
             },
