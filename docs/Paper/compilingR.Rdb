@@ -82,7 +82,6 @@ can connect compilation of R code.
 <title></title>
 
 
-
 <para>
 A very important motivation to us in this approach is that we are
 building on work of a vibrant, reasonably large community, i.e. the
@@ -136,6 +135,62 @@ rewrite the R expressions via relatively simple analysis of the R
 expressions and some simple manipulation of these same expressions.
 </para>
 
+
+</section>
+<section>
+<title>Details of compilation</title>
+
+<para>
+In this section, we describe some of the details about how our
+compiler processes R functions and translates them to LLVM instructions.
+For the most part, when dealing with scalars, 
+R is a regular programming language with a syntax and set of instructions
+that is similar to C and the machine instructions.
+This makes mapping R code to LLVM instructions quite straightforward.
+</para>
+<para>
+The <r:keyword>if</r:keyword> statement in R returns a value
+and that can be assigned to a variable.
+For example
+
+<r:code><![CDATA[
+ y = if(x < 10)
+         x + 3
+     else
+         x - 3
+]]></r:code>
+is legal in R.  In our compiler, we remap this to 
+<r:code><![CDATA[
+  if(x < 10)
+       y = x + 3
+     else
+       y = x - 3
+]]></r:code>
+There is an issue that we both have to declare a local variable
+y if it is not already defined, and we also have to ensure that the 
+type of this variable is the same in both (or more) branches.
+</para>
+
+<para>
+The return value of an R expression block ("{")
+is the value of the final expression. This means
+that programmers do not need to explicitly return a value
+but implicitly return the value of that last expression.
+As a result, we see functions such as
+
+<r:code>
+foo =
+function(x, y)
+{
+   log(x +  y ^ 2)
+}
+</r:code>
+without an explicit call to <r:keyword>return</r:keyword>.
+So we need to recognize these implicit <r:keyword>return</r:keyword>s.
+One approach is to pre-process the R code to insert <r:keyword>return</r:keyword>
+calls around these implicit statements.
+The <r:func>insertReturn</r:func> function does this.
+</para>
 
 </section>
 <section>

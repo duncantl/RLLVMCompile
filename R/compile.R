@@ -180,9 +180,15 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .functionInfo = list(...),
          .routineInfo = list(),
          .compilerHandlers = CompilerHandlers,
-         .globals = findGlobals(fun, merge = FALSE)
+         .globals = findGlobals(fun, merge = FALSE),
+         .insertReturn = TRUE
          )
 {
+  if(.insertReturn)
+     fun = insertReturn(fun)
+
+  fun = fixIfAssign(fun)  
+  
   ftype <- typeof(fun)
   if (ftype == "closure") {
 
@@ -220,9 +226,9 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     if(length(.routineInfo))
         processExternalRoutines(mod, .funcs = .routineInfo)
 
-    if(length(.globals$functions)) {
+    if(length(.globals$functions)) 
        compileCalledFuncs(.globals, mod, .functionInfo)
-    }
+
 
     if(length(.globals$variables))
        compileGlobalVariables(.globals$variables, mod, env, ir)
@@ -239,6 +245,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.module = mod
     nenv$.compilerHandlers = .compilerHandlers
     nenv$.returnType = returnType
+    nenv$.entryBlock = block
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 

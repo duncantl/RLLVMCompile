@@ -173,3 +173,12 @@ function(expr, nested = FALSE, ...)
   expr[[3]] = insertReturn(expr[[3]], nested = TRUE)
   expr
 }
+
+
+
+`insertReturn.function` =
+function(expr, nested = FALSE, ...)
+{
+   body(expr) = insertReturn(body(expr))
+   expr
+}

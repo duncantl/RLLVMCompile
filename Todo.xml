@@ -40,10 +40,12 @@ by specifying <r:arg>.globals</r:arg>.
 </item>
 
 <item>
-Handle default values for parameters.
+Handle default values for parameters in R functions.
 <br/>
 We can compile the code just before the first 
 expression at which that parameter is referenced.
+<br/>
+Need to know about missing. This is a feature of the call.
 </item>
 
 <item>
@@ -73,7 +75,7 @@ and add a new instruction to load x[i].
 </item>
 
 <item>
-Implement switch.
+Implement R's switch().
 </item>
 
 <item status="done">
@@ -192,7 +194,7 @@ from the routine.  So we will need to change the code that would return to assig
 fixed variable (e.g. .return) and then jump to the end block
 </item>
 
-<item>
+<item status="check">
 Create temporary variable for if statements 
 when we assign the value to a variable in R, e.g.
 
@@ -201,6 +203,9 @@ x = if(a < 1) "abc" else "def"
 ]]></r:code>
 Need to store the value from the expressions
 in the bodies of the if statement.
+<br/>
+Code is in ifAssign.R to rewrite these expressions.
+Now done automatically in 
 </item>
 
 

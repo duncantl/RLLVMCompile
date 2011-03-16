@@ -4,7 +4,7 @@
 # Same in R.
 
 inplace =
-function(x) {
+function(x, len) {
   for(i in 2:len) 
      x[i] = 2 * i
 

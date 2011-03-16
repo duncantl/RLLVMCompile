@@ -1,3 +1,7 @@
+#
+# fun = compileFunction(noreturn, Int32Type, list(Int32Type))
+#
+
 noreturn =
 function(x)
 {
