@@ -83,7 +83,7 @@ getArgs <- function(expr, env = NULL, ir = NULL) {
 
 
 getVariable =
-function(sym, env, ir = NULL, load = TRUE, ...)
+function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
 {
 
   sym = as.character(sym)
@@ -96,7 +96,7 @@ function(sym, env, ir = NULL, load = TRUE, ...)
              ir$createLoad(tmp)
           else
             tmp
-        } else if(sym %in% names(env$.params)) {
+        } else if(search.params && sym %in% names(env$.params)) {
           env$.params[[sym]]
         } else
             # find in the module.
@@ -181,4 +181,26 @@ function(expr, nested = FALSE, ...)
 {
    body(expr) = insertReturn(body(expr))
    expr
+}
+
+createCast =
+# Add a cast instruction; should this be in Rllvm?  So far this only
+# works with Int32Type, DoubleType, and DoublePtrType.  createLoad is
+# used to dereference pointers (of single values - this is temporary
+# and unsafe in some cases). 
+function(ir, toType, fromType, val) {
+  if (identical(toType, fromType))
+    stop("No need to cast: toType and fromType are same.")
+
+  toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType, DoubleType=DoubleType)
+  fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type, DoubleType=DoublePtrType)
+  casters = c(CreateFPToSIInst, CreateSIntToFPInst,
+    function(ir, val, ...) createLoad(ir, val))
+
+  i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
+
+  ## checking needed here
+  fun = casters[[i]]
+  ins = fun(ir, val, toType)
+  return(ins)
 }

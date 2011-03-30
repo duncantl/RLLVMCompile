@@ -19,28 +19,43 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
       
 
   
-     # Need to hadle the case where we have a literal and we can convert it to the
-     # target type.
-  
-  if(any( lit <- sapply(call[-1], is.numeric))) { # literals
-    targetType = getTypes(as.list(call[-1])[!lit][[1]], env)
-  } else {
-       #??? We may want to compile first and then determine types and then coerce.
-       # Compute the type of each, returning the LLVM type objects, e.g. DoubleType
-    types = lapply(call[-1], getTypes, env)
-     # Collapse these two types to the "common" type
-    targetType = getMathOpType(types)
+  # Need to handle the case where we have a literal and we can convert it to the
+  # target type.
+  toCast = NULL
+   
+  types = lapply(call[-1], getTypes, env)
+
+  lit <- sapply(call[-1], is.numeric) # literals
+   
+  if(any(lit)) {
+    # This has the problem that the literal will be coerced to the
+    # other type, a non-R behavior. TODO remove entirely?
+    ## targetType = getTypes(as.list(call[-1])[!lit][[1]], env)
   }
+
+  # Collapse these two types to the "common" type
+  targetType = getMathOpType(types)
+
+  # If any of the types are different from the targetType, we need
+  # to cast.
+  typeMatches = sapply(types, function(x) identical(x, targetType))
+  if (any(!typeMatches))
+    toCast = as.list(call[-1])[[which(!typeMatches)]]
+
   isIntType = identical(targetType, Int32Type)
   e = lapply(call[-1], function(x)
                        if(is(x, "numeric")) {
                           if(isIntType)
-                             createIntegerConstant(as.integer(x))
+                            createIntegerConstant(as.integer(x))
                           else
                              createDoubleConstant(as.numeric(x))
                        } else if(is.name(x)) {
-                            # Potentially have to cast based on the target type
-                         getVariable(x, env, ir)
+                         if (!is.null(toCast) && x == toCast) {
+                           # Casting to double needed
+                           return(createCast(ir, DoubleType, Int32Type,
+                                             getVariable(x, env, ir)))
+                         } else 
+                           getVariable(x, env, ir)
                        } else
                          compile(x, env, ir, ...))
 

@@ -310,7 +310,18 @@ Figure out the output from a function based on its inputs
 and the functions it calls.
 </item>
 
-
+<item>
+Handle variable reassignment; possibly by using a strategy of renaming
+variables. Are arguments immutable? Should this be treated exactly as
+it is in R?
+<r:code>
+t2 <- function(x) {
+  y <- 4L
+  x <- y
+  return(x)
+}
+</r:code>
+</item>
 
 </items>
 </topic>
