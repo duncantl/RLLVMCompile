@@ -17,6 +17,8 @@ CompilerHandlers <-
                     # TODO check types -- how?
               checkArgs(args, list('ANY'), 'return')
 
+
+              browser()
               argType = NULL
               if(is.name(args[[1]])) {
                 val = getVariable(args[[1]], env, ir, load=TRUE, ...)
@@ -27,6 +29,14 @@ CompilerHandlers <-
                 
               } else if (is.call(args[[1]])) {
                 val = compile(args[[1]], env, ir)
+                
+                # TODO We need to handle Rllvm calls in return
+                # statements more generally, but for now, this works
+                # for createNot (which returns an object of class
+                # BinaryOperator).
+                if (is(val, "BinaryOperator"))
+                  argType = Int32Type
+                browser()
               } else if (is.numeric(args[[1]])) {
                 if (is.integer(args[[1]]))
                   val = createIntegerConstant(as.integer(args[[1]]))

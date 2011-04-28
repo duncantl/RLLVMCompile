@@ -285,6 +285,19 @@ Add returning correct Null in R_Module_getGlobalVariable in Rllvm so
 assignHandler gets to second condition.
 </item>
 
+
+<item>
+Check for return - lacking return cases Rllvm to hardcrash, i.e.
+
+<r:code>
+function(x) {
+  if (!x)
+    return(3L)
+}
+</r:code>
+</item>
+
+
 </items>
 </topic>
 <topic>
