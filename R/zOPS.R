@@ -18,7 +18,7 @@ CompilerHandlers <-
               checkArgs(args, list('ANY'), 'return')
 
 
-              browser()
+#              browser()
               argType = NULL
               if(is.name(args[[1]])) {
                 val = getVariable(args[[1]], env, ir, load=TRUE, ...)
@@ -36,7 +36,7 @@ CompilerHandlers <-
                 # BinaryOperator).
                 if (is(val, "BinaryOperator"))
                   argType = Int32Type
-                browser()
+#                browser()
               } else if (is.numeric(args[[1]])) {
                 if (is.integer(args[[1]]))
                   val = createIntegerConstant(as.integer(args[[1]]))

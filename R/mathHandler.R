@@ -67,6 +67,6 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 
   op = codes[ as.character(call[[1]]) ]
 
-  ins = ir$binOp(op, e[[1]], e[[2]])
+  ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(call))
   ins
 }

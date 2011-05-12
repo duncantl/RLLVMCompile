@@ -47,6 +47,7 @@ function(type)
       stop("Need more implementation of the type of a pointer type")
 }
 
+# There is an S4 generic getType in llvm. Why not proide methods for that
 
 getType =
 function(val, env)

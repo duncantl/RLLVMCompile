@@ -4,7 +4,9 @@ function(call, env, ir, ...)
 
    if(length(call) == 2) {
      val = compile(call[[2]], env, ir, ...)
-     return(createNot(val, "xx", ir$getInsertBlock()))
+     not = ir$createNot(val)
+browser()     
+     return(not) #, "xx", ir$getInsertBlock()))
    }
   
     # need to handle the different ops
