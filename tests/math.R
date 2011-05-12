@@ -4,7 +4,7 @@ t1 <- function(x, y) {
   return(x + y)  
 }
 
-t1.c <- compileFunction(t1, DoubleType, list(x=DoubleType, y=DoubleType), asList=TRUE, optimize=FALSE)
+t1.c <- compileFunction(t1, DoubleType, list(x=DoubleType, y=DoubleType), asList=TRUE, optimize=FALSE)o
 stopifnot(verifyModule(t1.c$mod))
 
 
