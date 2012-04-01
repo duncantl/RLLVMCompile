@@ -1,6 +1,5 @@
 foo =
-function(x)
-{
+function(x) {
    z = 1L
    z = if(x < 0L)
           x + 2L
@@ -9,6 +8,21 @@ function(x)
 
    z + 3L
 }
+
+foo.alt =
+## Added this because foo is breaking, possible because of lack of `{`
+## or return()
+function(x) {
+   z = 1L
+   z = if (x < 0L) {
+          x + 2L
+        } else {
+          x - 2L
+        }
+
+   return(z + 3L)
+}
+
 
 bar =
 function(x)

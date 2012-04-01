@@ -174,8 +174,6 @@ function(expr, nested = FALSE, ...)
   expr
 }
 
-
-
 `insertReturn.function` =
 function(expr, nested = FALSE, ...)
 {
@@ -187,18 +185,27 @@ createCast =
 # Add a cast instruction; should this be in Rllvm?  So far this only
 # works with Int32Type, DoubleType, and DoublePtrType.  createLoad is
 # used to dereference pointers (of single values - this is temporary
-# and unsafe in some cases). 
+# and unsafe in some cases).  FIXME
 function(ir, toType, fromType, val) {
   if (identical(toType, fromType))
     stop("No need to cast: toType and fromType are same.")
 
-  toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType, DoubleType=DoubleType)
-  fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type, DoubleType=DoublePtrType)
-  casters = c(createFPToSI, createSIToFP,
-                function(ir, val, ...) createLoad(ir, val))
+  toTypes <- c(Int32Type=Int32Type,
+               DoubleType=DoubleType,
+               DoubleType=DoubleType)
+  fromTypes <- c(DoubleType=DoubleType,
+                 Int32Type=Int32Type,
+                 DoubleType=DoublePtrType)
+  casters <- c(createFPToSI,
+               createSIToFP,
+               function(ir, val, ...) createLoad(ir, val))
 
   i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
 
+  if (!length(i))
+    error(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
+    
+  
   ## checking needed here
   fun = casters[[i]]
   ins = fun(ir, val, toType)

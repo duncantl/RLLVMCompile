@@ -40,7 +40,7 @@ function(call, env, ir)
   # Second version here so I don't mess the other one up.
 function(call, env, ir, ...)
 {
-   args = call[-1]  # drop the =
+   args = call[-1]  # drop the = or <-
    val = compile(args[[2]], env, ir)
 
    if(is.name(args[[1]])) {
@@ -74,7 +74,7 @@ function(call, env, ir, ...)
    }
 
    ans = ir$createStore(val, ref)
-   val  # return value - I changed this to val from ans. There seems
+   val  # return value - I (Vince) changed this to val from ans. There seems
         # to be very little we can do with the object of class
         # StoreInst. Note: this seems to be the way it's done here
         # too: http://llvm.org/docs/tutorial/LangImpl7.html
@@ -97,7 +97,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
   # each expression.
 function(exprs, env, ir, fun = env$.fun, name = getName(fun))
 {
-  insertReturn(exprs)
+  #insertReturn(exprs)
   if(as.character(exprs[[1]]) != "{")
       compile(exprs, env, ir, fun = fun, name = name)
   else {
@@ -194,13 +194,12 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .routineInfo = list(),
          .compilerHandlers = CompilerHandlers,
          .globals = findGlobals(fun, merge = FALSE),
-         .insertReturn = TRUE
-         )
+         .insertReturn = FALSE)
 {
-  if(.insertReturn)
-     fun = insertReturn(fun)
+  if (.insertReturn)
+    fun = insertReturn(fun)
 
-  fun = fixIfAssign(fun)  
+  fun = fixIfAssign(fun)
   
   ftype <- typeof(fun)
   if (ftype == "closure") {
@@ -351,9 +350,9 @@ function(globalInfo, mod, .functionInfo = list())
              if(id %in% names(.functionInfo)) {
                types = .functionInfo[[id]]
                compileFunction(funs[[id]],
-                                types$returnType,
-                                types = types$params,
-                                mod = mod, name = id
+                               types$returnType,
+                               types = types$params,
+                               mod = mod, name = id
                                )
              } else
                compileFunction(funs[[id]], mod = mod, name = id)

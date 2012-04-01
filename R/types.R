@@ -24,6 +24,9 @@ function(obj, env, elementType = FALSE)
 
 
 getMathOpType =
+# Convenience function for checking types in math ops: if types are
+# same, return the common type; it not, return DoubleType (as this
+# will be what we should coerce to).
 function(types)
 {
    if( identical(types[[1]], types[[2]]) )
