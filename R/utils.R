@@ -194,7 +194,7 @@ function(ir, toType, fromType, val) {
 
   toTypes = c(Int32Type=Int32Type, DoubleType=DoubleType, DoubleType=DoubleType)
   fromTypes = c(DoubleType=DoubleType, Int32Type=Int32Type, DoubleType=DoublePtrType)
-  casters = c(createFPToSI, createSIntToFP,
+  casters = c(createFPToSI, createSIToFP,
                 function(ir, val, ...) createLoad(ir, val))
 
   i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
