@@ -199,7 +199,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
   if (.insertReturn)
     fun = insertReturn(fun)
 
-  fun = fixIfAssign(fun)
+  #fun = fixIfAssign(fun)
   
   ftype <- typeof(fun)
   if (ftype == "closure") {
@@ -322,7 +322,8 @@ function(def, name, mod)
 BuiltInRoutines  =
         # These should be understood to be vectorized also.
   list(exp = list(DoubleType, DoubleType),
-       sqrt = list(DoubleType, DoubleType))
+       sqrt = list(DoubleType, DoubleType),
+       length = list(DoublePtrType))
 
 # Should this just be names of CompilerHandlers
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, LogicOps, ":",

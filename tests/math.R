@@ -39,3 +39,11 @@ t4 <- function(x, y) {
 }
 
 t4.c <- compileFunction(t4, Int32Type, list(x=Int32Type, y=DoubleType), asList=TRUE, optimize=FALSE)
+
+# unary operators
+t5 <- function(x) {
+  y <- -x
+  return(y)
+}
+
+t5.c <- compileFunction(t5, DoubleType, list(x=DoubleType), asList=TRUE, optimize=FALSE)

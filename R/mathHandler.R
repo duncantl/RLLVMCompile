@@ -10,11 +10,19 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
-   if(length(call) == 2)  {
-         # unary operator - most likely -
-      val = compile(call[[2]], env, ir, ...)
-     return(createNeg(val, "xx", ir$getInsertBlock()))
-     # return(ir$binOp(FMul, ir$createConstant(-1), val))
+  if(length(call) == 2)  {
+    # unary operator - most likely -
+    val = compile(call[[2]], env, ir, ...)
+        
+    ## TODO fix ir$ SS, clean this
+    if (identical(getType(call[[2]], env), Int32Type)) {
+      return(createNeg(ir, val, as.character(call[[2]])))     
+    }
+    
+    if (identical(getType(call[[2]], env), DoubleType)) {
+      return(createFNeg(ir, val, as.character(call[[2]])))
+    }
+    stop("cannot createNeg for this type yet.")
    }
       
 
@@ -48,11 +56,11 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
                           if(isIntType)
                             createIntegerConstant(as.integer(x))
                           else
-                             createDoubleConstant(as.numeric(x))
-                       } else if(is.name(x)) {
-                         if (!is.null(toCast) && x == toCast) {
-                           # Casting to double needed
-                           return(createCast(ir, DoubleType, Int32Type,
+                            createDoubleConstant(as.numeric(x))
+                        } else if(is.name(x)) {
+                          if (!is.null(toCast) && x == toCast) {
+                            # Casting to double needed
+                            return(createCast(ir, DoubleType, Int32Type,
                                              getVariable(x, env, ir)))
                          } else 
                            getVariable(x, env, ir)

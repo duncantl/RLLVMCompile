@@ -111,7 +111,6 @@ function(code, params, len, var) {
     call <- call[[1]] # TODO fix this
     
     is.safe <- examineArgDepends(call, params) && call.name %in% names(vectorFunctions)
-    browser()
     # Are we not vectorizing?
     # (offset by one because of call name (not just args))
     is.necessary = call[[vectorFunctions[call.name] + 1]] == 1 

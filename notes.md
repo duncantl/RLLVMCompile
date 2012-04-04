@@ -24,3 +24,7 @@ type-specific comparison operators in LLVM, i.e. FCmp.
 
 - fixIfAssign needs type checking - possible best done by scanning the
   body of the assignment first?
+  
+## Stuff I broke or disabled intentionally
+- .InsertReturn is commented out and not TRUE by default in compileFunction because it's broken.
+- fixIfAssign is commented out because it's broken.

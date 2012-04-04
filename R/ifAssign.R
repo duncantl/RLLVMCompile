@@ -44,7 +44,6 @@ function(expr, var = character(), recurse = FALSE, ...)
   #
 function(expr, var = character(), ...)
 {
-  browser()
    if(is(expr[[3]], "if")) {
       expr[[3]][[3]] = fixIfAssign(expr[[3]][[3]], expr[[2]], recurse = FALSE, ...)
       if(length(expr[[3]]) >= 4)
