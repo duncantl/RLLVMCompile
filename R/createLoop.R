@@ -37,7 +37,7 @@ function(call, env, ir, ..., nextBlock = NULL)
 
 createLoopCode =
   #
-  # This takes a variable, a length variable and bulds a loop.
+  # This takes a variable, a length variable and builds a loop.
   #
   #
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
@@ -65,25 +65,32 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    len = ir$createLocalVariable(Int32Type, ".llen")
    assign(".llen", len, env)
    env$.types[[".llen"]] = Int32Type
-   
    mapply(function(lim,  to) {
-          if(is.symbol(lim)) {
-            sym = as.character(lim)
-            var = getVariable(sym, env, ir)
-            # ir$createLoad(to, get(as.character(lim), env))
-             ir$createStore(var, to)          
-          } else
-             ir$createStore(lim, to)
-          }, limits, list(iv, len))
-
+     if(is.symbol(lim)) {
+       sym = as.character(lim)
+       var = getVariable(sym, env, ir)
+       # ir$createLoad(to, get(as.character(lim), env))
+       ir$createStore(var, to)
+     } else {
+       ir$createStore(lim, to)
+     }
+     # offset the loop vars by one, since LLVM is 0-indexed and R is
+     # 1-indexed. This is a bit clunky, but LLVM will optimize this
+     # all away.
+     offset = ir$createLoad(to)
+     offset.var = ir$binOp(Sub, offset, 1L)
+     ir$createStore(offset.var, to)
+   }, limits, list(iv, len))
+   
    ir$createBr(cond)
 
    ir$setInsertPoint(cond)   
-     a = ir$createLoad(iv)
-     b = ir$createLoad(len)
-     ok = ir$createICmp(ICMP_SLE, a, b)
-     ir$createCondBr(ok, bodyBlock, nextBlock)
+   a = ir$createLoad(iv)
+   b = ir$createLoad(len)
 
+   ok = ir$createICmp(ICMP_SLE, a, b)
+   ir$createCondBr(ok, bodyBlock, nextBlock)
+   
    ir$setInsertPoint(bodyBlock)
 
            #XXX have to put the code for the actual  body, not just the incrementing of i
@@ -101,7 +108,16 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    ir$setInsertPoint(nextBlock)
 }
 
-
+## offsetIndex <- 
+## # Offset indexing by one to account for LLVM 0-based indexing and R's
+## # 1-based indexing
+## function(x) {
+##   browser()
+##   # TODO is this safe? could there be a name clash with y?
+##   x$from <- substitute(expression(y - 1), list(y=x$from))
+##   x$to <- substitute(expression(y - 1), list(y=x$to))
+##   x
+## }
 
 getLimits =
   #  1:10
@@ -119,26 +135,33 @@ getLimits =
 function(call)
 {
   op = as.character(call[[1]])
-
+  
   ans = if(op == ":") {
-           list(from = call[[2]], to = call[[3]])
-         } else if(op == "seq_along") {
-           tmp = substitute(length(x), list(x = call[[2]]))
-           list(from = 1L, to = tmp)
-         } else if(op == "seq") {
-           k = match.call(seq, call)
-           argNames = names(k)[-1]
-                                        # formals(seq) returns ...
-           formals = c("from", "to", "by", "length.out", "along.with")
-           i = argNames == ""
-           argNames[i] = formals[which(i)]
-           structure(as.list(call[-1]), names = argNames)
-         }
+    # TODO fix compiling of these calls
+    ## list(from = compile(call[[2]], env, ir, ...),
+    ##      to = compile(call[[3]], env, ir, ...))
+    list(from = call[[2]], to = call[[3]])
+  } else if(op == "seq_along") {
+    tmp = substitute(length(x), list(x = call[[2]]))
+    list(from = 1L, to = tmp)
+  } else if(op == "seq") {
+    k = match.call(seq, call)
+    argNames = names(k)[-1]
+    # formals(seq) returns ...
+    formals = c("from", "to", "by", "length.out", "along.with")
+    i = argNames == ""
+    argNames[i] = formals[which(i)]
+    structure(as.list(call[-1]), names = argNames)
+    warning("TODO this may not work with R to LLVM indexing offsetting.")
+  }
 
-    # how should we get integers when we have, e.g., 1:10 which are
-    # numeric
+  ## # LLVM uses 0 indexing and R doesn't; this we offset by 1
+  ## ans <- offsetIndex(ans)
+  
+  # how should we get integers when we have, e.g., 1:10 which are
+  # numeric
   ans = lapply(ans, function(val) if(is.numeric(val) && val == as.integer(val)) as.integer(val) else val)
-
+  
   ans
 }
 

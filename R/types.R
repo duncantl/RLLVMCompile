@@ -44,10 +44,14 @@ getTypeOfElement =
   #
 function(type)
 {
-   if(identical(type, DoublePtrType))
-      return(DoubleType)
-   else
-      stop("Need more implementation of the type of a pointer type")
+  if (identical(type, DoublePtrType))
+    return(DoubleType)
+  else if (identical(type, Int32PtrType))
+    return(Int32Type)
+  else if (identical(type, FloatPtrType))
+    return(FloatType)
+  else
+    stop("This type is not yet implemented.")
 }
 
 # There is an S4 generic getType in llvm. Why not proide methods for that
