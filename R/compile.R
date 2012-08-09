@@ -199,6 +199,12 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
   if (.insertReturn)
     fun = insertReturn(fun)
 
+  if(!is.list(types))
+    types = structure(list(types), names = names(formals(fun))[1])
+
+  if(length(names(types)) == 0)
+    names(types) = names(formals(fun))[seq(along = types)]
+  
   #fun = fixIfAssign(fun)
   
   ftype <- typeof(fun)

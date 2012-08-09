@@ -162,9 +162,9 @@ For example
 is legal in R.  In our compiler, we remap this to 
 <r:code><![CDATA[
   if(x < 10)
-       y = x + 3
-     else
-       y = x - 3
+     y = x + 3
+  else
+     y = x - 3
 ]]></r:code>
 There is an issue that we both have to declare a local variable
 y if it is not already defined, and we also have to ensure that the 
