@@ -18,8 +18,8 @@ function(expr, where = globalenv())
   f
 }
 
-getType =
-function(val)
-{
-  "numeric"
-}
+if(FALSE)
+ xx.getType =
+  function(val)
+     "numeric"
+

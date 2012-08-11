@@ -30,7 +30,7 @@ function(call, env, ir, ..., fun = env$.fun)
        compile(call[[3]], env, ir)
        ir$createBr(cond)
 
-    ir$setInsertPoint(nextBlock)    
+   ir$setInsertPoint(nextBlock)    
 }
 
 
@@ -38,11 +38,30 @@ function(call, env, ir, ..., fun = env$.fun)
 createConditionCode =
 function(call, env, ir, bodyBlock, nextBlock)
 {
+  compositeCond = as.character(call[[1]]) %in% c("&&", "||")
+                           
+    if(!compositeCond)  {
+  
           # Same as in while() so consolidate
        a = compile(call, env, ir)
           # We don't need to compare the value of a to 1 but can
           # expect that a is a logical value. 
        # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))
 
-       ir$createCondBr(a, bodyBlock, nextBlock)    
+       ir$createCondBr(a, bodyBlock, nextBlock)
+    } else {
+         # Currently assumes only a || b and only two expressions, i.e. not a || b || c which is recursive.
+       a = compile(call[[2]], env, ir)
+
+       alt.id = paste(deparse(call[[3]]), collapse = "")
+       bl = Block(env$.fun, alt.id)
+       if(as.character(call[[1]]) == "||")
+          ir$createCondBr(a, bodyBlock, bl)
+       else
+          ir$createCondBr(a, bl, nextBlock)
+
+       ir$setInsertPoint(bl)
+       b = compile(call[[3]], env, ir)       
+       ir$createCondBr(b, bodyBlock, nextBlock)
+    }
 }

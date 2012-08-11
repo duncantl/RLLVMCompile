@@ -137,7 +137,7 @@ function(x, y)
                        foo = list(returnType = DoubleType,
                                   params = c(DoubleType, DoubleType)))
 
- run(fb, 4, 5) # gives 3
+ run(fb, 4, 5) # gives 3 = sqrt(4 + 5)
 
 
   # Here we return an R function that is directly callable.
@@ -158,6 +158,7 @@ myDate = function() {
         return(Sys.Date())
      }
 
+myOPS = CompilerHandlers
 myOPS[["Sys.Date"]] =
    function(call, env, ir, ...) {
        cat("In Sys.Date handler\n")
@@ -175,9 +176,6 @@ f = compileFunction(myDate, Int32Type, optimize = FALSE,
 myPlus = function() {
           return(1L + x)
      }
-
-myOPS = CompilerHandlers
-
 }
 \keyword{programming}
 \concept{compilation}

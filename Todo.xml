@@ -8,8 +8,45 @@
 
 <items>
 
+<item status="check" note="works for fib example">
+Handle case when an expression is an if() and both branches return.
+Need to kill off the "next" block since there isn't one.
+
+See fib
+<r:code>
+fib =
+function(n)
+{
+  if(n == 0L || n == 1L)
+     return(n)
+  else
+     return(fib(n - 1L) + fib(n - 2L))
+}
+</r:code>
+</item>
+
 <item>
-Identify const variables
+Should we use a fixed variable name for the return value.
+Then all code could store that and jump  to final block.
+</item>
+<item>
+The initial assignment to ans doesn't compile
+<r:code>
+f = function()
+{
+  ans = -1L 
+  return(ans)
+}
+</r:code>
+<r:error>cannot createNeg for this type yet.</r:error>
+Now need a method for createNeg which is in Rllvm,
+but we need a version 
+</item>
+
+<item>
+Identify const variables.
+This is for our purpose rather than LLVM. We want to be able to identify
+these to determine whether we can pass them by reference since they don't change.
 </item>
 
 <item>
@@ -23,6 +60,7 @@ Compile the not() function to test the ! operator.
 <item>
 Logical data type
 </item>
+
 <item>
 Does run() in Rllvm return the mutable parameters?
 </item>
@@ -46,6 +84,9 @@ We can compile the code just before the first
 expression at which that parameter is referenced.
 <br/>
 Need to know about missing. This is a feature of the call.
+We can add a parameter to the target function .missing as a vector
+and then add this in each call.  Then we can test this in the code
+and conditionally evaluate the default value.
 </item>
 
 <item>

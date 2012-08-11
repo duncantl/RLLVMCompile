@@ -1,0 +1,6 @@
+<changelog>
+<version>
+<change>
+Support for composite conditions, e.g. x == 1 || y < 2.
+</change>
+</version>

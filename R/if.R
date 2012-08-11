@@ -4,6 +4,7 @@ compile.if = ifHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
 {
+
    # This is not elegant, but brute force.
    # We basically create blocks for each of the if conditions
    # and blocks for each of the bodies, including a trailing else
@@ -35,6 +36,7 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
             tmp = sprintf("body.%s", tmp)
           } else
             tmp = "body.last"
+         
          bodyBlocks[[tmp]] =  Block(fun, tmp)
 
          if(!is(cur, "if")) {
@@ -51,7 +53,11 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
       # This is the block that all branches of the if statement
       # will end up in. This is where start the code for the next statement
       # after the if statement.
+if(length(env$.remainingExpressions))
     nextBlock = Block(fun, sprintf("next.%s", label))
+else
+    nextBlock = NULL
+
     condBlocks[["final"]] = if(hasTrailingElse) bodyBlocks[[length(bodyBlocks)]] else nextBlock
 
       # Jump to the first condition block
@@ -77,7 +83,7 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
            ir$setInsertPoint(body)
            compile(cur, env, ir)                      
        }
-      if(length(getTerminator(ir$getInsertBlock())) == 0)
+      if(length(getTerminator(ir$getInsertBlock())) == 0 && !is.null(nextBlock))
          ir$createBr(nextBlock)  # jump to the end of the entire if statement           
 
       if(!is(cur, "if") || length(cur) < 4)
@@ -85,6 +91,7 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
       cur = cur[[4]]
       ctr = ctr + 1
     }
-     
-    ir$setInsertPoint(nextBlock)
+
+    if(!is.null(nextBlock))
+      ir$setInsertPoint(nextBlock)
 }

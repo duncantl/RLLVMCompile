@@ -16,6 +16,10 @@ function(obj, env, elementType = FALSE)
        if(obj[[1]] == as.name("[")) # XXX not in any way general And doesn't handle vectors being returned.
           return(getTypes(obj[[2]], env, TRUE))
 
+       fun = as.character(obj[[1]])
+       if(fun %in% names(env$.functionInfo))
+         return( get(fun, env$.functionInfo)$returnType )
+
    } else {
      stop("Can't determine type for ", class(obj))
    }
@@ -64,6 +68,12 @@ getType.character =
 function(val, env)
 {
   env$.types[[val]]
+}
+
+getType.integer =
+function(val, env)
+{
+  Int32Type
 }
 
 getType.name =

@@ -64,7 +64,7 @@ function(call, env, ir, ...)
           }
 
           if (is(val, "Value"))
-            type = Rllvm::getType(val)
+            type = getType(val)
         }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
@@ -109,6 +109,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun))
 
             break
          }
+         env$.remainingExpressions = exprs[ - (1:i) ]
          compile(exprs[[i]], env, ir, fun = fun, name = name)
 #        # One approach to handling the lack of an explicit return is to
 #        # create the return instruction ourselves, or to add a return
@@ -194,7 +195,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .routineInfo = list(),
          .compilerHandlers = CompilerHandlers,
          .globals = findGlobals(fun, merge = FALSE),
-         .insertReturn = FALSE)
+         .insertReturn = FALSE,
+         .builtInRoutines = getBuiltInRoutines())
 {
   if (.insertReturn)
     fun = insertReturn(fun)
@@ -202,14 +204,13 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
   if(!is.list(types))
     types = structure(list(types), names = names(formals(fun))[1])
 
-  if(length(names(types)) == 0)
-    names(types) = names(formals(fun))[seq(along = types)]
   
   #fun = fixIfAssign(fun)
   
   ftype <- typeof(fun)
   if (ftype == "closure") {
 
+       #if there is no type information but the author put the type information on the function itself, use that.
      .typeInfo = attr(fun, "llvmTypes")
      if( (missing(returnType) || missing(types)) && !is.null(.typeInfo)) {
        if(missing(types))
@@ -234,11 +235,14 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     llvm.fun <- Function(name, returnType, argTypes, mod)
 
 
-    if(any(.globals$functions %in% names(BuiltInRoutines))) {
-       i = match(.globals$functions, names(BuiltInRoutines), 0)
-       .routineInfo = BuiltInRoutines[ i ]
+    if(any(.globals$functions %in% names(.builtInRoutines))) {
+       i = match(.globals$functions, names(.builtInRoutines), 0)
+       .routineInfo = .builtInRoutines[ i ]
        .globals$functions = .globals$functions[i == 0]
     }
+
+    if(name %in% .globals$functions && !(name %in% names(.functionInfo)))
+       .functionInfo[[name]] = list(returnType = returnType, params = types)
 
 
     if(length(.routineInfo))
@@ -264,6 +268,9 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.compilerHandlers = .compilerHandlers
     nenv$.returnType = returnType
     nenv$.entryBlock = block
+     
+    nenv$.builtInRoutines = .builtInRoutines
+    nenv$.functionInfo = .functionInfo
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
@@ -331,9 +338,18 @@ BuiltInRoutines  =
        sqrt = list(DoubleType, DoubleType),
        length = list(DoublePtrType))
 
+getBuiltInRoutines =
+function()
+{
+  list(exp = list(DoubleType, DoubleType),
+       sqrt = list(DoubleType, DoubleType),
+       length = list(DoublePtrType))
+}
+
 # Should this just be names of CompilerHandlers
-ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps, LogicOps, ":",
-                        "=", "<-", "[<-", '[', "for", "if", "while",
+ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
+                        LogicOps, "||", "&&", # add more here &, |
+                        ":", "=", "<-", "[<-", '[', "for", "if", "while",
                         "repeat", "(", "!") # for now
 
 

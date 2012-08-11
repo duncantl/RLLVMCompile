@@ -31,7 +31,7 @@ function(call, env, ir, ...)
     codes = c("==" = FCMP_UEQ, "!=" = FCMP_UNE, ">" = FCMP_UGT, "<" = FCMP_ULT, ">=" = FCMP_UGE, "<=" = FCMP_ULE)
 
     # Coerce type TODO replace with more generic type coercion?
-    browser()
+#    browser()
     vars = list(a, b)
     convert.i = which(sapply(types, function(x) !identical(x, targetType)))
     vars[[convert.i]] = createCast(ir, targetType, types[[convert.i]], vars[[convert.i]])

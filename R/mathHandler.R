@@ -16,7 +16,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
         
     ## TODO fix ir$ SS, clean this
     if (identical(getType(call[[2]], env), Int32Type)) {
-      return(createNeg(ir, val, as.character(call[[2]])))     
+      return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
     }
     
     if (identical(getType(call[[2]], env), DoubleType)) {
@@ -32,9 +32,12 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   toCast = NULL
    
   types = lapply(call[-1], getTypes, env)
+  if(any(sapply(types, is.null)))
+     stop("NULL value for component type in math operation")
+    
 
   lit <- sapply(call[-1], is.numeric) # literals
-   
+
   if(any(lit)) {
     # This has the problem that the literal will be coerced to the
     # other type, a non-R behavior. TODO remove entirely?
@@ -46,7 +49,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 
   # If any of the types are different from the targetType, we need
   # to cast.
-  typeMatches = sapply(types, function(x) identical(x, targetType))
+  typeMatches = sapply(types, identical, targetType)
   if (any(!typeMatches))
     toCast = as.list(call[-1])[[which(!typeMatches)]]
 
