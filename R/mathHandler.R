@@ -16,7 +16,8 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
         
     ## TODO fix ir$ SS, clean this
     if (identical(getType(call[[2]], env), Int32Type)) {
-      return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
+      return(createNeg(val))
+       # return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
     }
     
     if (identical(getType(call[[2]], env), DoubleType)) {

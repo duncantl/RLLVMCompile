@@ -34,11 +34,16 @@ function(call, env, ir, ..., fun = env$.fun)
 }
 
 
+isCompositeCond =
+function(call)
+{
+  is.call(call) && as.character(call[[1]]) %in% c("&&", "||")
+}
 
 createConditionCode =
 function(call, env, ir, bodyBlock, nextBlock)
 {
-  compositeCond = as.character(call[[1]]) %in% c("&&", "||")
+    compositeCond = isCompositeCond(call)
                            
     if(!compositeCond)  {
   
@@ -50,7 +55,34 @@ function(call, env, ir, bodyBlock, nextBlock)
 
        ir$createCondBr(a, bodyBlock, nextBlock)
     } else {
+
+         #
+
+      if(isCompositeCond(call[[2]])) {
+browser()
+        alt.id = paste(deparse(call[[3]]), collapse = "")
+        bl = Block(env$.fun, alt.id)
+        blocks = list()
+        if(as.character(call[[1]]) == "||") {
+           blocks[[1]] = bodyBlock
+           blocks[[2]] = bl
+        } else {
+            blocks[[1]] = bl
+            blocks[[2]] = nextBlock
+        }
+
+
+          createConditionCode(call[[2]], env, ir, blocks[[1]], blocks[[2]])
+          ir$setInsertPoint(bl)
+          ans = createConditionCode(call[[3]], env, ir, bodyBlock, nextBlock)
+          return(ans)
+      }
+      
          # Currently assumes only a || b and only two expressions, i.e. not a || b || c which is recursive.
+         #
+         #
+         #
+         #
        a = compile(call[[2]], env, ir)
 
        alt.id = paste(deparse(call[[3]]), collapse = "")
@@ -61,7 +93,15 @@ function(call, env, ir, bodyBlock, nextBlock)
           ir$createCondBr(a, bl, nextBlock)
 
        ir$setInsertPoint(bl)
-       b = compile(call[[3]], env, ir)       
-       ir$createCondBr(b, bodyBlock, nextBlock)
+       if(isCompositeCond(call[[3]]))
+            # we need to deal with the composite condition here
+            # in the context of an if()/while() statement and blocks, not
+            # just a regular stand-alone call to && or || which we might
+            # handle differently
+         createConditionCode(call[[3]], env, ir, bodyBlock, nextBlock)
+       else {
+          b = compile(call[[3]], env, ir)       
+          ir$createCondBr(b, bodyBlock, nextBlock)
+       }
     }
 }

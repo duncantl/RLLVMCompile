@@ -69,9 +69,13 @@ function(expr) {
 
 isLiteral =
 # Check against any type of literal
-function(expr)
-  return(isStringLiteral(expr) || isNumericLiteral(expr))
+function(expr) {
+  i = (isStringLiteral(expr) || isNumericLiteral(expr))
+  if(i)
+    return(i)
 
+  (is.call(expr) && as.character(expr[[1]]) %in% c("+", "-") && isLiteral(expr[[2]]))
+}
 
 examineArgDepends =
 # It is absolutely necessary the arguments to any vectorized function

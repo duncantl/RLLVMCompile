@@ -41,7 +41,12 @@ function(call, env, ir)
 function(call, env, ir, ...)
 {
    args = call[-1]  # drop the = or <-
-   val = compile(args[[2]], env, ir)
+
+   if(isLiteral(args[[2]])) {
+      val = eval(args[[2]])
+      val = makeConstant(ir, val, getType(val))
+   } else
+      val = compile(args[[2]], env, ir)
 
    if(is.name(args[[1]])) {
       var = as.character(args[[1]])
@@ -201,9 +206,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
   if (.insertReturn)
     fun = insertReturn(fun)
 
-  if(!is.list(types))
+  if(!missing(types) && !is.list(types))
     types = structure(list(types), names = names(formals(fun))[1])
-
   
   #fun = fixIfAssign(fun)
   
@@ -223,6 +227,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     args <- formals(fun) # for checking against types; TODO
     fbody <- body(fun)
 
+     
     if(length(names(types)) == 0)
       names(types) = names(args)
     
@@ -261,6 +266,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
 
     nenv = makeCompileEnv()
 
+    nenv$.Rfun = fun
     nenv$.fun = llvm.fun
     nenv$.params = params
     nenv$.types = types

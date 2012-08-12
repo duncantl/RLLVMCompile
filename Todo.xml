@@ -8,6 +8,34 @@
 
 <items>
 
+<item>
+Support compiling for code with NAs
+</item>
+
+<item>
+Support creating code for vectors or scalars,
+i.e. different code that takes a vector and iterates over that or
+ a function/routine that takes a scalar.
+These are qualitatively different routines.
+</item>
+
+<item id="multiCond">
+Multiple conditions in a test, i.e. if and while condition
+<r:code>
+f = function(x, y)
+{
+  ans = 0L
+  if(x < 0 || y < 10 || y > 100)  #x + y == 0)
+      ans = 3L
+  else
+      ans = 7L
+ 
+  return(ans)
+}
+fc = compileFunction(f, Int32Type, list(x = Int32Type, y = Int32Type))
+</r:code>
+</item>
+
 <item status="check" note="works for fib example">
 Handle case when an expression is an if() and both branches return.
 Need to kill off the "next" block since there isn't one.
@@ -22,6 +50,7 @@ function(n)
   else
      return(fib(n - 1L) + fib(n - 2L))
 }
+fc = compileFunction(f, Int32Type, list(n = Int32Type))
 </r:code>
 </item>
 
@@ -29,7 +58,23 @@ function(n)
 Should we use a fixed variable name for the return value.
 Then all code could store that and jump  to final block.
 </item>
+
 <item>
+Issues with createNeg. 
+<r:code>
+library(RLLVMCompile)
+f = function(n)
+{
+  return( - n)
+}
+fc = compileFunction(f, Int32Type, list(n = Int32Type))
+</r:code>
+Broken module.
+Do we need to load n first.
+
+</item>
+
+<item status="done">
 The initial assignment to ans doesn't compile
 <r:code>
 f = function()
@@ -38,9 +83,14 @@ f = function()
   return(ans)
 }
 </r:code>
+We can handle this as a literal value and assign the value directly
+after evaluating it in R. Done.
+<br/>
 <r:error>cannot createNeg for this type yet.</r:error>
 Now need a method for createNeg which is in Rllvm,
-but we need a version 
+but we need a version .
+Compiles now, but get a bad module.
+
 </item>
 
 <item>

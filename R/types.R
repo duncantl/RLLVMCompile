@@ -20,6 +20,8 @@ function(obj, env, elementType = FALSE)
        if(fun %in% names(env$.functionInfo))
          return( get(fun, env$.functionInfo)$returnType )
 
+       getType(obj, env)
+
    } else {
      stop("Can't determine type for ", class(obj))
    }
@@ -92,6 +94,29 @@ function(val, env)
   DoubleType
 }
 
+
+getType.BinaryOperator =
+function(val, env)
+{
+  Rllvm::getType(val)
+}
+
+getType.call = 
+function(val, env)
+{
+  fun = as.character(val[[1]])
+  if(fun %in% c('+', '-', '*', '/')) { #XXXX
+      types = lapply(val[-1], getTypes, env)
+      return(getMathOpType(types))
+  }
+
+   warning("can't tell type of call")
+}
+
 getType.default =
 function(val, env)
+{
+#  return(getTypes(val, env))
+  warning("getType for ", class(val), ": default method")
   return(NULL)
+}

@@ -36,6 +36,7 @@ if(FALSE) {
    # Not getting the speed that clang does which spits out very optimized IR code.
    # Is this because we need to add more optimization passes or because we are generating
    # less efficient IR that LLVM can't optimize later.
+   # Don't get the tail calls. 
 
 mod = parseIR('
 define i32 @fib1(i32 %n) nounwind ssp {
