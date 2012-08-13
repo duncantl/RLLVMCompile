@@ -1,13 +1,13 @@
 <changelog>
 <version>
 <change>
-Support for composite conditions, e.g. x == 1 || y < 2.
+Support for composite conditions, e.g. x == 1 || y < 2, and more than 2 conditions.
 </change>
 <change>
 Register the function being compiled so that it can call itself recursively,
 i.e. we can generate code to call the function itself as part of its own body.
 </change>
 <change>
-<r:func>getTypes</r:func> can look up the type 
+<r:func>getTypes</r:func> can look up the type of a variable.
 </change>
 </version>

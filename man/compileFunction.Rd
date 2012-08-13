@@ -36,7 +36,7 @@
 }
 \usage{
 compileFunction(fun, returnType, types = list(), mod = Module(name),
-                name = NULL, asFunction = FALSE, optimize = TRUE, ...,
+                name = NULL, NAs = FALSE, asFunction = FALSE, optimize = TRUE, ...,
                 .functionInfo = list(...), .routineInfo = list(),
                .compilerHandlers = OPS,
                .globals =  findGlobals(fun, merge = FALSE))
@@ -56,7 +56,10 @@ compileFunction(fun, returnType, types = list(), mod = Module(name),
   \item{name}{the name to use for the function, typically obtained from
     deparsing \code{fun}, but which can be specified explicitly if
     not referencing the function directly in the call.
-   }
+  }
+  \item{NAs}{a logical controlling whether to add code to handle NAs in
+  the computations. If we know that there are no NAs in the inputs, we
+  can avoid adding extra code to handle them.  Currently ignored.}
   \item{asFunction}{a logical value}
   \item{\dots}{name = value pairs of type information describing other R
     functions that \code{fun} may call. This allows those to be compiled

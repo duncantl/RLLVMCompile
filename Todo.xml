@@ -9,7 +9,9 @@
 <items>
 
 <item>
-Support compiling for code with NAs
+Support compiling for code with NAs or without, i.e.
+allow the caller of compileFunction to specify whether
+to include code for NAs.
 </item>
 
 <item>

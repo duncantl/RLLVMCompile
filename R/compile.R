@@ -194,6 +194,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 compileFunction <-
 function(fun, returnType, types = list(), mod = Module(name), name = NULL,
+         NAs = FALSE,
          asFunction = FALSE, asList = FALSE,
          optimize = TRUE, ...,
          .functionInfo = list(...),
