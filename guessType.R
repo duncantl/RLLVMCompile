@@ -6,6 +6,9 @@ function(x, types)
 
 }
 
+RX =
+function(pattern)  
+ structure(pattern, class = "RegularExpression")
 
 ReturnTypeTable =
   list(numeric = c("sin", "cos", "log", "sinh", "log", "log10", "logb", "log1p", "exp", "^",
@@ -13,7 +16,7 @@ ReturnTypeTable =
        ScalarNumeric = c('mean', 'median', 'sd', 'var'),
        ScalarInteger = c("length", "floor", 'ceiling'),
        integer = c("rpois", "rbinom"),
-       logical = c("duplicated"),
+       logical = c("duplicated", RX("is.*"), "is"),
        ScalarLogical = c("&&", "||", "any", "all", "%in%"))
 
 # Have to separate mode/typeof and the class
