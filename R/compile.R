@@ -202,7 +202,8 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .compilerHandlers = CompilerHandlers,
          .globals = findGlobals(fun, merge = FALSE),
          .insertReturn = FALSE,
-         .builtInRoutines = getBuiltInRoutines())
+         .builtInRoutines = getBuiltInRoutines(),
+         .vectorize = character(), .execEngine = NULL)
 {
   if (.insertReturn)
     fun = insertReturn(fun)
@@ -288,7 +289,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
        Optimize(mod)
      
     if(asFunction) {
-       makeFunction(fun, llvm.fun)
+       makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine)
     } else if (asList)
       return(list(mod=mod, fun=llvm.fun, env = nenv))
     else
@@ -339,18 +340,18 @@ function(def, name, mod)
   fun
 }
 
-BuiltInRoutines  =
-        # These should be understood to be vectorized also.
-  list(exp = list(DoubleType, DoubleType),
-       sqrt = list(DoubleType, DoubleType),
-       length = list(DoublePtrType))
 
 getBuiltInRoutines =
 function()
 {
+        # These should be understood to be vectorized also.  
   list(exp = list(DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType),
-       length = list(DoublePtrType))
+       length = list(DoublePtrType),
+       nrow = list(Int32Type, c("matrix", "data.frame")),
+       ncol = list(Int32Type, c("matrix", "data.frame")),
+       dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))       
+      )  
 }
 
 # Should this just be names of CompilerHandlers
@@ -392,10 +393,14 @@ function(globalInfo, mod, .functionInfo = list())
 
 
 makeFunction =
-function(fun, compiledFun)
+function(fun, compiledFun, .vectorize = character(),  .execEngine = NULL)
 {
   e = new.env()
   e$.fun = compiledFun
+  if(is.null(.execEngine))
+    .execEngine = ExecutionEngine(as(compiledFun, "Module"))
+  formals(fun)$.ee = .execEngine
+  
   args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
   k = call('run')
   k[2:(length(args) + 1)] = args

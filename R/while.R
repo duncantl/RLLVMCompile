@@ -59,7 +59,7 @@ function(call, env, ir, bodyBlock, nextBlock)
          #
 
       if(isCompositeCond(call[[2]])) {
-browser()
+
         alt.id = paste(deparse(call[[3]]), collapse = "")
         bl = Block(env$.fun, alt.id)
         blocks = list()

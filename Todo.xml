@@ -9,6 +9,22 @@
 <items>
 
 <item>
+Call R functions from C code.
+</item>
+
+<item>
+Allow caller of compile to customize the code
+to a particular data frame or set of inputs, e.g. to
+map names to positions just once, e.g.
+<r:code>
+data$var1[1:n]
+data[1:n, "var1"]
+</r:code>
+woul look up the index of var1 and replace "var1" with its index.
+(Or use a hash table to represent the data structure.)
+</item>
+
+<item>
 Support compiling for code with NAs or without, i.e.
 allow the caller of compileFunction to specify whether
 to include code for NAs.
