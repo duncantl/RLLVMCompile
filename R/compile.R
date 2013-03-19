@@ -237,6 +237,14 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     if (is.null(name))
       name <- deparse(substitute(fun))
 
+    rVecTypes = sapply(types, isRVectorType)
+    if(any(rVecTypes)) {
+       lengthVars = sprintf("_%s_length", names(types)[rVecTypes])
+       types[lengthVars] = replicate(length(lengthVars), Int32Type)
+    } else
+       lengthVars = character()
+
+     
     # Grab types, including return. Set up Function, block, and params.
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, mod)
@@ -289,7 +297,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
        Optimize(mod)
      
     if(asFunction) {
-       makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine)
+       makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine, .lengthVars = lengthVars)
     } else if (asList)
       return(list(mod=mod, fun=llvm.fun, env = nenv))
     else
@@ -306,6 +314,16 @@ function()
    nenv$.continueBlock = list()
    nenv$.nextBlock = list()   
    nenv
+}
+
+
+isRVectorType =
+  # This is transient and intended to identify if the
+  # type corresponds to an R vector, rather than an R scalar.
+  # For now this is an arrayType(, 0), i.e. with zero elements
+function(type)
+{
+  is(type, "ArrayType") && getNumElements(type) == 0
 }
 
 
@@ -393,17 +411,25 @@ function(globalInfo, mod, .functionInfo = list())
 
 
 makeFunction =
-function(fun, compiledFun, .vectorize = character(),  .execEngine = NULL)
+function(fun, compiledFun, .vectorize = character(),  .execEngine = NULL, .lengthVars = character())
 {
   e = new.env()
   e$.fun = compiledFun
   if(is.null(.execEngine))
     .execEngine = ExecutionEngine(as(compiledFun, "Module"))
-  formals(fun)$.ee = .execEngine
   
   args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
   k = call('run')
   k[2:(length(args) + 1)] = args
+
+  if(length(.lengthVars))
+    k[.lengthVars] = lapply(gsub("_(.*)_length", "\\1", .lengthVars),
+                             function(id)
+                               substitute(length(x), list(x = as.name(id))))
+  
+  k[[".ee"]] = as.name('.ee')
+  
+  formals(fun)$.ee = .execEngine
   body(fun) = k
   environment(fun) = e
   fun
