@@ -20,7 +20,7 @@ function(call, env, ir, ...)
       if(is.name(args[[1]])) {
         val = getVariable(args[[1]], env, ir, load=TRUE, ...)
 
-        argType = getType(args[[1]], env)
+        argType = getDataType(args[[1]], env)
         if (is(argType, "Type") && !is(argType, "SEXPType"))
           argType = argType@ref
         

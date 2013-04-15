@@ -4,7 +4,6 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
-  browser()
    funName = mapRoutineName(as.character(call[[1]]))
 
     # Here we utilize the polymorphic nature of intrinsics.

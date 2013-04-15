@@ -32,7 +32,7 @@ function(obj, env, elementType = FALSE)
        else if(fun %in% names(FunctionTypeInfo)) 
          return(getFunctionTypeInfo(fun, obj, env, elementType, FunctionTypeInfo))
 
-       getType(obj, env)
+       getDataType(obj, env)
 
    } else {
      stop("Can't determine type for ", class(obj))
@@ -107,50 +107,51 @@ function(type)
 
 # There is an S4 generic getType in llvm. Why not provide methods for that
 
-getType =
+getDataType =
 function(val, env)
-  UseMethod("getType")
+  UseMethod("getDataType")
 
-getType.character =
+getDataType.character =
 function(val, env)
 {
   env$.types[[val]]
 }
 
-getType.integer =
+getDataType.integer =
 function(val, env)
 {
   Int32Type
 }
 
-getType.name =
+getDataType.name =
 function(val, env)
-  getType(as.character(val), env)
+  getDataType(as.character(val), env)
 
-getType.ConstantInt =
+getDataType.ConstantInt =
 function(val, env)  
 {
   Int32Type
 }
 
-getType.ConstantFP = 
+getDataType.ConstantFP = 
 function(val, env)    
 {
   DoubleType
 }
 
 
-getType.BinaryOperator =
+getDataType.StoreInst  = getDataType.Value  =
+getDataType.BinaryOperator =
 function(val, env)
 {
   Rllvm::getType(val)
 }
 
-getType.call = 
+getDataType.call = 
 function(val, env)
 {
   fun = as.character(val[[1]])
-  if(fun %in% c('+', '-', '*', '/')) { #XXXX
+  if(fun %in% MathOps) {   #XXXX
       types = lapply(val[-1], getTypes, env)
       return(getMathOpType(types))
   }
@@ -159,14 +160,14 @@ function(val, env)
   NULL
 }
 
-getType.default =
+getDataType.default =
 function(val, env)
 {
 #  return(getTypes(val, env))
   if(length(val) == 1)
       mapRTypeToLLVM(class(val))
   else {
-    warning("getType for ", class(val), ": default method")
+    warning("getDataType for ", class(val), ": default method")
     NULL
   }
 }

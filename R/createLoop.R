@@ -2,7 +2,6 @@
 compile.for = compileForLoop =
 function(call, env, ir, ..., nextBlock = NULL)
 {
- browser()
   var = as.character(call[[2]])
   inn = call[[3]]
   isSeq = isSequence(inn)
@@ -62,8 +61,6 @@ createLoopCode =
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
           label = ".")
 {
-  browser()
-
      # The caller (compileFunction and compileExpressions) has already created a block
      # for this expression, so we can use it as the entry block and create and initialize
      # variables here.

@@ -5,7 +5,6 @@ logicOpHandler =
 # comparison operators like FCmp.
 function(call, env, ir, ...)
 {
-browser()
    if(length(call) == 2) {
      val = compile(call[[2]], env, ir, ...)
      not = ir$createNot(val)

@@ -85,7 +85,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   opName = as.character(call[[1]]) 
   op = codes[ opName ]
 
-browser()  
+
   if(!is.na(op)) {
       ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(call))
   } else {

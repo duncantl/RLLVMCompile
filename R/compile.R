@@ -1,7 +1,6 @@
 ## compile.R - compile R functions
 # Some of this is inspired by Tierney's compiler package.
 
-
 MathOps = c("+", "-", "*", "/", "%/%", "^")
 LogicOps = c("<", ">", "<=", ">=", "!=", "==", "!")
 
@@ -22,7 +21,7 @@ function(call, env, ir)
    val <- args[[2]]
    if (is.na(findVar(var, env))) {
         # Create new local store, TODO remove the type here and infer it
-     type = getType(val, env)
+     type = getDataType(val, env)
      assign(var, createLocalVariable(ir, type, var), envir=env) ## Todo fix type
      env$.types[[var]] = type
    }
@@ -44,7 +43,7 @@ function(call, env, ir, ...)
 
    if(isLiteral(args[[2]])) {
       val = eval(args[[2]])
-      val = makeConstant(ir, val, getType(val))
+      val = makeConstant(ir, val, getDataType(val))
    } else
       val = compile(args[[2]], env, ir)
 
@@ -56,7 +55,7 @@ function(call, env, ir, ...)
       ref <- getVariable(var, env, ir, load = FALSE, search.params=FALSE)
       if(is.null(ref)) {
         # No existing variable; detect type and create one.
-        type = getType(val, env)
+        type = getDataType(val, env)
         if (is.null(type)) {
           # Variable not found in env or global environments; get type via Rllvm
           if (is(val, "StoreInst")) {
@@ -65,11 +64,11 @@ function(call, env, ir, ...)
             # compiled above, getVariable returns an object of class
             # StoreInst. We ignore the current val, and instead query
             # the type from the variable.
-            type = getType(args[[2]], env)
+            type = getDataType(args[[2]], env)
           }
 
           if (is(val, "Value"))
-            type = getType(val)
+            type = getDataType(val)
         }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type

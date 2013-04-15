@@ -13,7 +13,7 @@ function(call, env, ir, ...) {
   x <- call[[2]]
   
   if (is(x, "numeric")) {
-    if(identical(getMathOpType(getType(x)), Int32Type))
+    if(identical(getMathOpType(getDataType(x)), Int32Type))
       x <- createIntegerConstant(as.integer(x))
     else
       x <- createDoubleConstant(as.numeric(x))

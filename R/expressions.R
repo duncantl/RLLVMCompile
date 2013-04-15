@@ -7,7 +7,7 @@ function(expr, where = globalenv())
   library(codetools)
   g = findGlobals(f, merge = FALSE)
 
-  types = sapply(g$var, function(x) getType(get(x, where)))
+  types = sapply(g$var, function(x) getDataType(get(x, where)))
 
   cmd = paste("alist(", sprintf("%s = ", g$var), ")")
   formals(f) = eval(parse(text = cmd))
