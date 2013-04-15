@@ -1,0 +1,34 @@
+
+Write a function in R (that involves loops)
+
+Have it take a vector of doubles and a length.
+
+Compile it to LLVM
+
+Then pass this to Python
+
+If python is embedded in R or vice versa with Rpy2, then 
+call the routine directly.  Pass reference to routine or module
+and then allow Python call that.
+
+If don't have two interpreters in same process, export the compile
+routine to a file and allow Python to import it. Then call.
+
+Work with NumPy strides, etc.
+
+
+
+
+Lazy evaluation:
+Example: 
+
+f = function(x, y)
+{
+  g()
+}
+
+g = function(z, a)
+{
+  z
+  a
+}
