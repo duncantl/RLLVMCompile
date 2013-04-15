@@ -5,13 +5,14 @@ function(call, env, ir, ...)
      compile(getArgs(call, env, ir)[[1]], env, ir)
 
 returnHandler =
-function(call, env, ir, ...) {
+function(call, env, ir, ...) 
+{
       args = as.list(call[-1])
 
       if (is.null(findVar('.returnType', env)))
         stop(".returnType must be in environment.")
       rt <- env$.returnType
-            # TODO check types -- how?
+            # TODO check types -- how? What check do we want to run?
       checkArgs(args, list('ANY'), 'return')
 
 
@@ -20,7 +21,7 @@ function(call, env, ir, ...) {
         val = getVariable(args[[1]], env, ir, load=TRUE, ...)
 
         argType = getType(args[[1]], env)
-        if (is(argType, "Type"))
+        if (is(argType, "Type") && !is(argType, "SEXPType"))
           argType = argType@ref
         
       } else if (is.call(args[[1]])) {
@@ -53,8 +54,7 @@ function(call, env, ir, ...) {
 
       if (!identical(argType, env$.returnType)) {
         message("Coercing type of return!")
-        # We need to coerce types
-
+           # We need to coerce types
         val = createCast(ir, env$.returnType, argType, val)                
       }
       ir$createReturn(val)

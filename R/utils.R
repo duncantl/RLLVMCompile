@@ -209,7 +209,7 @@ function(ir, toType, fromType, val) {
   i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
 
   if (!length(i))
-    error(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
+    stop(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
     
   
   ## checking needed here
