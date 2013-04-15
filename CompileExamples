@@ -1,0 +1,71 @@
+function(x)
+{
+   x = x[!is.na(x)]  # makes a copy
+   sum(x)/length(x)
+}
+
+
+Want to write this as
+
+function(x)
+{
+   total = 0
+   n = 0
+   for(i in x) {
+     if(!is.na(i)) {
+       total = total + i
+       n = n + 1
+     }
+   }
+   total/n
+}
+
+This avoids creating the copy of x.
+
+###############################################################
+
+lazy evaluation
+
+Allow person compiling to say no lazy evaluation.
+foo = 
+function(x, y)
+{
+  cat("In foo\n")
+  x
+  cat(x, " - done x\n")
+  y
+  cat(y, " - done y\n")
+  x + y
+}
+
+a = 1
+b = 2
+c = 4
+foo({cat("from x\n"); a + b}, {cat("from y\n"); a - c})
+
+One possible approach for this is to complile foo into
+foo_llvm and create foo_x_lazy_llvm and foo_y_lazy_llvm
+
+foo = 
+function(x, y, foo_x_lazy_llvm, foo_y_lazy_llvm)
+{
+  cat("In foo\n")
+  x = foo_x_lazy_llvm()
+  x
+  cat(x, " - done x\n")
+  y = foo_y_lazy_llvm()
+  y
+  cat(y, " - done y\n")
+  x + y
+}
+
+foo_x_lazy_llvm knows the identify of the inputs it needs,
+as determined by analysis of the expressions.
+
+For a top-level call, we may actually want to evaluate the expressions.
+We won't know the types in the expressions, potentially or we will have to compile
+these functions on the fly for each call. So in fact we actually want to 
+compile a function for that expression with access to all the inputs it needs
+and then pass that function pointer
+
+

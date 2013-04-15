@@ -4,8 +4,13 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
+  browser()
    funName = mapRoutineName(as.character(call[[1]]))
-   
+
+    # Here we utilize the polymorphic nature of intrinsics.
+    # We may not want this flexibility. e.g. if we have an integer
+    # and are calling log(), then we get an int32 returned. We probably
+    # want to coerce the input up to a double and use the regular log() fn.
    if(isIntrinsic(funName)) {
       argTypes = lapply(as.list(call[-1]), getTypes, env)
       ofun = getIntrinsic(env$.module, funName, argTypes)

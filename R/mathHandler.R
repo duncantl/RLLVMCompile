@@ -10,6 +10,7 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
+ 
   if(length(call) == 2)  {
      # unary operator - most likely -
      val = compile(call[[2]], env, ir, ...)
@@ -84,6 +85,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   opName = as.character(call[[1]]) 
   op = codes[ opName ]
 
+browser()  
   if(!is.na(op)) {
       ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(call))
   } else {

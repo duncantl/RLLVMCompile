@@ -69,7 +69,8 @@ function(name)
 {
   switch(name,
          "numeric" = DoubleType,
-         "integer" = Int32Type)
+         "integer" = Int32Type,
+         stop("don't know mapping from ", name, " to LLVM"))
 }
 
 
@@ -104,7 +105,7 @@ function(type)
     stop("This type is not yet implemented.")
 }
 
-# There is an S4 generic getType in llvm. Why not proide methods for that
+# There is an S4 generic getType in llvm. Why not provide methods for that
 
 getType =
 function(val, env)
@@ -154,13 +155,18 @@ function(val, env)
       return(getMathOpType(types))
   }
 
-   warning("can't tell type of call")
+  warning("can't tell type of call ", paste(deparse(val), collapse = " "))
+  NULL
 }
 
 getType.default =
 function(val, env)
 {
 #  return(getTypes(val, env))
-  warning("getType for ", class(val), ": default method")
-  return(NULL)
+  if(length(val) == 1)
+      mapRTypeToLLVM(class(val))
+  else {
+    warning("getType for ", class(val), ": default method")
+    NULL
+  }
 }

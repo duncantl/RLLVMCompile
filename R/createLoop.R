@@ -2,6 +2,7 @@
 compile.for = compileForLoop =
 function(call, env, ir, ..., nextBlock = NULL)
 {
+ browser()
   var = as.character(call[[2]])
   inn = call[[3]]
   isSeq = isSequence(inn)
@@ -26,6 +27,24 @@ function(call, env, ir, ..., nextBlock = NULL)
          ans$limits = list(from = 1L, to = substitute(length(x), list(x = as.name(tmpVar))))
      } else
          ans$limits = list(from = 1L, to = substitute(length(x), list(x = call[[3]])))
+
+     #XXX since isSeq is FALSE here, we have to introduce a new temporary variable
+     # for the counter variable and rewrite the body of the loop or assign the value
+     # to the temporary variable. e.g. for(val in x) ... would become for(i in seq(along = x)) { val = x[i]; body }
+     # or else we have to change references to val to x[val].  For debugging, rewriting can be aggrevating.
+     # Introducing a new variable could conflict with another in the function, so need to know all of those.
+     if(class(ans$body) != "{") 
+       ans$body = substitute({foo}, list(foo = ans$body))
+
+     b = ans$body
+     b[(2:length(body)) + 1L] = b[(2:length(body))]
+     e = quote(x <- y)
+     e[[2]] = as.name(ans$var)
+     ans$var = "i"  #XXX pick an unused variable name
+     warning("compute name for counter in loop to be unique")
+     e[[3]] = substitute(y[i], list(y = inn))
+     b[[2]] = e
+     ans$body = b
    }
 
   class(ans) = "ForLoop"
@@ -43,6 +62,7 @@ createLoopCode =
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
           label = ".")
 {
+  browser()
 
      # The caller (compileFunction and compileExpressions) has already created a block
      # for this expression, so we can use it as the entry block and create and initialize
@@ -75,14 +95,13 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
         ty = getTypes(lim[[2]], env)
         if(is(ty, "SEXPType")) {
              # declare Rf_length()
-        browser()
            R.length = declareFunction(getBuiltInRoutines()[["length"]], "Rf_length", env$.module)
            sym = as.character(lim[[2]])
            var = getVariable(sym, env, ir)
 #XXXXXX        
            ir$createStore(ir$createCall(R.length, var), to)
         } else
-           stop("No certain  what to do with ", paste(deparse(lim), collaspe = " "), " for loop extents")
+           stop("Not certain  what to do with ", paste(deparse(lim), collaspe = " "), " for loop extents")
      } else {
        ir$createStore(lim, to)
      }
