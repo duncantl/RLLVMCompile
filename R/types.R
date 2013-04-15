@@ -156,6 +156,13 @@ function(val, env)
       return(getMathOpType(types))
   }
 
+  mod = env$.module
+  if(fun %in% names(mod) && is( f <- mod[[fun]], "Function")) {
+    return(getReturnType(f))
+  }
+
+  #XXX Builtin types that we know about.
+  
   warning("can't tell type of call ", paste(deparse(val), collapse = " "))
   NULL
 }

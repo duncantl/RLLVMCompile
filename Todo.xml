@@ -12,6 +12,11 @@ Create a class and constructor to represent the compiler.
 (Maybe a reference class).
 Then allow this to be reused to compile different functions.
 </item>
+
+<item>
+Explore why the fuseLoop example with fc for f2 segfaults when we have a vector of length 1e6 rather than 1e5
+</item>
+
 <item>
 Call R functions from C code.
 </item>
