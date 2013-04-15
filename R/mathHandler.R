@@ -11,21 +11,24 @@ mathHandler =
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
   if(length(call) == 2)  {
-    # unary operator - most likely -
-    val = compile(call[[2]], env, ir, ...)
-        
-    ## TODO fix ir$ SS, clean this
-    if (identical(getType(call[[2]], env), Int32Type)) {
-      return(createNeg(val))
-       # return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
-    }
-    
-    if (identical(getType(call[[2]], env), DoubleType)) {
-      return(createFNeg(ir, val, as.character(call[[2]])))
-    }
-    stop("cannot createNeg for this type yet.")
-   }
-      
+     # unary operator - most likely -
+     val = compile(call[[2]], env, ir, ...)
+
+     ty2 = getTypes(call[[2]], env)
+     ## TODO fix ir$ SS, clean this
+     if (identical(ty2, Int32Type)) {
+       return(createNeg(val))
+        # return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
+     }
+     
+     if (identical(ty2, DoubleType)) {
+       return(createFNeg(ir, val, as.character(call[[2]])))
+     }
+
+     stop("cannot createNeg for this type yet.")
+  }
+
+  call[2:length(call)] = lapply(call[-1], rewriteExpressions, env)
 
   
   # Need to handle the case where we have a literal and we can convert it to the
@@ -54,6 +57,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   if (any(!typeMatches))
     toCast = as.list(call[-1])[[which(!typeMatches)]]
 
+
   isIntType = identical(targetType, Int32Type)
   e = lapply(call[-1], function(x)
                        if(is(x, "numeric")) {
@@ -73,12 +77,24 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 
     # XXX Have to deal with different types.
   if(isIntType)
-     codes = c("+" = Add, "-" = Sub, "*" = Mul, "-" = SDiv, "%/%" = SRem)
+     codes = c("+" = Add, "-" = Sub, "*" = Mul, "/" = SDiv, "%/%" = SRem)
   else
-     codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "-" = FDiv, "%/%" = FRem)
+     codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "/" = FDiv, "%/%" = FRem)
 
-  op = codes[ as.character(call[[1]]) ]
+  opName = as.character(call[[1]]) 
+  op = codes[ opName ]
 
-  ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(call))
+  if(!is.na(op)) {
+      ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(call))
+  } else {
+    
+     if(opName == "^") {
+         # also see callHandler() in call.R
+       f = declareFunction(getBuiltInRoutines()[["pow"]], "pow", env$.module)
+       ins = ir$createCall(f, e[[1]], e[[2]])
+     } else
+       stop("no math operation found corresponding to ", opName)
+  }
+
   ins
 }

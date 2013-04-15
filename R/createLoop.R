@@ -71,6 +71,18 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
        var = getVariable(sym, env, ir)
        # ir$createLoad(to, get(as.character(lim), env))
        ir$createStore(var, to)
+     } else if(is.call(lim) && length(lim) == 2 && as.character(lim[[1]]) == "length") {
+        ty = getTypes(lim[[2]], env)
+        if(is(ty, "SEXPType")) {
+             # declare Rf_length()
+        browser()
+           R.length = declareFunction(getBuiltInRoutines()[["length"]], "Rf_length", env$.module)
+           sym = as.character(lim[[2]])
+           var = getVariable(sym, env, ir)
+#XXXXXX        
+           ir$createStore(ir$createCall(R.length, var), to)
+        } else
+           stop("No certain  what to do with ", paste(deparse(lim), collaspe = " "), " for loop extents")
      } else {
        ir$createStore(lim, to)
      }

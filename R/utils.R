@@ -131,6 +131,12 @@ function(expr, nested = FALSE, ...)
      expr
 }
 
+insertReturn.name =
+function(expr, nested = FALSE, ...)
+{
+   substitute(return(x), list(x = expr))
+}
+
 
 `insertReturn.call` =
 function(expr, nested = FALSE, ...)

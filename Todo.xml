@@ -7,7 +7,11 @@
 <title>General</title>
 
 <items>
-
+<item>
+Create a class and constructor to represent the compiler.
+(Maybe a reference class).
+Then allow this to be reused to compile different functions.
+</item>
 <item>
 Call R functions from C code.
 </item>
@@ -108,13 +112,40 @@ after evaluating it in R. Done.
 Now need a method for createNeg which is in Rllvm,
 but we need a version .
 Compiles now, but get a bad module.
-
 </item>
 
 <item>
 Identify const variables.
 This is for our purpose rather than LLVM. We want to be able to identify
 these to determine whether we can pass them by reference since they don't change.
+</item>
+
+<item>
+Identify constants  such as pi in dnorm calculation.
+If the current value is in a sealed package and is a numeric value,
+then could treat this as constant, heuristically.
+Replace in the code.
+</item>
+
+<item>
+If code refers to a non-local variable, either capture that variable now
+and convert it to a value in the module or insert a call to a routine
+to get the variable. We can then generate a routine in the module that
+retrieves the current value of the R object from the R interpreter.
+</item>
+
+<item>
+Compute types for the intrinsics and put in a table
+so that the R user doesn't have to specify them.
+Does this make sense, i.e. for the overloaded ones?
+</item>
+
+<item>
+Rewrite expressions. 
+Do we use a separate pass?
+Or do we make the changes as we try to compile a call, e.g. replace pi with the constant,
+replace  expr^2 with pow(expr, 2). (Ideally, we'd create a temporary variable for expr and
+then multiply.)
 </item>
 
 <item>

@@ -7,5 +7,5 @@ Author: Vince Buffalo, Duncan Temple Lang
 Maintainer: Duncan Temple Lang <duncan@r-project.org>
 License: GPL
 Depends: codetools, Rllvm
-xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R
+xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R 
 

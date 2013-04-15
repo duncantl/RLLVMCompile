@@ -5,8 +5,15 @@ function(obj, env, elementType = FALSE)
       Int32Type
    else if(is(obj, "numeric"))
       DoubleType   
-   else if(is.name(obj)) { 
-     ans = env$.types[[as.character(obj)]]
+   else if(is.name(obj)) {
+
+     id = as.character(obj)
+     ans = if(id %in% names(env$.types))
+              env$.types[[as.character(obj)]]
+           else
+                # look in additional environments if necessary.
+              getVariableType(id)
+     
      if(elementType)
         getTypeOfElement(ans)
      else
@@ -17,15 +24,52 @@ function(obj, env, elementType = FALSE)
           return(getTypes(obj[[2]], env, TRUE))
 
        fun = as.character(obj[[1]])
+       if(fun == "(")
+         return(getTypes(obj[[2]], env))
+       
        if(fun %in% names(env$.functionInfo))
          return( get(fun, env$.functionInfo)$returnType )
+       else if(fun %in% names(FunctionTypeInfo)) 
+         return(getFunctionTypeInfo(fun, obj, env, elementType, FunctionTypeInfo))
 
        getType(obj, env)
 
    } else {
      stop("Can't determine type for ", class(obj))
    }
-     
+}
+
+getVariableType =
+  #
+  #  See getVariable() in utils.R and synchronize/merge
+  #
+function(name, constants = ConstantInfo)
+{
+#  if(name %in% names(constants))
+  v = find(name)
+  if(length(v) == 0)
+    stop("cannot find variable ", name)
+
+  mapRTypeToLLVM(class(get(name, v[1])))    
+}
+
+getFunctionTypeInfo =
+function(funName, call, env, elementType = FALSE, info = FunctionTypeInfo)
+{
+   i = info[[funName]]
+   ans = i$"return"
+   if(is.character(ans))
+      mapRTypeToLLVM(ans)
+   else
+      ans
+}
+
+mapRTypeToLLVM =
+function(name)
+{
+  switch(name,
+         "numeric" = DoubleType,
+         "integer" = Int32Type)
 }
 
 

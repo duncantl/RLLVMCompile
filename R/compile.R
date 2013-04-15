@@ -21,7 +21,7 @@ function(call, env, ir)
    
    val <- args[[2]]
    if (is.na(findVar(var, env))) {
-     # Create new local store, TODO remove the type here and infer it
+        # Create new local store, TODO remove the type here and infer it
      type = getType(val, env)
      assign(var, createLocalVariable(ir, type, var), envir=env) ## Todo fix type
      env$.types[[var]] = type
@@ -84,10 +84,6 @@ function(call, env, ir, ...)
         # StoreInst. Note: this seems to be the way it's done here
         # too: http://llvm.org/docs/tutorial/LangImpl7.html
 }
-
-
-
-
 
 
 compile <-
@@ -201,8 +197,9 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .routineInfo = list(),
          .compilerHandlers = CompilerHandlers,
          .globals = findGlobals(fun, merge = FALSE),
-         .insertReturn = FALSE,
+         .insertReturn = TRUE,
          .builtInRoutines = getBuiltInRoutines(),
+         .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL)
 {
   if (.insertReturn)
@@ -229,7 +226,9 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     args <- formals(fun) # for checking against types; TODO
     fbody <- body(fun)
 
-     
+    if(length(args)  > length(types))
+      stop("need to specify the types for all of the arguments")
+
     if(length(names(types)) == 0)
       names(types) = names(args)
     
@@ -287,6 +286,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
      
     nenv$.builtInRoutines = .builtInRoutines
     nenv$.functionInfo = .functionInfo
+    nenv$.Constants = .constants
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
@@ -302,9 +302,17 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
       return(list(mod=mod, fun=llvm.fun, env = nenv))
     else
        llvm.fun
-    
-  } else
+  } else if(!isIntrinsic(name))
      stop("compileFunction can only handle closures. Failing on ", name)
+}
+
+Rf_routines = c("length")
+mapRoutineName =
+function(name)
+{
+  w = name %in% Rf_routines
+  name[w] = sprintf("Rf_%s", name[w])
+  name
 }
 
 makeCompileEnv =
@@ -330,6 +338,8 @@ function(type)
 processExternalRoutines =
 function(mod, ..., .funcs = list(...), .lookup = TRUE)
 {
+  names(.funcs) = mapRoutineName(names(.funcs))
+  
   ans = mapply(declareFunction, .funcs, names(.funcs), MoreArgs = list(mod))
 
   if(.lookup) {
@@ -359,13 +369,25 @@ function(def, name, mod)
 }
 
 
+getConstants =
+function(..., .defaults = ConstantInfo)
+{
+  vals = list(...)
+  .defaults[names(vals)] = vals
+  .defaults
+}
+
 getBuiltInRoutines =
+  #
+  # See FunctionTypeInfo also 
+  #
 function()
 {
         # These should be understood to be vectorized also.  
   list(exp = list(DoubleType, DoubleType),
+       pow = list(DoubleType, DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType),
-       length = list(DoublePtrType),
+       length = list(Int32Type, Rllvm:::getSEXPType("REAL")),
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),
        dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))       
@@ -376,7 +398,7 @@ function()
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "for", "if", "while",
-                        "repeat", "(", "!") # for now
+                        "repeat", "(", "!", "^")  # for now
 
 
 compileCalledFuncs =
@@ -390,6 +412,7 @@ function(globalInfo, mod, .functionInfo = list())
      # Skip the ones we already have in the module.
      # Possibly have different types!
   funs = funs[!(funs %in% names(getModuleFunctions(mod))) ]
+  funs = funs[!(sapply(names(funs), isIntrinsic))]  
   
   funs = structure(lapply(funs, get), names = funs)
 
@@ -450,7 +473,6 @@ compileGlobalVariables =
 function(varNames, mod, env, ir,
           mutable = sapply(varNames, isMutableRObject))
 {
-
    ctx = getGlobalContext()
    sapply(varNames[!mutable],
            function(var) {

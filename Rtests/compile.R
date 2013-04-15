@@ -1,6 +1,6 @@
 ## Test functions ##
 add <- function(x, y) {
-  xy.sum <- x+y # local var
+  xy.sum <- x + y # local var
   return(xy.sum)
 }
 ## mod <- Module('testAdd')

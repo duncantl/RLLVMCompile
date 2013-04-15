@@ -4,7 +4,13 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
-   ofun = findFun(as.character(call[[1]]), env)
+   funName = mapRoutineName(as.character(call[[1]]))
+   
+   if(isIntrinsic(funName)) {
+      argTypes = lapply(as.list(call[-1]), getTypes, env)
+      ofun = getIntrinsic(env$.module, funName, argTypes)
+   } else 
+      ofun = findFun(funName, env)
      #??? Need to get the types of parameters and coerce them to these types.
      # Can we pass this to compile and have that do the coercion as necessary
    args = lapply(as.list(call[-1]), compile, env, ir, ...)  # ... and fun, name,
