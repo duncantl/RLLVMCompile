@@ -476,7 +476,7 @@ function(varNames, mod, env, ir,
    sapply(varNames[!mutable],
            function(var) {
              val = createConstant(ir, get(var), context = ctx)   
-             createGlobalVariable(var, val, mod, constant = TRUE)
+             createGlobalVariable(var, val = val, mod, constant = TRUE)
            })
 
 #

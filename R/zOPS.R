@@ -18,14 +18,14 @@ function(call, env, ir, ...)
 
       argType = NULL
       if(is.name(args[[1]])) {
-        val = getVariable(args[[1]], env, ir, load=TRUE, ...)
+         val = getVariable(args[[1]], env, ir, load=TRUE, ...)
 
-        argType = getDataType(args[[1]], env)
-        if (is(argType, "Type") && !is(argType, "SEXPType"))
-          argType = argType@ref
+         argType = getDataType(args[[1]], env)
+         if(is(argType, "Type") && !is(argType, "SEXPType"))
+            argType = argType@ref
         
       } else if (is.call(args[[1]])) {
-        val = compile(args[[1]], env, ir)
+         val = compile(args[[1]], env, ir)
         
         # TODO We need to handle Rllvm calls in return
         # statements more generally, but for now, this works
@@ -52,13 +52,29 @@ function(call, env, ir, ...)
           stop("Could not getType.")
       }
 
-      if (!identical(argType, env$.returnType)) {
+      if (!sameType(argType, env$.returnType)) {
         message("Coercing type of return!")
            # We need to coerce types
         val = createCast(ir, env$.returnType, argType, val)                
       }
       ir$createReturn(val)
-    }          
+    }
+
+
+sameType =
+function(a, b)
+{
+  if(identical(a, b))
+     TRUE
+  else if(is(a, "externalptr") && is(b, "Type"))
+      identical(a, b@ref)
+  else if(is(b, "externalptr") && is(a, "Type"))
+      identical(a@ref, b)
+  else if(is(b, "Type") && is(a, "Type"))
+      identical(a@ref, b@ref)  
+  else
+      FALSE
+}
 
 CompilerHandlers <-
        list(

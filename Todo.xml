@@ -14,6 +14,16 @@ Then allow this to be reused to compile different functions.
 </item>
 
 <item>
+If the  return type is VoidType, don't bother with the .insertReturn
+See Dnorm_v
+</item>
+
+<item>
+When we find the free variables, check if they exist before
+generating any code and report errors immediately.
+</item>
+
+<item>
 Type inference system needed.
 </item>
 
