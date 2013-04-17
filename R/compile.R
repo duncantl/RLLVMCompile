@@ -264,9 +264,16 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     if(length(.globals$functions)) 
        compileCalledFuncs(.globals, mod, .functionInfo)
 
+    if(length(.globals$variables)) {
 
-    if(length(.globals$variables))
+       i = .globals$variables %in% names(mod)
+       if(any(i)) {
+              #XXX should check that they are actual variables and not functions.
+          .globals$variables = .globals$variables[!i]
+       }
+      
        compileGlobalVariables(.globals$variables, mod, env, ir)
+    }
     
     block <- Block(llvm.fun, "entry")
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
@@ -278,11 +285,11 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.fun = llvm.fun
     nenv$.params = params
     nenv$.types = types
+    nenv$.returnType = returnType
+    nenv$.entryBlock = block     
+
     nenv$.module = mod
     nenv$.compilerHandlers = .compilerHandlers
-    nenv$.returnType = returnType
-    nenv$.entryBlock = block
-     
     nenv$.builtInRoutines = .builtInRoutines
     nenv$.functionInfo = .functionInfo
     nenv$.Constants = .constants
@@ -350,7 +357,7 @@ function(mod, ..., .funcs = list(...), .lookup = TRUE)
 }
 
 declareFunction =
-function(def, name, mod)
+function(def, name, mod, linkage = ExternalLinkage)
 {
    # For now, just treat the def as list of returnType, parm1, parm2, ...
    # But want to handle if they split them into separate elements, e.g
@@ -362,8 +369,12 @@ function(def, name, mod)
      ret = def[[1]]
      parms = def[-1]
   }
+  
   fun = Function(name, ret, parms, module = mod)
-  setLinkage(fun, ExternalLinkage)
+
+  if(!is.na(linkage))
+     setLinkage(fun, linkage)
+  
   fun
 }
 
@@ -387,13 +398,14 @@ function()
        pow = list(DoubleType, DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType),
        length = list(Int32Type, Rllvm:::getSEXPType("REAL")),
+#XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),
        dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))       
       )  
 }
 
-# Should this just be names of CompilerHandlers
+# Should this just be names of CompilerHandlers?
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "for", "if", "while",
