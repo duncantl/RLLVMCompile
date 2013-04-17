@@ -98,9 +98,14 @@ function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
             tmp
         } else if(search.params && sym %in% names(env$.params)) {
           env$.params[[sym]]
-        } else
+        } else {
             # find in the module.
-          getGlobalVariable(env$.module, sym)
+          v = getGlobalVariable(env$.module, sym)
+          if(load && !is.null(ir))
+             ir$createLoad(v)
+          else
+             v
+        }
 }
 
 

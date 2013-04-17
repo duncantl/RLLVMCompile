@@ -196,7 +196,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .routineInfo = list(),
          .compilerHandlers = CompilerHandlers,
          .globals = findGlobals(fun, merge = FALSE),
-         .insertReturn = TRUE,
+         .insertReturn = !identical(returnType, VoidType),
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL)

@@ -80,6 +80,8 @@ getMathOpType =
 # will be what we should coerce to).
 function(types)
 {
+   types = lapply(types, function(x) if(is(x, "Type")) x@ref else x)
+   
    if( identical(types[[1]], types[[2]]) )
      return(types[[1]])
 
