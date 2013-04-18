@@ -5,9 +5,18 @@ logicOpHandler =
 # comparison operators like FCmp.
 function(call, env, ir, ...)
 {
+#if(call[[1]] == as.name("!"))  browser()
    if(length(call) == 2) {
      val = compile(call[[2]], env, ir, ...)
-     not = ir$createNot(val)
+     ty.val = getType(val)
+     if(sameType(ty.val, Int1Type))
+       not = ir$createNot(val)
+     else if(isIntegerType(ty.val))  { #sameType(getType(val), Int32Type)) {
+        # could just rewrite the call to call[[2]] == 0 or whatever and then pass to code below
+        # but we have already compiled call[[2]].
+       not = ir$createICmp( ICMP_EQ, val, ir$createIntegerConstant(0L, getContext(env$.module)), paste(deparse(call[[2]]), collapse = ""))
+     } else
+        stop("Not yet handling ! for non-integer types")
      
      return(not) #, "xx", ir$getInsertBlock()))
    }

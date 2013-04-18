@@ -35,8 +35,7 @@ function(expr, nested = FALSE, ...)
 function(expr, nested = FALSE, ...)
 {
   if(nested || expr[[1]] != as.name('return')) {
-    if(nested) {
-browser()
+    if(FALSE && nested) {
         # create .ret = expr
       k = quote(.ret <- val)
       k[[3]] = expr
@@ -77,6 +76,13 @@ function(expr, nested = FALSE, ...)
 `insertReturn.function` =
 function(expr, nested = FALSE, ...)
 {
-   body(expr) = insertReturn(body(expr))
+#   body(expr) = insertReturn(body(expr))
+   b = body(expr)
+   if(class(b) == "{")
+      b[[length(b)]] = insertReturn(b[[length(b)]])
+   else
+      b = insertReturn(b)
+   
+   body(expr) = b
    expr
 }

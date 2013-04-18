@@ -1,27 +1,28 @@
-
 basic.types = substitute(c(Int16Type, Int1Type, Int32PtrType,
-  Int32Type, Int64Type, Int8Type, VoidType,
-  FloatPtrType, FloatType, DoublePtrType, DoubleType))
+                           Int32Type, Int64Type, Int8Type, VoidType,
+                           FloatPtrType, FloatType, DoublePtrType, DoubleType))
 
 btnames = sapply(basic.types[-1], deparse)
 basic.types = sapply(basic.types[-1], eval)
 names(basic.types) = btnames
 
 reverseLookupType =
-# Given an external pointer, find the corresponding name for this
-# type. This is useful for debugging when Rllvm crashes and printing
-# everything in an environment.
-function(type) {
-  n <- which(sapply(basic.types, function(x) identical(x, type)))
+ # Given an external pointer, find the corresponding name for this
+ # type. This is useful for debugging when Rllvm crashes and printing
+ # everything in an environment.
+function(type)
+{
+  n <- which(sapply(basic.types, function(x) sameType(x, type)))
   if (!length(n))
     return(NA)
   names(n)
 }
 
 prettyEnv =
-# Print all the goodies in an environment. Maybe give compile
-# environments a class and make this a method.
-function(env) {
+  # Print all the goodies in an environment. Maybe give compile
+  # environments a class and make this a method.
+function(env)
+{
   cat(sprintf("Return type: %s\n", reverseLookupType(env$.returnType)))
 
   cat("Parameters:\n") # no way to get type
@@ -33,13 +34,16 @@ function(env) {
   }
 }
 
-findVar <- function(var, env) {
+findVar <-
+function(var, env)
+{
   return(mget(as.character(var), envir=env, ifnotfound=NA))
 }
 
 # Make this a generic and have this as the default.
 # Allow other people to provide their own.
-findCall <- function(call, OPS)
+findCall <-
+function(call, OPS)
 {
   op <- match(as.character(call), names(OPS))
   if (is.na(op))
@@ -48,7 +52,9 @@ findCall <- function(call, OPS)
   return(OPS[[op]])
 }
 
-checkArgs <- function(args, types, fun) {
+checkArgs <-
+function(args, types, fun)
+{
   # for side-effect of stop() when wrong arg type
   # encountered. TypeInfo will replace this probably.
   if (length(args) != length(types))
@@ -61,7 +67,9 @@ checkArgs <- function(args, types, fun) {
   }
 }
 
-getArgs <- function(expr, env = NULL, ir = NULL) {
+getArgs <-
+function(expr, env = NULL, ir = NULL)
+{
   # Converts to list; TODO this is no longer used by any code -
   # candidate for removal
   if(typeof(expr) != "language")
@@ -110,115 +118,61 @@ function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
 
 
 
-insertReturn =
-  # Checks to see if we need to enclose the final expression
-  # within a call to return()
-  #
-  # insertReturn(quote(return(x + 1))  )
-  # insertReturn(quote(x + 1))
-  # insertReturn(quote({ x = 2; x + 1} ))
-  # insertReturn(quote({ x = 2; return(x + 1)} ))
-  # insertReturn(quote(while(TRUE) {  return(x + 1) }  ))
-  # insertReturn(quote(while(TRUE) {  x + 1 }  ))
-  # insertReturn(quote(if(x < 10) 20 else 40  ))
-  # insertReturn(quote(if(x < 10) { x= 3; sqrt(x) } else 40  ))
-  # insertReturn(quote(if(x < 10) { x= 3; sqrt(x) } else { x = 100; sqrt(x)}  ))      
-  #
-  #XXX Need to handle while, if  
-function(expr, nested = FALSE, ...)
-  UseMethod("insertReturn")
-
-
-`insertReturn.{` =
-function(expr, nested = FALSE, ...)
-{
-     expr[[length(expr)]] = insertReturn(expr[[length(expr)]], nested)
-     expr
-}
-
-insertReturn.name =
-function(expr, nested = FALSE, ...)
-{
-   substitute(return(x), list(x = expr))
-}
-
-
-`insertReturn.call` =
-function(expr, nested = FALSE, ...)
-{
-  if(nested || expr[[1]] != as.name('return')) {
-    if(nested) {
-        # create .ret = expr
-      k = quote(.ret <- val)
-      k[[3]] = expr
-    } else {
-      k = call('return')
-      k[[2]] = expr
-    }
-    k
-  } else
-    expr
-}
-
-insertReturn.if =
-function(expr, nested = FALSE, ...)
-{
-  expr[[3]] = insertReturn(expr[[3]], nested = TRUE)
-  if(length(expr) == 4)
-      expr[[4]] = insertReturn(expr[[4]], nested = TRUE)
-  expr
-}
-
-insertReturn.numeric = insertReturn.logical = insertReturn.character =
-  insertReturn.integer = `insertReturn.(` =     # should check for (return(x+1))
-   function(expr, nested = FALSE, ...) {
-     k = call('return')
-     k[[2]] = expr
-     k
-   }
-
-
-insertReturn.while =
-function(expr, nested = FALSE, ...)
-{
-  expr[[3]] = insertReturn(expr[[3]], nested = TRUE)
-  expr
-}
-
-`insertReturn.function` =
-function(expr, nested = FALSE, ...)
-{
-   body(expr) = insertReturn(body(expr))
-   expr
-}
 
 createCast =
 # Add a cast instruction; should this be in Rllvm?  So far this only
 # works with Int32Type, DoubleType, and DoublePtrType.  createLoad is
 # used to dereference pointers (of single values - this is temporary
-# and unsafe in some cases).  FIXME
-function(ir, toType, fromType, val) {
-  if (identical(toType, fromType))
+# and unsafe in some cases).  FIXME - XXX
+function(ir, toType, fromType, val)
+{
+
+  # The logic seems to be off here. We have to find
+  # use both the from and to types rather than
+  # matching on the from type and then picking a function.
+
+  if (sameType(toType, fromType))
     stop("No need to cast: toType and fromType are same.")
 
-  toTypes <- c(Int32Type=Int32Type,
-               DoubleType=DoubleType,
-               DoubleType=DoubleType)
-  fromTypes <- c(DoubleType=DoubleType,
-                 Int32Type=Int32Type,
-                 DoubleType=DoublePtrType)
+
+  if(isIntegerType(fromType))
+    return(createCastIntType(ir, val, toType, fromType))
+  
+  toTypes <- c(Int32Type = Int32Type,
+               DoubleType = DoubleType,
+               DoubleType = DoubleType)
+  
+  fromTypes <- c(DoubleType = DoubleType,
+                 Int32Type = Int32Type,
+                 DoubleType = DoublePtrType)
+  
   casters <- c(createFPToSI,
                createSIToFP,
                function(ir, val, ...) createLoad(ir, val))
 
-  i <- which(sapply(fromTypes, function(x) identical(fromType, x)))
+  i <- which(sapply(fromTypes, function(x) sameType(fromType, x)))
 
   if (!length(i))
     stop(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
     
-  
+ browser()
+
   ## checking needed here
   fun = casters[[i]]
   ins = fun(ir, val, toType)
   return(ins)
 }
+
+createCastIntType =
+function(ir, val, toType, fromType, ...)
+{
+  if(sameType(toType, DoubleType))
+    return(createSIToFP(ir, val, toType))
+
+  w = getIntegerBitWidth(fromType)
+  #XXX
+  return(ir$createIntCast(val, toType))  
+#  return(ir$createBitCast(val, toType))
+}
+
+

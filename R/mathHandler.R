@@ -11,22 +11,34 @@ mathHandler =
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
 
-  if(length(call) == 2)  {
-     # unary operator - most likely -
-     val = compile(call[[2]], env, ir, ...)
+# if(FALSE && length(call) == 2)  {
+#    # unary operator - most likely -
+#    val = compile(call[[2]], env, ir, ...)
+#
+#    ty2 = getTypes(call[[2]], env)
+#    ## TODO fix ir$ SS, clean this
+#    if (identical(ty2, Int32Type)) {
+#      return(createNeg(val))
+#       # return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
+#    }
+#    
+#    if (identical(ty2, DoubleType)) {
+#      return(createFNeg(ir, val, as.character(call[[2]])))
+#    }
+#
+#    stop("cannot createNeg for this type yet.")
+# }
 
-     ty2 = getTypes(call[[2]], env)
-     ## TODO fix ir$ SS, clean this
-     if (identical(ty2, Int32Type)) {
-       return(createNeg(val))
-        # return(createNeg(ir, val, call[[2]]))  #?? as.character(call[[2]])))     
-     }
-     
-     if (identical(ty2, DoubleType)) {
-       return(createFNeg(ir, val, as.character(call[[2]])))
-     }
+  if(length(call) == 2) { #XXX temporary exploration
+        # if this is +, e.g. +n, we should just compile call[[2]]
+     if(as.character(call[[1]]) == "+")
+        return(compile(call[[2]], env, ir, ...))
 
-     stop("cannot createNeg for this type yet.")
+      # XXX what about !
+     k = quote(0 - 0)
+     k[[3]] = call[[2]]
+     k[[1]] = call[[1]]
+     call = k
   }
 
   call[2:length(call)] = lapply(call[-1], rewriteExpressions, env)

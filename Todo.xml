@@ -14,16 +14,6 @@ Then allow this to be reused to compile different functions.
 </item>
 
 <item>
-If the  return type is VoidType, don't bother with the .insertReturn
-See Dnorm_v
-</item>
-
-<item>
-When we find the free variables, check if they exist before
-generating any code and report errors immediately.
-</item>
-
-<item>
 Type inference system needed.
 </item>
 
@@ -33,6 +23,14 @@ Explore why the fuseLoop example with fc for f2 segfaults when we have a vector 
 
 <item>
 Call R functions from C code.
+<br/>
+Can construct the expression in the compiled code, if we have access to the
+routines in R.
+Alternatively, compile the R function and just call that.
+</item>
+
+<item>
+Explore non-standard evaluation.
 </item>
 
 <item>
@@ -43,7 +41,7 @@ map names to positions just once, e.g.
 data$var1[1:n]
 data[1:n, "var1"]
 </r:code>
-woul look up the index of var1 and replace "var1" with its index.
+would look up the index of var1 and replace "var1" with its index.
 (Or use a hash table to represent the data structure.)
 </item>
 
@@ -51,6 +49,10 @@ woul look up the index of var1 and replace "var1" with its index.
 Support compiling for code with NAs or without, i.e.
 allow the caller of compileFunction to specify whether
 to include code for NAs.
+<br/>
+There is a parameter for this in compileFunction.
+Is it used? No, at this moment. April 17th.
+Basically, we ignore NAs entirely.
 </item>
 
 <item>
@@ -60,9 +62,9 @@ i.e. different code that takes a vector and iterates over that or
 These are qualitatively different routines.
 </item>
 
-<item id="multiCond">
+<item id="multiCond" status="high">
 Multiple conditions in a test, i.e. if and while condition
-<r:code>
+<r:code><![CDATA[
 f = function(x, y)
 {
   ans = 0L
@@ -74,25 +76,36 @@ f = function(x, y)
   return(ans)
 }
 fc = compileFunction(f, Int32Type, list(x = Int32Type, y = Int32Type))
-</r:code>
+]]></r:code>
+How do we represent these - test each separately and branch for each or combine the operations and test the overall result?
+For || the second approach won't work as we don't want to evaluate the RHS.
+Checking with  how llvm does it on a .c file, it is the multi branch/block setup.
 </item>
 
-<item status="check" note="works for fib example">
+<item status="done" note="works for fib example">
 Handle case when an expression is an if() and both branches return.
 Need to kill off the "next" block since there isn't one.
 
 See fib
 <r:code>
+library(RLLVMCompile)
 fib =
 function(n)
 {
   if(n == 0L || n == 1L)
-     return(n)
+     n
   else
-     return(fib(n - 1L) + fib(n - 2L))
+     fib(n - 1L) + fib(n - 2L)
 }
-fc = compileFunction(f, Int32Type, list(n = Int32Type))
+fc = compileFunction(fib, Int32Type, list(n = Int32Type), name = "fib")
 </r:code>
+</item>
+
+<item status="done">
+insertReturn for fib function above.
+Adding .ret and not return() for the else expression.
+<br/>
+Check we haven't broken anything else related to insertReturn.
 </item>
 
 <item>
@@ -100,7 +113,28 @@ Should we use a fixed variable name for the return value.
 Then all code could store that and jump  to final block.
 </item>
 
+<item status="fix">
+Compile ! 
+<r:code>
+library(RLLVMCompile)
+h = function(l) !l
+hun = compileFunction(h, Int32Type, Int32Type)
+.llvm(hun, 1)
+</r:code>
+This creates an xor.
+<br/>
+[Fixed] Now fails but in better place. Tries to cast Int1Type to Int32Type.
+Write the code for this in utils.R (in RLLVMCompile) to handle this.
+<br/>
+WOrks but <r:expr>.llvm(hun, 0)</r:expr> gives -1. 
+What should it give us.  See tests/not.R
+</item>
+
 <item>
+compile references to character() to be the NULL string, i.e. 0.
+</item>
+
+<item status="done">
 Issues with createNeg. 
 <r:code>
 library(RLLVMCompile)
@@ -111,8 +145,7 @@ f = function(n)
 fc = compileFunction(f, Int32Type, list(n = Int32Type))
 </r:code>
 Broken module.
-Do we need to load n first.
-
+Do we need to load n first?
 </item>
 
 <item status="done">
@@ -151,6 +184,9 @@ If code refers to a non-local variable, either capture that variable now
 and convert it to a value in the module or insert a call to a routine
 to get the variable. We can then generate a routine in the module that
 retrieves the current value of the R object from the R interpreter.
+<br/>
+Add a parameter to compileFunction that controls whether we do this
+aggressive capture or lazy lookup at call time.
 </item>
 
 <item>
@@ -175,8 +211,8 @@ Handle x[1:10], i.e. x[vector] and x[vector] = value(s).
 Compile the not() function to test the ! operator.
 </item>
 
-<item>
-Logical data type
+<item status="check">
+Logical data type - Int1Type.
 </item>
 
 <item>
@@ -339,7 +375,6 @@ Implement repeat
 <item>
 Handle cases where R doesn't return anything explicitly, i.e. just NULL implicitly, but we need
 a particular type, e.g. an integer in 
-
 <r:code><![CDATA[
 foo = function(x) if(x < 10) 100L
 ]]></r:code>
@@ -392,7 +427,7 @@ Consolidate the 2 getLimits functions.
 
 <item status="done">
 May want to simplify compile() and not call getArgs() and pass them to
-the handler funcition - call.op. Many of the handlers will need the entire call.
+the handler function - call.op. Many of the handlers will need the entire call.
 </item>
 
 <item status="done">
@@ -408,7 +443,7 @@ Need a function to give the name of an available temporary variable
 for our function we are compiling.
 </item>
 
-<item>
+<item status="done">
 Handle no explicit return() in the code
 i.e. 
 <r:code>
@@ -432,11 +467,11 @@ Add connections to the different blocks, i.e.
 </item>
 
 <item> 
-  Handle vectorized operations of ==, +, !, etc.
+Handle vectorized operations of ==, +, !, etc.
 </item>
 
 <item> 
-  Handle unary "-".
+Handle unary "-".
 </item>
 
 <item status="done">
@@ -467,13 +502,10 @@ Identify const variables.
 </item>
 
 <item>
-When compiling a function
-and we are given its types,
-follow those through the expressions to determine
-the types of local variables
-and also then follow calls to other functions
-and determine the types of those calls
-and so recursively follow the expressions in those other
+When compiling a function and we are given its types, follow those
+through the expressions to determine the types of local variables and
+also then follow calls to other functions and determine the types of
+those calls and so recursively follow the expressions in those other
 functions.
 </item>
 
@@ -482,18 +514,34 @@ Figure out the output from a function based on its inputs
 and the functions it calls.
 </item>
 
-<item>
+<item status="ok">
 Handle variable reassignment; possibly by using a strategy of renaming
 variables. Are arguments immutable? Should this be treated exactly as
 it is in R?
-<r:code>
+<r:code><![CDATA[
 t2 <- function(x) {
   y <- 4L
   x <- y
   return(x)
 }
+]]></r:code>
+<r:code>
+ff = compileFunction(t2, DoubleType, DoubleType)
+.llvm(ff, 3)
 </r:code>
 </item>
+
+
+<item status="done">
+If the  return type is VoidType, don't bother with the .insertReturn
+See Dnorm_v
+</item>
+
+<item status="done">
+When we find the free variables, check if they exist before
+generating any code and report errors immediately.
+</item>
+
 
 </items>
 </topic>

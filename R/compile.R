@@ -201,7 +201,10 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL)
 {
-  if (.insertReturn)
+   if(missing(name))
+     name = deparse(substitute(fun))
+  
+   if (.insertReturn)
     fun = insertReturn(fun)
 
   if(!missing(types) && !is.list(types))
@@ -293,8 +296,12 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.builtInRoutines = .builtInRoutines
     nenv$.functionInfo = .functionInfo
     nenv$.Constants = .constants
+    nenv$.NAs = NAs
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
+
+    if(identical(returnType, VoidType))
+      ir$createReturn()
 
     ## This may ungracefully cause R to exit, but it's still
     ## preferably to the crash Optimize() on an unverified module
