@@ -50,13 +50,14 @@ function(call, env, ir, ...)
 {
 browser()  
    args = call[-1]  # drop the = or <-
-   
+   stringLiteral = FALSE
    if(isLiteral(args[[2]])) {
       tmp = val = eval(args[[2]])
       ctx = getContext(env$.module)
       val = makeConstant(ir, val, getDataType(I(val), env), ctx)
-      if(is.character(tmp))
-         val = getGetElementPtr(val, ctx = ctx)
+      if(is.character(tmp)) {
+         stringLiteral = TRUE
+      }
    }# else if(isPrimitiveConstructor(args[[2]]))) {
        # so this is probably just defining a variable.
        # Use the type of the RHS to create the variable.
@@ -71,13 +72,14 @@ browser()
 
       # We don't search parameters for the var name, since we don't
       # want to try to assign over a parameter name.
-      ref <- getVariable(var, env, ir, load = FALSE, search.params=FALSE)
+      #XXX  I think we do want to mimic that behaviour but understand which local variable that corresponds to.
+      ref <- getVariable(var, env, ir, load = FALSE, search.params = FALSE)
       if(is.null(ref)) {
-        # No existing variable; detect type and create one.
+                 # No existing variable; detect type and create one.
           type = getDataType(val, env)
         
         if (is.null(type)) {
-          # Variable not found in env or global environments; get type via Rllvm
+                   # Variable not found in env or global environments; get type via Rllvm
           if (is(val, "StoreInst")) {
             # This is from the val = compile(); probably from a
             # statement like: y <- 4L; x <- y. When args[[2]] is
@@ -90,6 +92,12 @@ browser()
           if(is(val, "Value"))
             type = getDataType(val, env)
         }
+         if(stringLiteral) {  # isStringType(type)) 
+           gvar = createGlobalVariable(sprintf(".%s", var), env$.module, type, val, TRUE, PrivateLinkage)
+           val = getGetElementPtr(gvar, ctx = ctx)
+           type = StringType
+         }
+           
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
@@ -97,9 +105,11 @@ browser()
       ref = compile(args[[1]], env, ir, ..., load = FALSE)
    }
 
-   ans = ir$createStore(val, ref)
-   val  # return value - I (Vince) changed this to val from ans. There seems
-        # to be very little we can do with the object of class
+   if(!is.null(val))
+      ir$createStore(val, ref)
+
+   val  # return value - I (Vince) changed this to val from ans (the createStore() return).
+        # There seems to be very little we can do with the object of class
         # StoreInst. Note: this seems to be the way it's done here
         # too: http://llvm.org/docs/tutorial/LangImpl7.html
 }

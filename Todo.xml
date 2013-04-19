@@ -9,6 +9,10 @@
 <items>
 
 <item>
+introduce declarations as R functions, e.g. strPointer(tmp)
+which then creates a local variable tmp of type pointerType(StringType).
+</item>
+<item>
 compile references to character() to be the NULL string, i.e. 0.
 <r:code>
 library(RLLVMCompile)
