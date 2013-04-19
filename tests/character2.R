@@ -2,17 +2,11 @@ library(RLLVMCompile)
 readTo =
 function()
 {
-   tmp = "foo"
+   tmp = character()
    1L
 }
-
-#fun = compileFunction(readTo, StringType)
 fun = compileFunction(readTo, Int32Type, optimize = FALSE)
 showModule(fun)
 .llvm(fun)
-
-
-
-
 
 
