@@ -34,17 +34,36 @@ function(call, env, ir)
    createStore(ir, val, ref)
  }
 
+isPrimitiveConstructor =
+function(call)
+{
+  FALSE
+  if(as.character(call[[1]])  %in% c("integer", "character", "numeric", "logical", "string"))
+    TRUE
+  else
+    FALSE
+}
 
 `compile.=` = `compile.<-`  = assignHandler =
   # Second version here so I don't mess the other one up.
 function(call, env, ir, ...)
 {
+browser()  
    args = call[-1]  # drop the = or <-
-
+   
    if(isLiteral(args[[2]])) {
-      val = eval(args[[2]])
-      val = makeConstant(ir, val, getDataType(val))
-   } else
+      tmp = val = eval(args[[2]])
+      ctx = getContext(env$.module)
+      val = makeConstant(ir, val, getDataType(I(val), env), ctx)
+      if(is.character(tmp))
+         val = getGetElementPtr(val, ctx = ctx)
+   }# else if(isPrimitiveConstructor(args[[2]]))) {
+       # so this is probably just defining a variable.
+       # Use the type of the RHS to create the variable.
+       # Perhaps just change compile.call to handle these functions
+       # specially  and return a val.
+    #   type = getBasicType(args[[2]])
+    else
       val = compile(args[[2]], env, ir)
 
    if(is.name(args[[1]])) {
@@ -55,7 +74,8 @@ function(call, env, ir, ...)
       ref <- getVariable(var, env, ir, load = FALSE, search.params=FALSE)
       if(is.null(ref)) {
         # No existing variable; detect type and create one.
-        type = getDataType(val, env)
+          type = getDataType(val, env)
+        
         if (is.null(type)) {
           # Variable not found in env or global environments; get type via Rllvm
           if (is(val, "StoreInst")) {
@@ -67,8 +87,8 @@ function(call, env, ir, ...)
             type = getDataType(args[[2]], env)
           }
 
-          if (is(val, "Value"))
-            type = getDataType(val)
+          if(is(val, "Value"))
+            type = getDataType(val, env)
         }
          assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type

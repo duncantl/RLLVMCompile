@@ -65,8 +65,8 @@ function(call, env, ir, ...)
 
 CompilerHandlers <-
        list(
-            '!'=notHandler,  # Do we add this to LogicOps, or keep
-                             # separate because it's unitary?
+            '!' = notHandler,  # Do we add this to LogicOps, or keep
+                               # separate because it's unitary?
             'return'= returnHandler,
             '[' = subsetHandler,
             '[<-' = subsetAssignHandler,

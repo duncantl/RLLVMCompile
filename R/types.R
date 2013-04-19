@@ -113,6 +113,13 @@ getDataType =
 function(val, env)
   UseMethod("getDataType")
 
+getDataType.AsIs =
+function(val, env)
+{
+   #XXX guessType from Rllvm
+  Rllvm:::guessType(val)
+}
+
 getDataType.character =
 function(val, env)
 {

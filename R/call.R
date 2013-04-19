@@ -4,7 +4,11 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
-   funName = mapRoutineName(as.character(call[[1]]))
+   funName = as.character(call[[1]])
+   if(isPrimitiveConstructor(call))
+     return(compilePrimitiveConstructor(funName, call, env, ir, ...))
+   
+   funName = mapRoutineName(funName)
 
     # Here we utilize the polymorphic nature of intrinsics.
     # We may not want this flexibility. e.g. if we have an integer
@@ -44,3 +48,22 @@ function(fun, hints)
 
   return(FALSE)
 }
+
+
+
+compilePrimitiveConstructor =
+function(funName, call, env, ir, ...)
+{
+  if(length(call) > 1)
+    warning("ignoring the second argument for call")
+  
+  val = switch(funName,
+               character = "",
+               string = "",
+               integer = 0L,
+               numeric = 0,
+               logical = TRUE)
+  
+   compile(val, env, ir, ...)
+}
+

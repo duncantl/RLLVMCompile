@@ -7,6 +7,37 @@
 <title>General</title>
 
 <items>
+
+<item>
+compile references to character() to be the NULL string, i.e. 0.
+<r:code>
+library(RLLVMCompile)
+f = function() { x = character() ; 1L}
+fc = compileFunction(f, Int32Type)
+</r:code>
+</item>
+
+<item id="multiCond" status="high">
+Multiple conditions in a test, i.e. if and while condition
+<r:code><![CDATA[
+f = function(x, y)
+{
+  ans = 0L
+  if(x < 0 || y < 10 || y > 100)  #x + y == 0)
+      ans = 3L
+  else
+      ans = 7L
+ 
+  return(ans)
+}
+fc = compileFunction(f, Int32Type, list(x = Int32Type, y = Int32Type))
+]]></r:code>
+How do we represent these - test each separately and branch for each or combine the operations and test the overall result?
+For || the second approach won't work as we don't want to evaluate the RHS.
+Checking with  how llvm does it on a .c file, it is the multi branch/block setup.
+</item>
+
+
 <item>
 Create a class and constructor to represent the compiler.
 (Maybe a reference class).
@@ -62,58 +93,12 @@ i.e. different code that takes a vector and iterates over that or
 These are qualitatively different routines.
 </item>
 
-<item id="multiCond" status="high">
-Multiple conditions in a test, i.e. if and while condition
-<r:code><![CDATA[
-f = function(x, y)
-{
-  ans = 0L
-  if(x < 0 || y < 10 || y > 100)  #x + y == 0)
-      ans = 3L
-  else
-      ans = 7L
- 
-  return(ans)
-}
-fc = compileFunction(f, Int32Type, list(x = Int32Type, y = Int32Type))
-]]></r:code>
-How do we represent these - test each separately and branch for each or combine the operations and test the overall result?
-For || the second approach won't work as we don't want to evaluate the RHS.
-Checking with  how llvm does it on a .c file, it is the multi branch/block setup.
-</item>
-
-<item status="done" note="works for fib example">
-Handle case when an expression is an if() and both branches return.
-Need to kill off the "next" block since there isn't one.
-
-See fib
-<r:code>
-library(RLLVMCompile)
-fib =
-function(n)
-{
-  if(n == 0L || n == 1L)
-     n
-  else
-     fib(n - 1L) + fib(n - 2L)
-}
-fc = compileFunction(fib, Int32Type, list(n = Int32Type), name = "fib")
-</r:code>
-</item>
-
-<item status="done">
-insertReturn for fib function above.
-Adding .ret and not return() for the else expression.
-<br/>
-Check we haven't broken anything else related to insertReturn.
-</item>
-
 <item>
 Should we use a fixed variable name for the return value.
 Then all code could store that and jump  to final block.
 </item>
 
-<item status="fix">
+<item status="explore results">
 Compile ! 
 <r:code>
 library(RLLVMCompile)
@@ -126,44 +111,8 @@ This creates an xor.
 [Fixed] Now fails but in better place. Tries to cast Int1Type to Int32Type.
 Write the code for this in utils.R (in RLLVMCompile) to handle this.
 <br/>
-WOrks but <r:expr>.llvm(hun, 0)</r:expr> gives -1. 
+Works but <r:expr>.llvm(hun, 0)</r:expr> gives -1. 
 What should it give us.  See tests/not.R
-</item>
-
-<item>
-compile references to character() to be the NULL string, i.e. 0.
-</item>
-
-<item status="done">
-Issues with createNeg. 
-<r:code>
-library(RLLVMCompile)
-f = function(n)
-{
-  return( - n)
-}
-fc = compileFunction(f, Int32Type, list(n = Int32Type))
-</r:code>
-Broken module.
-Do we need to load n first?
-</item>
-
-<item status="done">
-The initial assignment to ans doesn't compile
-<r:code>
-f = function()
-{
-  ans = -1L 
-  return(ans)
-}
-</r:code>
-We can handle this as a literal value and assign the value directly
-after evaluating it in R. Done.
-<br/>
-<r:error>cannot createNeg for this type yet.</r:error>
-Now need a method for createNeg which is in Rllvm,
-but we need a version .
-Compiles now, but get a bad module.
 </item>
 
 <item>
@@ -172,7 +121,7 @@ This is for our purpose rather than LLVM. We want to be able to identify
 these to determine whether we can pass them by reference since they don't change.
 </item>
 
-<item>
+<item status="done">
 Identify constants  such as pi in dnorm calculation.
 If the current value is in a sealed package and is a numeric value,
 then could treat this as constant, heuristically.
@@ -209,6 +158,8 @@ Handle x[1:10], i.e. x[vector] and x[vector] = value(s).
 
 <item>
 Compile the not() function to test the ! operator.
+<br/>
+Which not() function. See below for a function(x) !x.
 </item>
 
 <item status="check">
@@ -541,7 +492,63 @@ See Dnorm_v
 When we find the free variables, check if they exist before
 generating any code and report errors immediately.
 </item>
+<item status="done" note="works for fib example">
+Handle case when an expression is an if() and both branches return.
+Need to kill off the "next" block since there isn't one.
 
+See fib
+<r:code>
+library(RLLVMCompile)
+fib =
+function(n)
+{
+  if(n == 0L || n == 1L)
+     n
+  else
+     fib(n - 1L) + fib(n - 2L)
+}
+fc = compileFunction(fib, Int32Type, list(n = Int32Type), name = "fib")
+</r:code>
+</item>
+
+<item status="done">
+insertReturn for fib function above.
+Adding .ret and not return() for the else expression.
+<br/>
+Check we haven't broken anything else related to insertReturn.
+</item>
+
+<item status="done">
+Issues with createNeg. 
+<r:code>
+library(RLLVMCompile)
+f = function(n)
+{
+  return( - n)
+}
+fc = compileFunction(f, Int32Type, list(n = Int32Type))
+</r:code>
+Broken module.
+Do we need to load n first?
+</item>
+
+<item status="done">
+The initial assignment to ans doesn't compile
+<r:code>
+f = function()
+{
+  ans = -1L 
+  return(ans)
+}
+</r:code>
+We can handle this as a literal value and assign the value directly
+after evaluating it in R. Done.
+<br/>
+<r:error>cannot createNeg for this type yet.</r:error>
+Now need a method for createNeg which is in Rllvm,
+but we need a version .
+Compiles now, but get a bad module.
+</item>
 
 </items>
 </topic>
