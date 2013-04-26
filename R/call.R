@@ -4,9 +4,20 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
+ browser()
    funName = as.character(call[[1]])
-   if(isPrimitiveConstructor(call))
+
+       #XXX may not want this generally, but via an option in env or just have caller invoke compileSApply() directly.
+       #  See fgets.Rdb in Rllvm/
+   if(funName == "sapply" &&  isSEXPType(type <- getDataType(call[[2]]))) {
+      e = rewriteSApply(call, type, ) # return type of routine being called.
+      lapply(e, compile, env, ir, ...)
+   }
+   
+   if(isPrimitiveConstructor(call))  
      return(compilePrimitiveConstructor(funName, call, env, ir, ...))
+
+   # switch and other special functions.
    
    funName = mapRoutineName(funName)
 
@@ -19,6 +30,8 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
       ofun = getIntrinsic(env$.module, funName, argTypes)
    } else 
       ofun = findFun(funName, env)
+
+   
      #??? Need to get the types of parameters and coerce them to these types.
      # Can we pass this to compile and have that do the coercion as necessary
    args = lapply(as.list(call[-1]), compile, env, ir, ...)  # ... and fun, name,

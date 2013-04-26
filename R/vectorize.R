@@ -14,10 +14,10 @@
 vectorFunctions <- c(rnorm=1, rbinom=1, sample=2)
 
 findCalls =
-# Traverse a block of code, looking for call. Each time it is found,
-# the name of the call will be placed in an environment, and its
-# arguments in a list.
-function(code, call, results=new.env(parent=emptyenv())) {
+ # Traverse a block of code, looking for call. Each time it is found,
+ # the name of the call will be placed in an environment, and its
+ # arguments in a list.
+function(code, call, results = new.env(parent=emptyenv())) {
   for (i in seq_along(code)) {
     if (is.call(code[[i]])) {
       cat("checking:", as.character(code[[i]]), "\n")
@@ -96,8 +96,8 @@ function(call, params) {
 }
 
 checkVectorizedCodeMotion =
-# Check a for loop for code that can be vectorized and moved out of
-# it.
+# Check a for loop for code that can be vectorized and moved out of it.
+#XX examples???
 function(code, params, len, var) {
   out.expr <- list()
   
@@ -195,7 +195,7 @@ function(code, call, replace) {
 
 
 replaceVectorizedCodeMotion =
-# After checking for possible code motion, replace if necessary
+ # After checking for possible code motion, replace if necessary
 function(for.code, params) {
   var <- for.code[[2]]
   len <- getLimits(for.code[[3]])$to # consider from?
@@ -206,19 +206,9 @@ function(for.code, params) {
     call.search <- motion[[2]][[1]]
     call.replace <- motion[[2]][[2]]
   }
-  
-  
 }
-
-
-
-
 
 if (FALSE) {
   body(ex.wrong)[[4]][[4]][[2]]
-
   findCalls(body(ex.wrong), "rnorm")
-
-  
-
 }

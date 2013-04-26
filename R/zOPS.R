@@ -7,6 +7,7 @@ function(call, env, ir, ...)
 returnHandler =
 function(call, env, ir, ...) 
 {
+browser()  
       args = as.list(call[-1])
 
       if (is.null(findVar('.returnType', env)))

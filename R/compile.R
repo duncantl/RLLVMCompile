@@ -34,11 +34,23 @@ function(call, env, ir)
    createStore(ir, val, ref)
  }
 
+getBasicType =
+function(call)
+{
+   id =  as.character(call[[1]])
+   switch(id,
+            integer = Int32Type,
+            string = ,
+            character = StringType,
+            numeric = DoubleType,
+            logical = Int1Type,
+            float = FloatType)
+}
+
 isPrimitiveConstructor =
 function(call)
 {
-  FALSE
-  if(as.character(call[[1]])  %in% c("integer", "character", "numeric", "logical", "string"))
+  if(is.call(call) && as.character(call[[1]])  %in% c("integer", "string", "character", "numeric", "logical", "float"))
     TRUE
   else
     FALSE
@@ -46,25 +58,33 @@ function(call)
 
 `compile.=` = `compile.<-`  = assignHandler =
   # Second version here so I don't mess the other one up.
+  #
+  # XXX   This is now getting to long. Break it up and streamline.
+  #
 function(call, env, ir, ...)
 {
-browser()  
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
-   if(isLiteral(args[[2]])) {
+   type = NULL
+browser()
+       # look at the RHS
+   if(isLiteral(args[[2]])) {  #!! these are the args, not the call
       tmp = val = eval(args[[2]])
       ctx = getContext(env$.module)
-      val = makeConstant(ir, val, getDataType(I(val), env), ctx)
+      type = getDataType(I(val), env)
+      val = makeConstant(ir, val, type, ctx)
+      type = getDataType(val, env)
       if(is.character(tmp)) {
          stringLiteral = TRUE
       }
-   }# else if(isPrimitiveConstructor(args[[2]]))) {
+   } else if(isPrimitiveConstructor(args[[2]])) {
        # so this is probably just defining a variable.
        # Use the type of the RHS to create the variable.
        # Perhaps just change compile.call to handle these functions
        # specially  and return a val.
-    #   type = getBasicType(args[[2]])
-    else
+       type = getBasicType(args[[2]])
+       val = NULL
+    } else
       val = compile(args[[2]], env, ir)
 
    if(is.name(args[[1]])) {
@@ -76,7 +96,8 @@ browser()
       ref <- getVariable(var, env, ir, load = FALSE, search.params = FALSE)
       if(is.null(ref)) {
                  # No existing variable; detect type and create one.
-          type = getDataType(val, env)
+          if(is.null(type))
+             type = getDataType(val, env)
         
         if (is.null(type)) {
                    # Variable not found in env or global environments; get type via Rllvm
@@ -102,7 +123,15 @@ browser()
          env$.types[[var]] = type
        }
    } else {
-      ref = compile(args[[1]], env, ir, ..., load = FALSE)
+
+      expr = args[[1]]
+     
+         # XXX  have to be a lot more general here, but okay to be simple for now (Apr 26 2013).
+      if(is(ty <- getElementAssignmentContainerType(expr, env), "SEXPType")
+          && is.null(expr <- assignToSEXPElement(expr, val, env, ir, ty)))
+            return(val)
+
+        ref = compile(expr, env, ir, ..., load = FALSE)
    }
 
    if(!is.null(val))
@@ -114,10 +143,71 @@ browser()
         # too: http://llvm.org/docs/tutorial/LangImpl7.html
 }
 
+getElementAssignmentContainerType =
+  #
+  #  called from just above for x[.....]
+  #
+function(call, env)
+{
+   if(is.name(call))
+      var = call
+   else
+      var = call[[2]]
+
+   getDataType(var, env)
+}
+
+assignToSEXPElement =
+function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(call, env), ...)
+{
+   if(is(type, "VECSXPType")) {
+     stop("not completed yet")
+   }
+
+   if(is(type, "STRSXPType")) {
+browser()       
+     r = "SET_VECTOR_ELT"
+     declareFunction(env$.builtInRoutines[[r]], r, env$.module)
+
+        # we want to modify x[i] = val to SET_VECTOR_ELT(x, i, val)
+        # Do we also need to add the mkChar(). Depends on what the type is of the RHS,
+        # i.e. compiledValue. We may need more information here than we have, i.e. args[[2]] from the caller of this function.
+     e = quote(SET_VECTOR_ELT(x, i, val))
+     e[[2]] = call[[2]]
+     e[[3]] = subtractOne(call[[3]]) # to zero based counting
+     e[[4]] = compiledValue
+     compile(e, env, ir)
+     return(NULL)
+   }
+
+# Move these definitions into builtins and then just get the name of the routine
+# and simplify the code here. 
+
+   r = getSEXPTypeElementAccessor(type)
+
+
+   declareFunction(env$.builtInRoutines[[r]], r, env$.module)
+
+         # call INTEGER(call[[1]]), etc.
+   e = quote(.tmp <- r(x))
+   e[[3]][[1]] = as.name(r)
+   e[[3]][[2]] = call[[2]]
+
+   compile(e, env, ir, ...)
+
+    # now have the original call refer to .tmp
+   call[[2]] = e[[2]]
+   call
+}
 
 compile <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
+{
+   if(is(e, "RC++Reference")) # for already compiled objects, i.e. Value.
+      return(e)
+   
    UseMethod("compile")
+}
 
 
 `compile.{` = compileExpressions =
@@ -218,7 +308,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 
 compileFunction <-
-function(fun, returnType, types = list(), mod = Module(name), name = NULL,
+function(fun, returnType, types = list(), module = Module(name), name = NULL,
          NAs = FALSE,
          asFunction = FALSE, asList = FALSE,
          optimize = TRUE, ...,
@@ -278,7 +368,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
      
     # Grab types, including return. Set up Function, block, and params.
     argTypes <- types
-    llvm.fun <- Function(name, returnType, argTypes, mod)
+    llvm.fun <- Function(name, returnType, argTypes, module)
 
 
     if(any(.globals$functions %in% names(.builtInRoutines))) {
@@ -292,20 +382,21 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
 
 
     if(length(.routineInfo))
-        processExternalRoutines(mod, .funcs = .routineInfo)
+        processExternalRoutines(module, .funcs = .routineInfo)
 
     if(length(.globals$functions)) 
-       compileCalledFuncs(.globals, mod, .functionInfo)
+       compileCalledFuncs(.globals, module, .functionInfo)
 
     if(length(.globals$variables)) {
 
-       i = .globals$variables %in% names(mod)
+       i = .globals$variables %in% names(module)
        if(any(i)) {
               #XXX should check that they are actual variables and not functions.
           .globals$variables = .globals$variables[!i]
        }
-      
-       compileGlobalVariables(.globals$variables, mod, env, ir)
+
+#XXX     env is not yet defined. What do we want here?
+       compileGlobalVariables(.globals$variables, module, env, ir)
     }
     
     block <- Block(llvm.fun, "entry")
@@ -321,7 +412,7 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     nenv$.returnType = returnType
     nenv$.entryBlock = block     
 
-    nenv$.module = mod
+    nenv$.module = module
     nenv$.compilerHandlers = .compilerHandlers
     nenv$.builtInRoutines = .builtInRoutines
     nenv$.functionInfo = .functionInfo
@@ -336,13 +427,13 @@ function(fun, returnType, types = list(), mod = Module(name), name = NULL,
     ## This may ungracefully cause R to exit, but it's still
     ## preferably to the crash Optimize() on an unverified module
     ## creates.
-    if(optimize && verifyModule(mod))
-       Optimize(mod)
+    if(optimize && verifyModule(module))
+       Optimize(module)
      
-    if(asFunction) {
+    if(asFunction) 
        makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine, .lengthVars = lengthVars)
-    } else if (asList)
-      return(list(mod=mod, fun=llvm.fun, env = nenv))
+    else if (asList)
+       list(mod = module, fun = llvm.fun, env = nenv)
     else
        llvm.fun
   } else if(!isIntrinsic(name))
@@ -430,15 +521,25 @@ getBuiltInRoutines =
   #
 function()
 {
+  SEXPType = getSEXPType()
+  
         # These should be understood to be vectorized also.  
   list(exp = list(DoubleType, DoubleType),
        pow = list(DoubleType, DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType),
-       length = list(Int32Type, Rllvm:::getSEXPType("REAL")),
+       length = list(Int32Type, getSEXPType("REAL")),
+       INTEGER = list(Int32PtrType, getSEXPType("INT")),
+       REAL = list(DoublePtrType, getSEXPType("REAL")),
+       Rf_allocVector = list(SEXPType, Int32Type, Int32Type),
+       Rf_protect = list(VoidType, SEXPType),
+       Rf_unprotect = list(VoidType, Int32Type),
+       Rf_mkcChar = list(SEXPType, StringType),
+       SET_VECTOR_ELT = list(SEXPType, SEXPType, Int32Type, getSEXPType("CHAR")), # XXX may need different type for the index for long vector support.
+       
 #XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),
-       dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))       
+       dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))
       )  
 }
 

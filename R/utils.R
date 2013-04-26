@@ -154,7 +154,8 @@ function(ir, toType, fromType, val)
 
   if (!length(i))
     stop(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
-    
+
+#XXX    
  browser()
 
   ## checking needed here
@@ -170,7 +171,9 @@ function(ir, val, toType, fromType, ...)
     return(createSIToFP(ir, val, toType))
 
   w = getIntegerBitWidth(fromType)
-  #XXX
+  if(w == 1)
+  return(ir$createZExt(val, toType))      
+
   return(ir$createIntCast(val, toType))  
 #  return(ir$createBitCast(val, toType))
 }

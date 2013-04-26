@@ -7,12 +7,78 @@
 <title>General</title>
 
 <items>
+<item>
+Implement assignment to accessor for a STRSXP.
+assignToSEXPElement
+</item>
+
+<item>
+Can't add x[1] + 20L when passing in an INTSXPType.
+Need to implement the getTypeOfElement for SEXPType types.
+tests/SEXPSubset.R
+</item>
+
+<item>
+We need to know what the target/output type of an expression
+such as x[i] is when we x is a SEXP type.
+Is it the raw element or is it a SEXP subset, i.e. an integer() vector.
+We know this from the context, potentially.
+</item>
+
+<item>
+Problems with casting when returning an element of a REALSXP as a DoubleType.
+tests/SEXPSubset.R
+Are we treating the x as a pointer to an array of structs, i.e SEXP*
+and so getting it all wrong.
+So we need to know that these are SEXPTypes and work differently with these.
+Same as for assignment. See getElementAssignmentContainerType
+</item>
+
+
+<item>
+Fix the casting of the x[i] = 20 in SEXPSubset example.
+Currently need 20L, but should be able to handle this.
+</item>
+
+<item>
+[Added some support to subtract 1 via subractOne()]
+One- and zero-based indexing.
+Could do a rewrite of the expression.
+Also could just subtract 1 from the expression.
+</item>
+
+<item>
+Handle subsetting generally, non-integer values and strings and vectors.
+</item>
+
+<item status="done">
+Subsetting with x[2] (any literal) fails. Need to make the literal into an integer.
+See R/subset.R
+</item>
+
+<item>
+Allow fun[["n"]] retrieve the parameter named n in fun.
+Do we store the names?
+</item>
+
+<item>
+Recognize a = if() x else y and map to a select/ternary operation.
+</item>
+
+<item>
+Map switch() in R to a switch in LLVM when the conditions are integers.
+Also recognize an series of if() statements.
+</item>
 
 <item>
 introduce declarations as R functions, e.g. strPointer(tmp)
 which then creates a local variable tmp of type pointerType(StringType).
+Also concepts such as positiveInt(), nonNegInt(), unsignedInt().
+These functions would do nothing and so can stay in code that is interpreted.
 </item>
-<item>
+
+<item status="done">
+See tests/character*.R
 compile references to character() to be the NULL string, i.e. 0.
 <r:code>
 library(RLLVMCompile)
@@ -50,6 +116,7 @@ Then allow this to be reused to compile different functions.
 
 <item>
 Type inference system needed.
+See RTypeInference on github.
 </item>
 
 <item>
@@ -102,7 +169,7 @@ Should we use a fixed variable name for the return value.
 Then all code could store that and jump  to final block.
 </item>
 
-<item status="explore results">
+<item status="done">
 Compile ! 
 <r:code>
 library(RLLVMCompile)

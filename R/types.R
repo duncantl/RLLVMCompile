@@ -97,6 +97,17 @@ getTypeOfElement =
   #
 function(type)
 {
+  if(is(type, "SEXPType")) 
+    return(switch(class(type),
+                   INTSXPType = Int32Type,
+                   LGLSXPType = Int32Type,
+                   REALSXPType = DoubleType,
+                   STRSXPType = StringType,
+                   VECSXP = getEXPType(),
+                   stop("don't know element type of this SEXP")))
+ 
+
+  
   if (identical(type, DoublePtrType))
     return(DoubleType)
   else if (identical(type, Int32PtrType))

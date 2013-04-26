@@ -6,7 +6,6 @@ function(x, types)
 
 }
 
-
 ReturnTypeTable =
   list(numeric = c("sin", "cos", "log", "sinh", "log", "log10", "logb", "log1p", "exp", "^",
                    'rexp', 'rnorm', 'runif'),
