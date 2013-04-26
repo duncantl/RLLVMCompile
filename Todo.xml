@@ -8,14 +8,15 @@
 
 <items>
 <item>
-Implement assignment to accessor for a STRSXP.
-assignToSEXPElement
+[*] Implement assignment to accessor for a STRSXP. assignToSEXPElement
 </item>
 
-<item>
+<item status="done">
 Can't add x[1] + 20L when passing in an INTSXPType.
 Need to implement the getTypeOfElement for SEXPType types.
-tests/SEXPSubset.R
+tests/SEXPSubset.R.
+<br/>
+Problem was that x[i] wasn't understanding SEXPs as special and working with the pointer to the sxpinfo_struct.
 </item>
 
 <item>
@@ -23,9 +24,11 @@ We need to know what the target/output type of an expression
 such as x[i] is when we x is a SEXP type.
 Is it the raw element or is it a SEXP subset, i.e. an integer() vector.
 We know this from the context, potentially.
+<br/>
+Added a SEXPToPrimitive, but not using it yet.
 </item>
 
-<item>
+<item status="done">
 Problems with casting when returning an element of a REALSXP as a DoubleType.
 tests/SEXPSubset.R
 Are we treating the x as a pointer to an array of structs, i.e SEXP*

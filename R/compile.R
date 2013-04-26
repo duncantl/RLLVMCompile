@@ -172,16 +172,10 @@ browser()
         # we want to modify x[i] = val to SET_VECTOR_ELT(x, i, val)
         # Do we also need to add the mkChar(). Depends on what the type is of the RHS,
         # i.e. compiledValue. We may need more information here than we have, i.e. args[[2]] from the caller of this function.
-     e = quote(SET_VECTOR_ELT(x, i, val))
-     e[[2]] = call[[2]]
-     e[[3]] = subtractOne(call[[3]]) # to zero based counting
-     e[[4]] = compiledValue
+     substitute(SET_VECTOR_ELT(x, i, val), list(x = call[[2]], i = subtractOne(call[[3]]), val= compiledValue))
      compile(e, env, ir)
      return(NULL)
    }
-
-# Move these definitions into builtins and then just get the name of the routine
-# and simplify the code here. 
 
    r = getSEXPTypeElementAccessor(type)
 
@@ -189,9 +183,7 @@ browser()
    declareFunction(env$.builtInRoutines[[r]], r, env$.module)
 
          # call INTEGER(call[[1]]), etc.
-   e = quote(.tmp <- r(x))
-   e[[3]][[1]] = as.name(r)
-   e[[3]][[2]] = call[[2]]
+   e = substitute(.tmp <- r(x), list(r = as.name(r), x = call[[2]]))
 
    compile(e, env, ir, ...)
 
