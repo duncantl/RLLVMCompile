@@ -32,18 +32,14 @@ function(expr, nested = FALSE, ...)
 
 
 `insertReturn.call` =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, env = NULL, ...)
 {
+#XXXX rework this strategy
+  if(!is.null(env) && !is.null(getSApplyType(expr, env)))
+    return(expr)
+  
   if(nested || expr[[1]] != as.name('return')) {
-    if(FALSE && nested) {
-        # create .ret = expr
-      k = quote(.ret <- val)
-      k[[3]] = expr
-    } else {
-      k = call('return')
-      k[[2]] = expr
-    }
-    k
+     substitute(return(x), list(x = expr))
   } else
     expr
 }
@@ -82,7 +78,7 @@ function(expr, nested = FALSE, ...)
       b[[length(b)]] = insertReturn(b[[length(b)]])
    else
       b = insertReturn(b)
-   
+
    body(expr) = b
    expr
 }

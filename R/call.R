@@ -4,14 +4,20 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
- browser()
+
    funName = as.character(call[[1]])
+
+   if(funName == "<-")
+     return(`compile.<-`(call, env, ir, ...))
 
        #XXX may not want this generally, but via an option in env or just have caller invoke compileSApply() directly.
        #  See fgets.Rdb in Rllvm/
-   if(funName == "sapply" &&  isSEXPType(type <- getDataType(call[[2]]))) {
-      e = rewriteSApply(call, type, ) # return type of routine being called.
-      lapply(e, compile, env, ir, ...)
+   if(!is.null(type <- getSApplyType(call, env, funName))) {
+      fun = env$.module[[ as.character(call[[3]]) ]]
+      rt = getReturnType(fun)
+      e = rewriteSApply(call, type, rt, env = env, ir = ir) # return type of routine being called.
+      ans = lapply(e, compile, env, ir, ...)
+      return(ans[[length(ans)]])
    }
    
    if(isPrimitiveConstructor(call))  
@@ -39,6 +45,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
    call = ir$createCall(ofun, .args = args)
    if(isTailFunction(env$.Rfun, env$.hints))
      setTailCall(call)
+   
    call
 }
 
@@ -47,9 +54,11 @@ function(id, env)
 {
   funcs = getModuleFunctions(env$.module)
   if(id %in% names(funcs))
-     funcs[[id]]
-  else
-    stop("Can't reference function ", id, " in module ") #, getName(env$.module))
+     return(funcs[[id]])
+  else if(id %in% names(env$.builtInRoutines)) 
+     return(declareFunction(env$.builtInRoutines[[id]], id, env$.module))
+
+  stop("Can't reference function ", id, " in module ") #, getName(env$.module))
 }
 
 

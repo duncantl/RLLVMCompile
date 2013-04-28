@@ -7,7 +7,15 @@ function(call, env, ir, ...)
 returnHandler =
 function(call, env, ir, ...) 
 {
-browser()  
+#XXX  connect with insertReturn.call and avoid doing anything here.
+     if(is.call(call[[2]]) && !is.null(getSApplyType(call[[2]], env))) {
+         # so now we have a return(sapply(...)) and so it contains a call to return(r_ans)
+         # and we don't need to do this.
+        compile(call[[2]], env, ir)
+        #call = quote(return(r_ans))
+        return(NULL)
+      }
+
       args = as.list(call[-1])
 
       if (is.null(findVar('.returnType', env)))
@@ -74,7 +82,10 @@ CompilerHandlers <-
             "break" = breakHandler,
             "next" = nextHandler,
             'repeat' = repeatHandler,
-            'call' = callHandler
+            'call' = callHandler,
+             #XXX These are needed for the rewriteSApply() code which doesn't seem to dispatch. Any programmatically generated code?
+            'for' = `compile.for`,
+            '<-' = `compile.<-`            
            )
 
 

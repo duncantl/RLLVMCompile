@@ -7,8 +7,58 @@
 <title>General</title>
 
 <items>
+
+<item>
+Check in the loops that we are getting the limits correct.
+In explorations/sapply.R in Rllvm/ we are not doing the last element correctly.
+Interaction issue here as subsetting subtracts off the 1 which may be necessary to do 
+since not always in a loop.
+</item>
+
+<item>
+recognize function names in calls to sapply.
+It would be okay if we rewrote the sapply() calls before determining
+the global variables.
+</item>
+
+<item>
+There is some inelegancy in handling return(sapply(...)) 
+when we do the rewrite of sapply(). 
+It would be nice to do the rewrite explicitly and so remove the
+return(sapply(....)).
+In fact, we actually add it and then remove it.
+But there is knowledge in the rewrite about the name of the variable
+and actually returning it.
+</item>
+
+<item>
+Separate storing the type for a variable and creating
+it. In rewriteSApply(), we set the type for r_ans, but we haven't 
+created it.  So keep track of which variables we have created.
+</item>
+
+<item>
+In the code we generate for rewriteSApply(), the generic compile() function
+doesn't dispatch to the methods for <![CDATA[compile.<-]]> and compile.for.
+Instead, they go to call. Yet the class seems to be correct. However
+they are created programmatically with quote(), etc.
+I have put in a mechanism to do this dispatch explicitly in compile.call.
+</item>
+
+<item>
+When calling a function, perform a cast for the arguments if they are not of the correct
+type.
+e.g. STRING_ELT(a, 0) and STRING_ELT(a, 0L). The latter works, but the former doesn't.
+</item>
+
 <item>
 [*] Implement assignment to accessor for a STRSXP. assignToSEXPElement
+See tests/SEXPStringSubset.R
+</item>
+<item>
+Sort out a mechanism for dealing with more specific SEXP types
+and not matching the types when calling functions with more
+specific types.
 </item>
 
 <item status="done">

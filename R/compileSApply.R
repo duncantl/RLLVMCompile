@@ -1,3 +1,11 @@
+getSApplyType =
+  # returns NULL if not a case we would rewrite an sapply()
+function(call, env, funName = as.character(call[[1]])) {
+ if(funName == "sapply" &&  isSEXPType(type <- getDataType(call[[2]], env))  )
+    type
+ else
+     NULL
+}
 
 rewriteSApply = 
   #
@@ -21,7 +29,7 @@ rewriteSApply =
   #
   #     ty = getDataType(sym, env)
   #
-function(call, vecType, returnType, env = NULL, ir = NULL, ...)
+function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...)
 {
    X = call[[2]]
     # get length of the R vector.
@@ -34,8 +42,8 @@ function(call, vecType, returnType, env = NULL, ir = NULL, ...)
    els[[3]][[1]] = as.name(getSEXPDataAccessor(vecType))  # get the INTEGER, REAL, etc. for the type
    
    # allocate answer
-   alloc = quote(r_ans <- Rf_allocVector(n, sexpEnum))
-   alloc[[3]][[3]] = getSEXPTypeNum(returnType)  # get INTSXP, REALSXP, etc.
+   alloc = quote(r_ans <- Rf_allocVector(sexpEnum, n))
+   alloc[[3]][[2]] = sexpTypeNum = getSEXPTypeNum(returnType)  # get INTSXP, REALSXP, etc.
 
    # create the instruction to get the element
      
@@ -48,17 +56,27 @@ function(call, vecType, returnType, env = NULL, ir = NULL, ...)
      quote(for(i in 1:n) {
              el = els[i]
              x
-             r_ans[i] = el  # leave to the compiler make sense of this.
+             r_ans[i] = tmp  # leave to the compiler make sense of this.
            })
    loop[[4]][[3]] = funCall
 
+
+      # Add the type for r_ans to the compiler's known types
+      # This might indicate that we have created that variable already
+      # So we may need to maintain a list of the variables we have explicitly
+      # allocated separately from the type information that we know ahead of time.
+   if(!is.null(env)) 
+     env$.types$r_ans = getSEXPType(names(sexpTypeNum))
+   
    ans = c(len,
            els,
            alloc,
            quote(Rf_protect(r_ans)),
            loop,
-           quote(Rf_unprotect(1)),
-           quote(return(r_ans)))
+           quote(Rf_unprotect(1L)),
+           if(addReturn)
+               quote(return(r_ans))
+          )
 
 }
 
@@ -85,14 +103,14 @@ CHARSXP = 9L
 getSEXPTypeNum =
 function(type)
 {
-  if(sameType(type, getSEXPType("STR")))
-     STRSXP
+  if(sameType(type, getSEXPType("STR")) || sameType(type, StringType))
+     c(STR = STRSXP)
   else if(sameType(type, getSEXPType("REAL")))
-     REALSXP
+     c(REAL = REALSXP)
   else if(sameType(type, getSEXPType("LGL")))
-     LGLSXP
-  else if(sameType(type, getSEXPType("INTSXP")))
-     INTSXP
+     c(LGL = LGLSXP)
+  else if(sameType(type, getSEXPType("INT")) || sameType(type, Int32Type))
+     c(INT = INTSXP)
   else
-    stop("...")
+     stop("don't know what SEXP type corresponds to this type")
 }

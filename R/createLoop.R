@@ -59,7 +59,7 @@ createLoopCode =
   #
   #
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
-          label = ".")
+          label = ".", zeroBased = FALSE)
 {
      # The caller (compileFunction and compileExpressions) has already created a block
      # for this expression, so we can use it as the entry block and create and initialize
@@ -102,12 +102,15 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
      } else {
        ir$createStore(lim, to)
      }
-     # offset the loop vars by one, since LLVM is 0-indexed and R is
-     # 1-indexed. This is a bit clunky, but LLVM will optimize this
-     # all away.
-     offset = ir$createLoad(to)
-     offset.var = ir$binOp(Sub, offset, 1L)
-     ir$createStore(offset.var, to)
+
+     if(zeroBased) {
+                  # offset the loop vars by one, since LLVM is 0-indexed and R is
+                  # 1-indexed. This is a bit clunky, but LLVM will optimize this
+                  # all away.
+       offset = ir$createLoad(to)
+       offset.var = ir$binOp(Sub, offset, 1L)
+       ir$createStore(offset.var, to)
+     }
    }, limits, list(iv, len))
    
    ir$createBr(cond)
