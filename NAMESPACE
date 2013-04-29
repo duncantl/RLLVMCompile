@@ -23,3 +23,5 @@ export(declareFunction)
 export(insertReturn)
 S3method(insertReturn, "function")
 
+
+export(vectorizeFunction)

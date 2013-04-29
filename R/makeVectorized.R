@@ -9,7 +9,7 @@ vectorizeFunction =
 #
 #  vectorizeFunction(Dnorm, scalar = "Dnorm")
 #
-function(f, fc = NULL, typeInfo, module = as(fc, "Module"), 
+function(f, fc = NULL, typeInfo = NULL, module = as(fc, "Module"), 
          scalarFunName = getName(fc), vectorArgName = names(parms)[1])
 {
   g = f
@@ -19,7 +19,7 @@ function(f, fc = NULL, typeInfo, module = as(fc, "Module"),
       e[seq(4, length = nargs - 1L) ] = lapply(names(parms)[seq(2, length = nargs - 1L)], as.name)
 
   body(g) = e
-  if(length(types)) {
+  if(length(typeInfo)) {
 
   } else
      g	 
