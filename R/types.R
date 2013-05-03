@@ -9,8 +9,10 @@ function(obj, env, elementType = FALSE)
 
      id = as.character(obj)
      ans = if(id %in% names(env$.types))
-              env$.types[[as.character(obj)]]
-           else
+              env$.types[[ id ]]
+           else if(id %in% names(env$.module)) {
+              getTypes(getGlobalVariable(mod, id), env)
+           } else
                 # look in additional environments if necessary.
               getVariableType(id)
      
@@ -31,10 +33,22 @@ function(obj, env, elementType = FALSE)
          return( get(fun, env$.functionInfo)$returnType )
        else if(fun %in% names(FunctionTypeInfo)) 
          return(getFunctionTypeInfo(fun, obj, env, elementType, FunctionTypeInfo))
+       else if(fun %in% c("+", "-", "*")) {
+          argTypes = lapply(obj[-1], getTypes, env)
+          #XXX Make the following more general and more comprehensive test
+          if(any(sapply(argTypes, function(x) sameType(x, DoubleType))))
+            return(DoubleType)
+          else
+            return(argTypes[[1]])
+       }
 
        getDataType(obj, env)
 
-   } else {
+   } else if(is(obj,  "GlobalVariable"))
+      getElementType(Rllvm:::getType(obj))
+   else if(is(obj,  "Value"))
+      Rllvm:::getType(obj)
+   else {
      stop("Can't determine type for ", class(obj))
    }
 }
@@ -97,6 +111,7 @@ getTypeOfElement =
   #
 function(type)
 {
+ 
   if(is(type, "SEXPType")) 
     return(switch(class(type),
                    INTSXPType = Int32Type,
@@ -106,7 +121,8 @@ function(type)
                    VECSXP = getEXPType(),
                    stop("don't know element type of this SEXP")))
  
-
+  if(isPointerType(type))
+    return(getElementType(type))
   
   if (identical(type, DoublePtrType))
     return(DoubleType)

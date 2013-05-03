@@ -95,7 +95,8 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
            R.length = declareFunction(getBuiltInRoutines()[["length"]], "Rf_length", env$.module)
            sym = as.character(lim[[2]])
            var = getVariable(sym, env, ir)
-#XXXXXX        
+#XXXXXX
+           env$addCallInfo("Rf_length")           
            ir$createStore(ir$createCall(R.length, var), to)
         } else
            stop("Not certain  what to do with ", paste(deparse(lim), collaspe = " "), " for loop extents")

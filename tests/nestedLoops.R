@@ -10,7 +10,7 @@ f = function(n) {
    ctr
 }
 
-fc = compileFunction(f, Int32Type, list(Int32Type, Int32Type))
+fc = compileFunction(f, Int32Type, list(Int32Type))
 
 library(compiler)
 fcc = cmpfun(f)

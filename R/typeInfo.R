@@ -4,10 +4,11 @@ FunctionTypeInfo =
         exp = list(return = "numeric", isElementwise = TRUE, inputs = c("numeric")),
         log = list(return = "numeric", isElementwise = TRUE, inputs = c("numeric")),        
         "^" = list(return = "numeric", isElementwise = TRUE, inputs = c("numeric")),                
-        "/" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric"),
-        "*" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric"),
-        "+" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric"),
-        "-" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric")                        
+        "/" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric")
+     # the following depend onthe types of the inputs
+#       "*" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric"),
+#       "+" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric"),
+#       "-" = list(return = "numeric", isElementwise = TRUE, inputs = "numeric")                        
         )
 
 ConstantInfo =

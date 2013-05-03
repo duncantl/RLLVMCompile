@@ -7,6 +7,64 @@
 <title>General</title>
 
 <items>
+<item>
+Compile closures with shared state. See R/compileClosures.R
+Use RCIndex collectors as examples, or SAX handlers.
+First compile  the functions, ignoring the global variables and get
+them to work.
+Use clone() to copy the module for a new instance. In other words,
+the call to the generator function is just a call to clone of the
+routines.
+</item>
+<item>
+Recognize/identify idioms of the form
+<r:code>
+ x = c()
+ for(i in z) 
+    x = c(x, f(i))
+</r:code>
+The key is the declaration of an empty vector and then
+concatenating it with a single value.
+</item>
+
+<item>
+Problem with  looping from 1:n and subsetting using i - 1L.
+When we have nested loops,  i + j doesn't correspond to the correct element
+See tests/convolve.R
+We can work with two variables - i and i.index/i.offset and use them for different purposes,
+i.e i.offset for subsetting.
+</item>
+
+<item>
+When compiling expr = expr, pass the 
+type of the LHS to compile.call, and generically to compile
+as, say, targetType.  Alternatively, we can just  cast the result
+when assigning to the LHS.
+</item>
+
+<item status="done">
+Get the numeric() example in tests/numeric.R  working.
+</item>
+
+<item>
+Consolidate the code in compile.= and call.R for numeric(), etc.
+and the isPrimitiveConstructor() and compilePrimitiveConstructor()
+and how we rewrite to do the Rf_allocVector in call.R
+</item>
+
+<item>
+Deal with closures within a function. Create global variables in the module ?
+</item>
+
+<item>
+Recognize x[i] for a SEXPType and change this to be work on x.els and 
+compute the pointer first as a local variable.
+</item>
+
+<item status="done">
+map functions to other names in a call, e.g. length to Rf_length and then compile.
+May want to check we are dealing with a SEXPType.
+</item>
 
 <item>
 Check in the loops that we are getting the limits correct.

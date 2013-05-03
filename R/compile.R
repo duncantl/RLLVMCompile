@@ -91,11 +91,15 @@ function(call, env, ir, ...)
       if(is.character(tmp)) {
          stringLiteral = TRUE
       }
-   } else if(isPrimitiveConstructor(args[[2]])) {
+   } else if(FALSE && isPrimitiveConstructor(args[[2]])) {  # what does skipping this break? any code where we have an integer() or whatever and use it as int *
        # so this is probably just defining a variable.
        # Use the type of the RHS to create the variable.
        # Perhaps just change compile.call to handle these functions
        # specially  and return a val.
+       #
+       #  Need to know if we need to create a SEXP or just the corresponding native type
+       # i.e. an INTSXP or an int [n]
+browser()     
        type = getBasicType(args[[2]])
        val = NULL
     } else
@@ -357,6 +361,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
        .functionInfo[[name]] = list(returnType = returnType, params = types)
 
 
+#XXX temporary to see if we should declare and load these individually when we encounter them
     if(length(.routineInfo))
         processExternalRoutines(module, .funcs = .routineInfo)
 
@@ -422,6 +427,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 }
 
 Rf_routines = c("length")
+RewrittenRoutineNames = c("numeric", "integer", "logical", "character", "list")
+
 mapRoutineName =
 function(name)
 {
@@ -437,9 +444,17 @@ function()
    nenv$.continueBlock = list()
    nenv$.nextBlock = list()
 
-   nenv$declFunction = function(name) {
+   nenv$declFunction = function(name) 
         declareFunction(nenv$.builtInRoutines[[name]], name, nenv$.module)
+
+   nenv$.funCalls = list()
+   nenv$addCallInfo = function(name, retType = NULL, types = NULL) {
+        i = length(nenv$.funCalls)
+        nenv$.funCalls[[i + 1L]] <<- list(name, returnType = retType, params = types)
+        names(nenv$.funCalls)[i + 1L] <<- name
+        TRUE
    }
+
    
    nenv
 }
@@ -459,6 +474,11 @@ processExternalRoutines =
 function(mod, ..., .funcs = list(...), .lookup = TRUE)
 {
   names(.funcs) = mapRoutineName(names(.funcs))
+
+  w = !duplicated(names(.funcs))
+  .funcs = .funcs[w]
+
+  .funcs = .funcs[setdiff(names(.funcs) , RewrittenRoutineNames)]
   
   ans = mapply(declareFunction, .funcs, names(.funcs), MoreArgs = list(mod))
 
@@ -521,9 +541,16 @@ function()
        Rf_protect = list(VoidType, SEXPType),
        Rf_unprotect = list(VoidType, Int32Type),
        Rf_mkChar = list(getSEXPType("CHAR"), StringType),
+       Rf_PrintValue = list(VoidType, SEXPType),
        STRING_ELT = list(getSEXPType("CHAR"), getSEXPType("STR"), Int32Type), # long vectors?
        SET_STRING_ELT = list(SEXPType, getSEXPType("STR"), Int32Type, getSEXPType("CHAR")), # XXX may need different type for the index for long vector support.       
        SET_VECTOR_ELT = list(SEXPType, getSEXPType("VEC"), Int32Type, SEXPType), # XXX may need different type for the index for long vector support.
+
+       numeric = list(REALSXPType, Int32Type),
+       integer = list(INTSXPType, Int32Type),
+       logical = list(LGLSXPType, Int32Type),
+       character = list(LGLSXPType, Int32Type),
+
 #XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),

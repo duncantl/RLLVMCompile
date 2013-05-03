@@ -80,49 +80,5 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
 
 }
 
-getSEXPDataAccessor =
-function(type)
-{
-   if(is(type, "SEXPType"))
-      return(switch(class(type),
-                     REALSXPType = "REAL",
-                     INTSXPType = "INTEGER",                    
-                     LGLSXPType = "LOGICAL",
-                     stop("no accessor for any other type")))
-   else
-      stop("cannot determine type of SEXP")
-
- # the following doesn't make sense anymore as we use the same pointer for all the types and only distinguish the SEXPs by the R class.
-   if(sameType(type,  getSEXPType("INT")))  
-      "INTEGER"
-   else if(sameType(type, getSEXPType("LGL"))) 
-      "INTEGER"   
-   else if(sameType(type, getSEXPType("REAL")))
-      "REAL"
-   else
-     stop("problem getting R data accessor routine name")
-}
 
 
-# Should  borrow from Rllvm.
-STRSXP = 16L
-LGLSXP = 9L
-REALSXP = 14L
-INTSXP = 13L
-ANYSXP = 18L
-CHARSXP = 9L
-
-getSEXPTypeNum =
-function(type)
-{
-  if(sameType(type, getSEXPType("STR")) || sameType(type, StringType))
-     c(STR = STRSXP)
-  else if(sameType(type, getSEXPType("REAL")) || sameType(type, DoubleType))
-     c(REAL = REALSXP)
-  else if(sameType(type, getSEXPType("LGL")))
-     c(LGL = LGLSXP)
-  else if(sameType(type, getSEXPType("INT")) || sameType(type, Int32Type))
-     c(INT = INTSXP)
-  else
-     stop("don't know what SEXP type corresponds to this type")
-}

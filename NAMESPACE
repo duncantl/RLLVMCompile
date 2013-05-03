@@ -1,6 +1,8 @@
 # For now export everything.
 #exportPattern(".*")
 
+import(Rllvm)
+
 export(compileFunction) #, compile)
 export(CompilerHandlers)
 

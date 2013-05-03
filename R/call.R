@@ -4,10 +4,38 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
+# print(call)
    funName = as.character(call[[1]])
 
    if(funName == "<-")
      return(`compile.<-`(call, env, ir, ...))
+   else if(funName %in% c("numeric", "integer", "character", "logical")) { 
+     call[[3]] = call[[2]]
+     call[[2]] = getSEXPTypeNumByConstructorName(funName)
+     call[[1]] = as.name(funName <- "Rf_allocVector")     
+   } else if(funName == "$") {
+
+       elName = as.character(call[[3]])
+       obj = call[[2]]
+       val = compile(obj, env, ir)
+       ty = valType = getType(val)
+       pointerToStruct = isPointerType(ty)
+       if(pointerToStruct)
+         valType = getElementType(ty)
+
+browser()       
+       if(isStructType(valType)) {
+#          elVal = createStructGEP(ir, val, 0L)
+          pvar = createLocalVariable(ir, pointerType(ty), sprintf("p%s", as.character(call[[2]]))) # not if call[[2]] is an actual call
+          
+          elVal = getGetElementPtr(pvar, c(0L, 0L), ctx = getContext(env$.module)) # 0, 0 need to change to the actual name of the struct.
+          ans = createLoad(ir, elVal)
+       }
+       else
+         stop("not implemented yet")
+       
+       return(ans)
+   }
 
        #XXX may not want this generally, but via an option in env or just have caller invoke compileSApply() directly.
        #  See fgets.Rdb in Rllvm/
@@ -18,7 +46,8 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
       ans = lapply(e, compile, env, ir, ...)
       return(ans[[length(ans)]])
    }
-   
+
+ #XXX Can this happen now that rewrite it above to use Rf_allocaVector()?
    if(isPrimitiveConstructor(call))  
      return(compilePrimitiveConstructor(funName, call, env, ir, ...))
 
@@ -41,6 +70,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
      # Can we pass this to compile and have that do the coercion as necessary
    args = lapply(as.list(call[-1]), compile, env, ir, ...)  # ... and fun, name,
 
+   env$addCallInfo(funName)
    call = ir$createCall(ofun, .args = args)
    if(isTailFunction(env$.Rfun, env$.hints))
      setTailCall(call)

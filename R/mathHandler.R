@@ -41,6 +41,8 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      call = k
   }
 
+#browser()  
+
   call[2:length(call)] = lapply(call[-1], rewriteExpressions, env)
 
   
@@ -66,12 +68,12 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 
   # If any of the types are different from the targetType, we need
   # to cast.
-  typeMatches = sapply(types, identical, targetType)
+  typeMatches = sapply(types, sameType, targetType)
   if (any(!typeMatches))
     toCast = as.list(call[-1])[[which(!typeMatches)]]
 
 
-  isIntType = identical(targetType, Int32Type)
+  isIntType = sameType(targetType, Int32Type)
   e = lapply(call[-1], function(x)
                        if(is(x, "numeric")) {
                           if(isIntType)
@@ -105,6 +107,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      if(opName == "^") {
          # also see callHandler() in call.R
        f = declareFunction(getBuiltInRoutines()[["pow"]], "pow", env$.module)
+       env$addCallInfo("pow")       
        ins = ir$createCall(f, e[[1]], e[[2]])
      } else
        stop("no math operation found corresponding to ", opName)
