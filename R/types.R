@@ -176,6 +176,7 @@ function(val, env)
 }
 
 
+#getDataType.LoadInst =
 getDataType.StoreInst  = getDataType.Value  =
 getDataType.BinaryOperator =
 function(val, env)

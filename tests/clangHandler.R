@@ -22,11 +22,13 @@ createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
 
 cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
 
-library(RCIndex)
+library(RCIndex) # here because we need to find CXChildVisit_Recurse
 fc = compileFunction(h, Int32Type, list( cursorType, cursorType, pointerType(Int8Type)), module = mod)
+
 
 ee = ExecutionEngine(mod)
 fp = structure(getPointerToFunction(fc, ee)@ref, class = "NativeSymbol")
+
 tu = createTU("testAlloc.c", includes = sprintf("%s/%s", R.home(), c("include", "../src/include")))
 visitTU(tu, fp)
 mod[["ctr", ee = ee]]  # value
