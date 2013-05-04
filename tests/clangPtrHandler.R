@@ -7,18 +7,22 @@ library(RLLVMCompile)
 
 h = function(cur, parent, data)
 {
-#   ctr = ctr + 1L
-#   kinds[ctr] = cur$kind
+   ctr = ctr + 1L
    kind = cur$kind
-   printInt(kind)
-   2L
-#   CXChildVisit_Recurse
+   kinds[ctr] = kind
+#   printInt(kind)
+   CXChildVisit_Recurse
 }
 
 mod = Module()
-createGlobalVariable("ctr", mod, Int32Type, createIntegerConstant(0L))
-createGlobalVariable("kind", mod, Int32Type, createIntegerConstant(0L))
-createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
+mod[["ctr"]] = 0L
+mod[["kind"]] = 0L
+ty = arrayType(Int32Type, 1000000)
+mod[["kinds"]] =  ty
+setInitializer(mod[["kinds"]], constantAggregateZero(ty))
+#createGlobalVariable("ctr", mod, Int32Type, createIntegerConstant(0L))
+#createGlobalVariable("kind", mod, Int32Type, createIntegerConstant(0L))
+#createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
 
 cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
 pointerCursorType = pointerType(cursorType)
@@ -31,7 +35,8 @@ declareFunction(list(VoidType, Int32Type), "printInt", mod)
 fc = compileFunction(h, Int32Type, list( pointerCursorType, pointerCursorType, pointerType(Int8Type)), module = mod, optimize = FALSE)
 
 if(TRUE) {
-   
+    # This commented out code is when we generate the IR from actual C code to see what llvm really generates for our
+    # struct definition.
  # ir = "tests/clang.ll"
  #  mod = parseIR(ir)
 
@@ -45,4 +50,8 @@ if(TRUE) {
   .Call("R_clang_visitChildren_LLVM_test", as(tu, "CXCursor"), fp, FALSE)
   
   mod[["kind", ee = ee]] # should be 101
+
+  kinds = mod[["kinds", ee = ee]][ 1: mod[["ctr", ee = ee]] ]
+  table(kinds)
+  
 }

@@ -6,8 +6,8 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
 # print(call)
    funName = as.character(call[[1]])
-
-   if(funName == "<-")
+   
+   if(funName == "<-" || funName == "=")
      return(`compile.<-`(call, env, ir, ...))
    else if(funName %in% c("numeric", "integer", "character", "logical")) { 
      call[[3]] = call[[2]]
@@ -23,28 +23,22 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
        if(pointerToStruct)
          valType = getElementType(ty)
 
-browser()       
+#browser()       
        if(isStructType(valType)) {
-#          elVal = createStructGEP(ir, val, 0L)
-           # make local variable to access the parameter. TEMPORARY
+                # make local variable to access the parameter. TEMPORARY. See if it is already present.
           pvar = createLocalVariable(ir, ty, sprintf("%s.addr", as.character(call[[2]]))) # not if call[[2]] is an actual call
-          setAlignment(pvar, 8L)
+#          setAlignment(pvar, 8L)
           ans = createStore(ir, val, pvar) # ??? should val be compiled or just get the parameter value.
-          setAlignment(ans, 8L)
+#          setAlignment(ans, 8L)
           tmp = createLoad(ir, pvar)
-          setAlignment(tmp, 8L)
-
+#          setAlignment(tmp, 8L)
           
           ctx = getContext(env$.module)
                  # need to change indices based on the actual name of the struct.
-#          ans =  elVal = getGetElementPtr(tmp, c(0L, 1L), ctx = ctx) 
           elVal = createGEP(ir, tmp, lapply(c(0L, 0L), createIntegerConstant, ctx), "getfield")
           
           ans = createLoad(ir, elVal)
           setAlignment(ans, 4L)          
-#          fieldVar = createLocalVariable(ir, Int32Type, sprintf("%s.field", as.character(call[[2]])))
-#          createStore(ir, ll, fieldVar)
-#          ans = createLoad(ir, fieldVar) # elVal) # fieldVar)
           return(ans)
        }
        else

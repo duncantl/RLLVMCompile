@@ -71,7 +71,7 @@ function(call)
   #
 function(call, env, ir, ...)
 {
-#browser()    
+browser()    
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL

@@ -109,6 +109,7 @@ function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
         } else {
             # find in the module.
           v = getGlobalVariable(env$.module, sym)
+#load = FALSE  # don't load a global, just access it. ??          
           if(load && !is.null(ir))
              ir$createLoad(v)
           else

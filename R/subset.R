@@ -11,9 +11,9 @@ subsetHandler =
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
-
+browser()
   objType = getElementAssignmentContainerType(call, env)
-  if(is(objType, "SEXPType")) {
+  if(is(objType, "SEXPType")) {  # is this already in compile.=? If so, consolidate.
     if(SEXPToPrimitive) {
       r = getSEXPTypeElementAccessor(objType)
       declareFunction(env$.builtInRoutines[[r]], r, env$.module)
@@ -26,7 +26,7 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
     }
  
         # ty = getDataType(obj, env)
-  obj = getVariable(call[[2]], env, ir)
+  obj = getVariable(call[[2]], env, ir, load = FALSE) #???? for load = FALSE
 
     #XXX Need to handle subsetting generally and need to ensure we get an integer
   call[[3]] = subtractOne(call[[3]])
@@ -34,6 +34,12 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
   i = compile(call[[3]], env, ir) # getVariable(call[[3]], env, ir)
   #i = getVariable(call[[3]], env, ir)
   idx = ir$createSExt(i, 64L)
+
+  ty = getType(obj)
+  if(isArrayType(ty)  ||
+         (isPointerType(ty) && isArrayType(getElementType(ty))))
+    idx = list(createIntegerConstant(0L, getContext(env$.module)), idx)
+
   p = ir$createGEP(obj, idx)
   if(load)
     return(ir$createLoad(p))
