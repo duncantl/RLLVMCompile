@@ -26,10 +26,26 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 browser()       
        if(isStructType(valType)) {
 #          elVal = createStructGEP(ir, val, 0L)
-          pvar = createLocalVariable(ir, pointerType(ty), sprintf("p%s", as.character(call[[2]]))) # not if call[[2]] is an actual call
+           # make local variable to access the parameter. TEMPORARY
+          pvar = createLocalVariable(ir, ty, sprintf("%s.addr", as.character(call[[2]]))) # not if call[[2]] is an actual call
+          setAlignment(pvar, 8L)
+          ans = createStore(ir, val, pvar) # ??? should val be compiled or just get the parameter value.
+          setAlignment(ans, 8L)
+          tmp = createLoad(ir, pvar)
+          setAlignment(tmp, 8L)
+
           
-          elVal = getGetElementPtr(pvar, c(0L, 0L), ctx = getContext(env$.module)) # 0, 0 need to change to the actual name of the struct.
+          ctx = getContext(env$.module)
+                 # need to change indices based on the actual name of the struct.
+#          ans =  elVal = getGetElementPtr(tmp, c(0L, 1L), ctx = ctx) 
+          elVal = createGEP(ir, tmp, lapply(c(0L, 0L), createIntegerConstant, ctx), "getfield")
+          
           ans = createLoad(ir, elVal)
+          setAlignment(ans, 4L)          
+#          fieldVar = createLocalVariable(ir, Int32Type, sprintf("%s.field", as.character(call[[2]])))
+#          createStore(ir, ll, fieldVar)
+#          ans = createLoad(ir, fieldVar) # elVal) # fieldVar)
+          return(ans)
        }
        else
          stop("not implemented yet")
