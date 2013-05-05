@@ -36,11 +36,11 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
 
    fn = env$declFunction(r)
 
-# Temporary test: Sun, May 5th 7:26
-browser()
+#XXX Temporary test: Sun, May 5th 7:26
+#browser()
    var = getVariable(call[[2]], env, ir)
    ptr = ir$createCall(fn, var)
-   i = compile(call[[3]], env, ir)
+   i = compile(subtractOne(call[[3]]), env, ir)
    idx = ir$createSExt(i, 64L)   
    gep = ir$createGEP(ptr, idx)
    return(gep)

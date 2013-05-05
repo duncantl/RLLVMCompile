@@ -147,7 +147,7 @@ function(call, env, ir, ...)
    } else {
 
       expr = args[[1]]
-browser()     
+
          # XXX  have to be a lot more general here, but okay to be simple for now (Apr 26 2013).
       if(is(ty <- getElementAssignmentContainerType(expr, env), "SEXPType")
           && is.null(expr <- assignToSEXPElement(expr, val, env, ir, ty)))

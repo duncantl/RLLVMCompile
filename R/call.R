@@ -4,10 +4,7 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
-# print(call)
    funName = as.character(call[[1]])
-#if(funName == "[" && as.character(call[[2]]) == "ans.els")  browser()
-   browser()
    
    if(funName == "<-" || funName == "=")
      return(`compile.<-`(call, env, ir, ...))  #XXX should lookup the env$.compilerHandlers[["<-"]] or "="
