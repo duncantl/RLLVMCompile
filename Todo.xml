@@ -7,6 +7,17 @@
 <title>General</title>
 
 <items>
+
+<item>
+Allocate the variables within a loop outside of the loop just once.
+</item>
+
+<item>
+When we have a REALSXPType and access its elements,
+create a local variable and initialize it with a call to REAL().
+Then use that in place of the REALSXPType variable.
+</item>
+
 <item>
 Compile closures with shared state. See R/compileClosures.R
 Use RCIndex collectors as examples, or SAX handlers.

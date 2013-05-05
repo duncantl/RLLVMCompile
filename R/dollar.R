@@ -10,26 +10,47 @@ function(call, env, ir, ...)
        if(pointerToStruct)
          valType = getElementType(ty)
 
-#browser()       
+
        if(isStructType(valType)) {
+           # Should add setAlignment() calls (with 8L) for the local var, store and load instructions
                 # make local variable to access the parameter. TEMPORARY. See if it is already present.
           pvar = createLocalVariable(ir, ty, sprintf("%s.addr", as.character(call[[2]]))) # not if call[[2]] is an actual call
-#          setAlignment(pvar, 8L)
+
           ans = createStore(ir, val, pvar) # ??? should val be compiled or just get the parameter value.
-#          setAlignment(ans, 8L)
+
           tmp = createLoad(ir, pvar)
-#          setAlignment(tmp, 8L)
+
           
-          ctx = getContext(env$.module)
-                 # need to change indices based on the actual name of the struct.
-          elVal = createGEP(ir, tmp, lapply(c(0L, 0L), createIntegerConstant, ctx), "getfield")
+            # now match the name of the field being accessed to its position in the structure.
+            # we need the structure info from outside of llvm as it doesn't store names.
+          info = findStructInfo(valType, env$.structInfo)
+          if(is.null(info))
+            stop("need information about the elements of the struct")
+          
+          index = match(elName, info@names) - 1L
+          if(is.na(index))
+            stop("no such field '", elName,  "' in the struct")
+
+          ctx = getContext(env$.module)          
+          elVal = createGEP(ir, tmp, lapply(c(0L, index), createIntegerConstant, ctx), "getfield")
           
           ans = createLoad(ir, elVal)
           setAlignment(ans, 4L)          
-          return(ans)
        }
        else
          stop("not implemented yet")
        
    ans
 }
+
+findStructInfo =
+function(ty, info)
+{
+
+  i = sapply(info, sameType, ty)
+  if(!any(i))
+    return(NULL)
+
+  info[[which(i)[1]]]
+}
+

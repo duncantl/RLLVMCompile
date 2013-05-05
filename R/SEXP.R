@@ -34,8 +34,18 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
 
    r = getSEXPTypeElementAccessor(type)
 
-   env$declFunction(r)
+   fn = env$declFunction(r)
 
+# Temporary test: Sun, May 5th 7:26
+browser()
+   var = getVariable(call[[2]], env, ir)
+   ptr = ir$createCall(fn, var)
+   i = compile(call[[3]], env, ir)
+   idx = ir$createSExt(i, 64L)   
+   gep = ir$createGEP(ptr, idx)
+   return(gep)
+#
+   
          # call INTEGER(call[[1]]), etc.
    e = substitute(.tmp <- r(x), list(r = as.name(r), x = call[[2]]))
 

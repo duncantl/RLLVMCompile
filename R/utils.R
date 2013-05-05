@@ -103,7 +103,7 @@ function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
           if(load && !is.null(ir))
              ir$createLoad(tmp)
           else
-            tmp
+             tmp
         } else if(search.params && sym %in% names(env$.params)) {
           env$.params[[sym]]
         } else {

@@ -6,45 +6,17 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
 # print(call)
    funName = as.character(call[[1]])
+#if(funName == "[" && as.character(call[[2]]) == "ans.els")  browser()
+   browser()
    
    if(funName == "<-" || funName == "=")
-     return(`compile.<-`(call, env, ir, ...))
+     return(`compile.<-`(call, env, ir, ...))  #XXX should lookup the env$.compilerHandlers[["<-"]] or "="
    else if(funName %in% c("numeric", "integer", "character", "logical")) { 
      call[[3]] = call[[2]]
      call[[2]] = getSEXPTypeNumByConstructorName(funName)
      call[[1]] = as.name(funName <- "Rf_allocVector")     
    } else if(funName == "$") {
-
-       elName = as.character(call[[3]])
-       obj = call[[2]]
-       val = compile(obj, env, ir)
-       ty = valType = getType(val)
-       pointerToStruct = isPointerType(ty)
-       if(pointerToStruct)
-         valType = getElementType(ty)
-
-#browser()       
-       if(isStructType(valType)) {
-                # make local variable to access the parameter. TEMPORARY. See if it is already present.
-          pvar = createLocalVariable(ir, ty, sprintf("%s.addr", as.character(call[[2]]))) # not if call[[2]] is an actual call
-#          setAlignment(pvar, 8L)
-          ans = createStore(ir, val, pvar) # ??? should val be compiled or just get the parameter value.
-#          setAlignment(ans, 8L)
-          tmp = createLoad(ir, pvar)
-#          setAlignment(tmp, 8L)
-          
-          ctx = getContext(env$.module)
-                 # need to change indices based on the actual name of the struct.
-          elVal = createGEP(ir, tmp, lapply(c(0L, 0L), createIntegerConstant, ctx), "getfield")
-          
-          ans = createLoad(ir, elVal)
-          setAlignment(ans, 4L)          
-          return(ans)
-       }
-       else
-         stop("not implemented yet")
-       
-       return(ans)
+      return(env$.compilerHandlers[["$"]](call, env, ir, ...))
    }
 
        #XXX may not want this generally, but via an option in env or just have caller invoke compileSApply() directly.

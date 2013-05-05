@@ -71,7 +71,7 @@ function(call)
   #
 function(call, env, ir, ...)
 {
-browser()    
+#browser()  
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL
@@ -88,9 +88,9 @@ browser()
       type = getDataType(I(val), env)
       val = makeConstant(ir, val, type, ctx)
       type = getDataType(val, env)
-      if(is.character(tmp)) {
+      if(is.character(tmp)) 
          stringLiteral = TRUE
-      }
+
    } else if(FALSE && isPrimitiveConstructor(args[[2]])) {  # what does skipping this break? any code where we have an integer() or whatever and use it as int *
        # so this is probably just defining a variable.
        # Use the type of the RHS to create the variable.
@@ -99,7 +99,7 @@ browser()
        #
        #  Need to know if we need to create a SEXP or just the corresponding native type
        # i.e. an INTSXP or an int [n]
-browser()     
+
        type = getBasicType(args[[2]])
        val = NULL
     } else
@@ -134,6 +134,7 @@ browser()
           if(is(val, "Value"))
             type = getDataType(val, env)
         }
+          #XXXX Merge with compile.character
          if(stringLiteral) {  # isStringType(type)) 
            gvar = createGlobalVariable(sprintf(".%s", var), env$.module, type, val, TRUE, PrivateLinkage)
            val = getGetElementPtr(gvar, ctx = ctx)
@@ -146,17 +147,20 @@ browser()
    } else {
 
       expr = args[[1]]
-     
+browser()     
          # XXX  have to be a lot more general here, but okay to be simple for now (Apr 26 2013).
       if(is(ty <- getElementAssignmentContainerType(expr, env), "SEXPType")
           && is.null(expr <- assignToSEXPElement(expr, val, env, ir, ty)))
             return(val)
 
+      #XXXX What does removing load = FALSE affect. Find examples of where this breaks matters.
+      # fuseLoops?
         ref = compile(expr, env, ir, ..., load = FALSE)
    }
 
-   if(!is.null(val))
+   if(!is.null(val)) {
       ir$createStore(val, ref)
+   }
 
    val  # return value - I (Vince) changed this to val from ans (the createStore() return).
         # There seems to be very little we can do with the object of class
@@ -179,6 +183,7 @@ function(call, env)
 }
 
 
+
 compile <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
@@ -189,7 +194,22 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 #  if(is.call(e) && as.character(call[[1]]) == "<-")
 #    `compile.=`(e, env, ir, ...)
 #  else
+   print(e)
      UseMethod("compile")
+}
+
+compile.character =
+  # See varargs.R which is a call to printf() with a constant format
+function(e, env, ir, ...)
+{
+   ctxt = getContext(env$.module)
+   ty = arrayType(Int8Type, nchar(e))
+   strVar = createGlobalVariable(".tmpString", env$.module, val = e, constant = TRUE, linkage = PrivateLinkage)
+   return(getGetElementPtr(strVar, ctx = ctxt))
+   
+   ptrVar = createLocalVariable(ir, StringType, ".tmpStringPtr")
+   setInitializer(ptrVar, strVar)
+   createLoad(ir, ptrVar)
 }
 
 
@@ -284,10 +304,24 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
+    } else if(is.character(e)) {
+       return(compile.character(e, env, ir, ...))
     } else
       stop("can't compile objects of class ", class(e))
 }
 
+
+findGlobals=
+function(fun, merge = FALSE, ignoreDefaultArgs = TRUE)
+{
+  ans = codetools::findGlobals(fun, merge)
+  if(!merge && ignoreDefaultArgs) {
+     formals(fun) = lapply(formals(fun), function(x) NULL)
+     ans$functions = codetools::findGlobals(fun, FALSE)$functions
+  }
+  ans
+}
+  
 
 
 compileFunction <-
@@ -297,12 +331,13 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          optimize = TRUE, ...,
          .functionInfo = list(...),
          .routineInfo = list(),
-         .compilerHandlers = CompilerHandlers,
-         .globals = findGlobals(fun, merge = FALSE),
+         .compilerHandlers = getCompilerHandlers(),
+         .globals = findGlobals(fun, merge = FALSE, .ignoreDefaultArgs), #  would like to avoid processing default arguments.
          .insertReturn = !identical(returnType, VoidType),
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
-         .vectorize = character(), .execEngine = NULL)
+         .vectorize = character(), .execEngine = NULL,
+         structInfo = list(), .ignoreDefaultArgs = TRUE)
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -338,6 +373,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     if (is.null(name))
       name <- deparse(substitute(fun))
 
+      # See if we have some SEXP types for which we may need to the length.
+      # This might go as we can call Rf_length().  nrow()
     rVecTypes = sapply(types, isRVectorType)
     if(any(rVecTypes)) {
        lengthVars = sprintf("_%s_length", names(types)[rVecTypes])
@@ -398,6 +435,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.functionInfo = .functionInfo
     nenv$.Constants = .constants
     nenv$.NAs = NAs
+    nenv$.structInfo = structInfo
 
 
     if (.insertReturn)
@@ -414,7 +452,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     ## preferably to the crash Optimize() on an unverified module
     ## creates.
     if(optimize && verifyModule(module))
-       Optimize(module)
+       Optimize(module, execEngine = .execEngine)
      
     if(asFunction) 
        makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine, .lengthVars = lengthVars)

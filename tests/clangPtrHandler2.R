@@ -7,26 +7,26 @@ library(RLLVMCompile)
 
 h = function(cur, parent, data)
 {
-   ctr = ctr + 1L
    kind = cur$xdata # kind
-   kinds[ctr] = kind
-#   printInt(kind)
+   if(cur$kind == CXCursor_CallExpr) {
+     str = clang_getCursorSpelling(cur)
+     names[ctr] = clang_getCString(str)
+     ctr = ctr + 1L
+   }
+   
    CXChildVisit_Recurse
 }
 
 mod = Module()
-mod[["ctr"]] = 0L
-mod[["kind"]] = 0L
-ty = arrayType(Int32Type, 1000000)
-mod[["kinds"]] =  ty
-setInitializer(mod[["kinds"]], constantAggregateZero(ty))
-#createGlobalVariable("ctr", mod, Int32Type, createIntegerConstant(0L))
-#createGlobalVariable("kind", mod, Int32Type, createIntegerConstant(0L))
-#createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
+mod[["ctr"]] = 1L
+mod[["names"]] = arrayType(Int32Type, 1000000)
+
 
 cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
 pointerCursorType = pointerType(cursorType)
 
+llvmAddSymbol("clang_getCursorSpelling", "clang_getCString")
+declareFunction(list(
 
 library(RCIndex) # here because we need to find CXChildVisit_Recurse
 llvmAddSymbol("printInt")

@@ -4,7 +4,7 @@
 import(Rllvm)
 
 export(compileFunction) #, compile)
-export(CompilerHandlers)
+export(getCompilerHandlers)
 
 # Need to export the compile methods to make things work.
 # Otherwise, we get an error about compile.call not found.

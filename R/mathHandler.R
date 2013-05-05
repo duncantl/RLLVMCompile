@@ -29,6 +29,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 #    stop("cannot createNeg for this type yet.")
 # }
 
+
   if(length(call) == 2) { #XXX temporary exploration
         # if this is +, e.g. +n, we should just compile call[[2]]
      if(as.character(call[[1]]) == "+")
@@ -41,7 +42,6 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      call = k
   }
 
-#browser()  
 
   call[2:length(call)] = lapply(call[-1], rewriteExpressions, env)
 

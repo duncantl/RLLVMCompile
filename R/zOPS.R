@@ -72,8 +72,10 @@ function(call, env, ir, ...)
 
 
 
-CompilerHandlers <-
-       list(
+getCompilerHandlers <-
+function(...)
+{  
+   CompilerHandlers =   list(
             '!' = notHandler,  # Do we add this to LogicOps, or keep
                                # separate because it's unitary?
             'return'= returnHandler,
@@ -90,6 +92,12 @@ CompilerHandlers <-
            )
 
 
-CompilerHandlers[LogicOps] = replicate(length(LogicOps), logicOpHandler, simplify = FALSE)
-CompilerHandlers[MathOps] = replicate(length(MathOps), mathHandler, simplify = FALSE)
+   CompilerHandlers[LogicOps] = replicate(length(LogicOps), logicOpHandler, simplify = FALSE)
+   CompilerHandlers[MathOps] = replicate(length(MathOps), mathHandler, simplify = FALSE)
 
+     # add any others user supplied.
+   others = list(...)
+   CompilerHandlers[names(others)] = others
+ 
+  invisible(CompilerHandlers)
+}
