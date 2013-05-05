@@ -4,6 +4,7 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
+
    funName = as.character(call[[1]])
    
    if(funName == "<-" || funName == "=")
@@ -38,7 +39,8 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
     # We may not want this flexibility. e.g. if we have an integer
     # and are calling log(), then we get an int32 returned. We probably
     # want to coerce the input up to a double and use the regular log() fn.
-   if(isIntrinsic(funName)) {
+#XXX remove the intrinsics here as problems on Linux.
+   if(FALSE && isIntrinsic(funName)) {
       argTypes = lapply(as.list(call[-1]), getTypes, env)
       ofun = getIntrinsic(env$.module, funName, argTypes)
    } else 
