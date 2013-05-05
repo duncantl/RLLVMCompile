@@ -14,6 +14,7 @@ function(call, env, ir, ...)
        if(isStructType(valType)) {
            # Should add setAlignment() calls (with 8L) for the local var, store and load instructions
                 # make local variable to access the parameter. TEMPORARY. See if it is already present.
+#XXX         
           pvar = createLocalVariable(ir, ty, sprintf("%s.addr", as.character(call[[2]]))) # not if call[[2]] is an actual call
 
           ans = createStore(ir, val, pvar) # ??? should val be compiled or just get the parameter value.

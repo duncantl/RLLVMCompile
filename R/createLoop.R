@@ -76,10 +76,10 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    pushContinueBlock(env, incrBlock)
    on.exit(popContinueBlock(env))   
   
-   iv = ir$createLocalVariable(Int32Type, var)
+   iv = createFunctionVariable(Int32Type, var, env, ir)  #  ir$createLocalVariable(Int32Type, var)
    assign(var, iv, env)
    env$.types[[var]] = Int32Type
-   len = ir$createLocalVariable(Int32Type, ".llen")
+   len = createFunctionVariable(Int32Type, ".llen", env, ir) # ir$createLocalVariable(Int32Type, ".llen")
    assign(".llen", len, env)
    env$.types[[".llen"]] = Int32Type
    mapply(function(lim,  to) {

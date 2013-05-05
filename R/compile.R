@@ -22,7 +22,7 @@ function(call, env, ir)
    if (is.na(findVar(var, env))) {
         # Create new local store, TODO remove the type here and infer it
      type = getDataType(val, env)
-     assign(var, createLocalVariable(ir, type, var), envir=env) ## Todo fix type
+     assign(var, createFunctionVariable(type, var, env, ir), envir = env) ## Todo fix type
      env$.types[[var]] = type
    }
    
@@ -140,8 +140,8 @@ function(call, env, ir, ...)
            val = getGetElementPtr(gvar, ctx = ctx)
            type = StringType
          }
-           
-         assign(var, ref <- createLocalVariable(ir, type, var), envir=env) ## Todo fix type and put into env$.types
+
+         assign(var, ref <- createFunctionVariable(type, var, env, ir), envir=env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
    } else {
@@ -182,6 +182,19 @@ function(call, env)
    getDataType(var, env)
 }
 
+createFunctionVariable =
+  #
+  # create a local variable, but put it in the entry block of the function
+  # rather than in the current block.  The idea is that we don't
+  # want to allocate variables in a loop and so end up repeating that instruction.
+  #
+function(type, id, env, ir)
+{
+  cur = getInsertBlock(ir)
+  setInsertPoint(ir, env$.entryBlock)
+  on.exit(setInsertPoint(ir, cur))
+  createLocalVariable(ir, type, id, TRUE)  # to insert before terminator.
+}
 
 
 compile <-
@@ -194,7 +207,6 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 #  if(is.call(e) && as.character(call[[1]]) == "<-")
 #    `compile.=`(e, env, ir, ...)
 #  else
-   print(e)
      UseMethod("compile")
 }
 
@@ -207,7 +219,7 @@ function(e, env, ir, ...)
    strVar = createGlobalVariable(".tmpString", env$.module, val = e, constant = TRUE, linkage = PrivateLinkage)
    return(getGetElementPtr(strVar, ctx = ctxt))
    
-   ptrVar = createLocalVariable(ir, StringType, ".tmpStringPtr")
+   ptrVar = createFunctionVariable(StringType, ".tmpStringPtr", env, ir) 
    setInitializer(ptrVar, strVar)
    createLoad(ir, ptrVar)
 }
