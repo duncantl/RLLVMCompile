@@ -12,6 +12,7 @@ function(call, env, ir, ...)
 
 
        if(isStructType(valType)) {
+browser()         
            # Should add setAlignment() calls (with 8L) for the local var, store and load instructions
                 # make local variable to access the parameter. TEMPORARY. See if it is already present.
 #XXX         
@@ -32,7 +33,7 @@ function(call, env, ir, ...)
           if(is.na(index))
             stop("no such field '", elName,  "' in the struct")
 
-          ctx = getContext(env$.module)          
+          ctx = getContext(env$.module)
           elVal = createGEP(ir, tmp, lapply(c(0L, index), createIntegerConstant, ctx), "getfield")
           
           ans = createLoad(ir, elVal)

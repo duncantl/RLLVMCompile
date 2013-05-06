@@ -634,11 +634,13 @@ function(fun, compiledFun, .vectorize = character(),  .execEngine = NULL, .lengt
 {
   e = new.env()
   e$.fun = compiledFun
+  e$.irCode = showModule(compiledFun, TRUE)
+  
   if(is.null(.execEngine))
     .execEngine = ExecutionEngine(as(compiledFun, "Module"))
   
   args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
-  k = call('run')
+  k = call('.llvm')
   k[2:(length(args) + 1)] = args
 
   if(length(.lengthVars))

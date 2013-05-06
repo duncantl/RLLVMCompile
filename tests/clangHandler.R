@@ -11,7 +11,7 @@ h = function(cur, parent, data)
 {
    ctr = ctr + 1L
 #   kinds[ctr] = cur$kind
-   kind = cur$kind
+#   kind = cur$kind
    CXChildVisit_Recurse
 }
 
@@ -23,7 +23,8 @@ createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
 cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
 
 library(RCIndex) # here because we need to find CXChildVisit_Recurse
-fc = compileFunction(h, Int32Type, list( cursorType, cursorType, pointerType(Int8Type)), module = mod)
+fc = compileFunction(h, Int32Type, list( cursorType, cursorType, pointerType(Int8Type)), module = mod,
+                       structInfo = list(CXCursor = cursorType))
 
 
 ee = ExecutionEngine(mod)
