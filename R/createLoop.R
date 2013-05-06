@@ -61,6 +61,9 @@ createLoopCode =
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
           label = ".", zeroBased = FALSE)
 {
+   env$.loopDepth = env$.loopDepth + 1L
+   on.exit( env$.loopDepth <- env$.loopDepth - 1L)
+  
      # The caller (compileFunction and compileExpressions) has already created a block
      # for this expression, so we can use it as the entry block and create and initialize
      # variables here.

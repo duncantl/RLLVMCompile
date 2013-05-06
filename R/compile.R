@@ -448,6 +448,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.Constants = .constants
     nenv$.NAs = NAs
     nenv$.structInfo = structInfo
+    nenv$.loopDepth = 0L
 
 
     if (.insertReturn)

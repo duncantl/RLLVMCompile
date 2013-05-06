@@ -10,7 +10,7 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
-
+  
 # if(FALSE && length(call) == 2)  {
 #    # unary operator - most likely -
 #    val = compile(call[[2]], env, ir, ...)
@@ -33,7 +33,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   if(length(call) == 2) { #XXX temporary exploration
         # if this is +, e.g. +n, we should just compile call[[2]]
      if(as.character(call[[1]]) == "+")
-        return(compile(call[[2]], env, ir, ...))
+        return(compile(call[[2]], env, ir, ..., isSubsetIndex = isSubsetIndex))
 
       # XXX what about !
      k = quote(0 - 0)
@@ -43,7 +43,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   }
 
 
-  call[2:length(call)] = lapply(call[-1], rewriteExpressions, env)
+  call[2:length(call)] = lapply(call[-1], rewriteExpressions, env, isSubsetIndex = isSubsetIndex)
 
   
   # Need to handle the case where we have a literal and we can convert it to the

@@ -32,7 +32,7 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
     #XXX Need to handle subsetting generally and need to ensure we get an integer
   call[[3]] = subtractOne(call[[3]])
 
-  i = compile(call[[3]], env, ir) # getVariable(call[[3]], env, ir)
+  i = compile(call[[3]], env, ir, isSubsetIndex = TRUE) # getVariable(call[[3]], env, ir)
   #i = getVariable(call[[3]], env, ir)
   idx = ir$createSExt(i, 64L)
 
