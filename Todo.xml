@@ -9,7 +9,15 @@
 <items>
 
 <item>
+When we call any of the constructor functions, i.e. numeric(), etc.
+protect the result and unprotect them at the end.
+</item>
+
+<item status="done">
 Allocate the variables within a loop outside of the loop just once.
+<br/>
+Could be smarter about this. Currently doing it for ever variable.
+But only needs to be done for a  loop.
 </item>
 
 <item>

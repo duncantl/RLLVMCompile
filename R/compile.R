@@ -71,7 +71,6 @@ function(call)
   #
 function(call, env, ir, ...)
 {
-#browser()  
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL
@@ -116,9 +115,12 @@ function(call, env, ir, ...)
 
                  # No existing variable; detect type and create one.
           if(is.null(type)) 
-             type = getDataType(var, env)        
+             type = getDataType(var, env)
+
+                 # didn't get a type from the variable, so look at the RHS.
           if(is.null(type)) 
-             type = getDataType(val, env)
+             type = getDataType(val, env, call[[3]])
+
         
         if (is.null(type)) {
                    # Variable not found in env or global environments; get type via Rllvm
@@ -478,7 +480,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 }
 
 Rf_routines = c("length")
-RewrittenRoutineNames = c("numeric", "integer", "logical", "character", "list")
+RewrittenRoutineNames = c("numeric", "integer", "logical", "character", "list", "double")
 
 mapRoutineName =
 function(name)

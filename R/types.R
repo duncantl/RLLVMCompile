@@ -137,40 +137,40 @@ function(type)
 # There is an S4 generic getType in llvm. Why not provide methods for that
 
 getDataType =
-function(val, env)
+function(val, env, call = NULL)
   UseMethod("getDataType")
 
 getDataType.AsIs =
-function(val, env)
+function(val, env, call = NULL)
 {
    #XXX guessType from Rllvm
   Rllvm:::guessType(val)
 }
 
 getDataType.character =
-function(val, env)
+function(val, env, call = NULL)
 {
   env$.types[[val]]
 }
 
 getDataType.integer =
-function(val, env)
+function(val, env, call = NULL)
 {
   Int32Type
 }
 
 getDataType.name =
-function(val, env)
-  getDataType(as.character(val), env)
+function(val, env, call = NULL)
+  getDataType(as.character(val), env, call)
 
 getDataType.ConstantInt =
-function(val, env)  
+function(val, env, call = NULL)  
 {
   Int32Type
 }
 
 getDataType.ConstantFP = 
-function(val, env)    
+function(val, env, call = NULL)    
 {
   DoubleType
 }
@@ -179,13 +179,32 @@ function(val, env)
 #getDataType.LoadInst =
 getDataType.StoreInst  = getDataType.Value  =
 getDataType.BinaryOperator =
-function(val, env)
+function(val, env, call = NULL)
 {
-  Rllvm::getType(val)
+  ty = Rllvm::getType(val)
+  if(sameType(ty, SEXPType)) {
+        # try to make this more specific to the R type.
+     if(is.call(call) && as.character(call[[1]]) %in% RewrittenRoutineNames) {
+
+           # These need to be in the function rather than outside as they will be null pointers until Rllvm is loaded.
+       ConstructorTypes = list(
+         numeric = REALSXPType,
+         double = REALSXPType,
+         integer = INTSXPType,  
+         logical = LGLSXPType,
+         character = STRSXPType,
+         list = VECSXPType    
+         )
+
+       
+         ty = ConstructorTypes[[as.character(call[[1]])]]
+     }
+  }
+  ty
 }
 
 getDataType.call = 
-function(val, env)
+function(val, env, call = NULL)
 {
   fun = as.character(val[[1]])
   if(fun %in% MathOps) {   #XXXX
@@ -205,7 +224,7 @@ function(val, env)
 }
 
 getDataType.default =
-function(val, env)
+function(val, env, call = NULL)
 {
 #  return(getTypes(val, env))
   if(length(val) == 1)
