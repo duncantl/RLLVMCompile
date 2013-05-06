@@ -9,6 +9,13 @@
 <items>
 
 <item>
+Get native version of nrow(), ncol() that don't
+use a SEXP.
+Can implement directly ourselves as C routines.
+Nice to compile them however.
+</item>
+
+<item>
 When we call any of the constructor functions, i.e. numeric(), etc.
 protect the result and unprotect them at the end.
 </item>

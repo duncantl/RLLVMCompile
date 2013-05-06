@@ -19,9 +19,6 @@ S3method(compile,"{")
          
 
 
-export(declareFunction)
-
-
 export(insertReturn)
 S3method(insertReturn, "function")
 
