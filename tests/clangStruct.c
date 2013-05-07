@@ -10,3 +10,12 @@ foo(CXCursor cur, CXCursor parent)
     return(2);
 }
 
+
+int
+bar(CXCursor cur, CXCursor parent)
+{
+    CXString cxstr = clang_getCursorSpelling(cur);
+    const char *str = clang_getCString(cxstr);
+    return(2);
+}
+

@@ -12,7 +12,7 @@ function(call, env, ir, ...)
 
 
        if(isStructType(valType)) {
-browser()         
+
            # Should add setAlignment() calls (with 8L) for the local var, store and load instructions
                 # make local variable to access the parameter. TEMPORARY. See if it is already present.
 #XXX         

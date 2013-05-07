@@ -10,22 +10,33 @@ library(RLLVMCompile)
 h = function(cur, parent, data)
 {
    ctr = ctr + 1L
-   kinds[ctr] = cur$kind
+   str = clang_CXCursor_getName(cur)
+#   cxstr = clang_getCursorSpelling(cur)
+#   val = clang_getCString(cxstr)
+#   names[ctr] = 
    CXChildVisit_Recurse
 }
 
 mod = Module()
 createGlobalVariable("ctr", mod, Int32Type, createIntegerConstant(0L))
-createGlobalVariable("kind", mod, Int32Type, createIntegerConstant(0L))
-createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
+createGlobalVariable("names", mod, arrayType(StringType, 10000))
 
-cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
+CXCursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
+CXStringType = structType(list(data = pointerType(Int8Type), private_flags = Int32Type), "CXString")
+
+Function("clang_getCursorSpelling", CXStringType, list(CXCursorType), mod)
+Function("clang_getCString", StringType, list(CXStringType), mod)
+
+# My own for testing
+Function("clang_CXCursor_getName", StringType, list(CXCursorType), mod)
 
 library(RCIndex) # here because we need to find CXChildVisit_Recurse
-fc = compileFunction(h, Int32Type, list( cursorType, cursorType, pointerType(Int8Type)), module = mod,
-                       structInfo = list(CXCursor = cursorType))
+llvmAddSymbol("clang_getCString", "clang_getCursorSpelling", "clang_CXCursor_getName")
 
+fc = compileFunction(h, Int32Type, list( CXCursorType, CXCursorType, pointerType(Int8Type)), module = mod,
+                       structInfo = list(CXCursor = CXCursorType, CXString = CXStringType))
 
+if(FALSE) {
 ee = ExecutionEngine(mod)
 fp = structure(getPointerToFunction(fc, ee)@ref, class = "NativeSymbol")
 
@@ -49,6 +60,6 @@ visitTU(tu, f)
 
 all(table(kinds) == table(rkinds))
 identical(kinds, rkinds)
-
+}
 
 
