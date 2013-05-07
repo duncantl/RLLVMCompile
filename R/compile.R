@@ -563,6 +563,7 @@ function()
   
         # These should be understood to be vectorized also.  
   list(exp = list(DoubleType, DoubleType),
+       log = list(DoubleType, DoubleType),       
        pow = list(DoubleType, DoubleType, DoubleType),
        sqrt = list(DoubleType, DoubleType),
        length = list(Int32Type, getSEXPType("REAL")),

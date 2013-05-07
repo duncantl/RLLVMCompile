@@ -7,6 +7,22 @@
 <title>General</title>
 
 <items>
+<item>
+Compile rw2d
+</item>
+<item>
+Compile vectorized fibonacci (Rllvm/explorationts/fib.R)
+and compare with closed form solution approach.
+</item>
+
+<item>
+handle case of serial assignment
+<r:code>
+xpos = ypos = numeric(n)
+</r:code>
+to ensure create a new vector.
+Do we do this for the SEXP types, i.e. call Rf_duplicate() when assigning.
+</item>
 
 <item>
 Get native version of nrow(), ncol() that don't
