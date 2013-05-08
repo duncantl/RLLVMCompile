@@ -27,7 +27,7 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
  
         # ty = getDataType(obj, env)
      # do we need to load this.  The compile.= function 
-  obj = getVariable(call[[2]], env, ir, load = FALSE) #???? for load = FALSE
+  obj = getVariable(call[[2]], env, ir, load = TRUE) #???? for load = FALSE. Now back to TRUE. Based on fgets.Rdb.
 
     #XXX Need to handle subsetting generally and need to ensure we get an integer
   call[[3]] = subtractOne(call[[3]])
@@ -37,7 +37,7 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
   idx = ir$createSExt(i, 64L)
 
   ty = getType(obj)
-  if(isArrayType(ty)  ||
+  if(isArrayType(ty)  || 
          (isPointerType(ty) && isArrayType(getElementType(ty))))
     idx = list(createIntegerConstant(0L, getContext(env$.module)), idx)
 

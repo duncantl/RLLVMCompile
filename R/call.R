@@ -4,7 +4,6 @@ callHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
-browser()
    funName = as.character(call[[1]])
    
    if(funName == "<-" || funName == "=")

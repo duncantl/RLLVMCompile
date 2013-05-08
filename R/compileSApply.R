@@ -40,6 +40,8 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
    els = quote(els <- foo(x))
    els[[3]][[2]] = X
    els[[3]][[1]] = as.name(getSEXPDataAccessor(vecType))  # get the INTEGER, REAL, etc. for the type
+
+#XXX Could add the types for els and el right now.
    
    # allocate answer
    alloc = quote(r_ans <- Rf_allocVector(sexpEnum, n))

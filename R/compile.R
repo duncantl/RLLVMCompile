@@ -74,7 +74,7 @@ function(call, env, ir, ...)
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL
-
+   
 #XXX may not need to do this but maybe can compile the RHS as usual.
    if(isSubsettingAssignment(call) && is(ty <- getElementAssignmentContainerType(call[[2]], env), "STRSXPType")) {
      return(assignToSEXPElement(call[[2]], call[[3]], env, ir, type = ty))
