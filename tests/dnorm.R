@@ -16,7 +16,6 @@ fc = compileFunction(f, arrayType(DoubleType), list(arrayType(DoubleType), Doubl
 
 mod = as(fc, "Module")
 g = vectorizeFunction(Dnorm, scalar = "Dnorm")
-REALSXPType = getSEXPType("REAL")
 gc = compileFunction(g, REALSXPType, list(REALSXPType, DoubleType, DoubleType), module = mod)
 
 all(.llvm(gc, x, 0, 1) == dnorm(x, 0, 1))
@@ -27,12 +26,13 @@ Dnormc = cmpfun(Dnorm)
 n = 1e5
 x = rnorm(n)
 
+if(FALSE) {
 ee = ExecutionEngine(mod)
 tm.1e5 = list(llvm = system.time(replicate(20, .llvm(gc, x, 0, 1, .ee = ee))),
               bytec = system.time(replicate(20, Dnormc(x))),
               native = system.time(replicate(20, dnorm(x))),
               r = system.time(replicate(20, g(x))))
-
+}
 
 #
 # double *fc(double *x, size_t x_length, double mu, double sd)

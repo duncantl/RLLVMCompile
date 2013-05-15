@@ -1,10 +1,11 @@
 # math.R - basic maths functions
+library(RLLVMCompile)
 
 t1 <- function(x, y) {
   return(x + y)  
 }
 
-t1.c <- compileFunction(t1, DoubleType, list(x=DoubleType, y=DoubleType), asList=TRUE, optimize=FALSE)o
+t1.c <- compileFunction(t1, DoubleType, list(x=DoubleType, y=DoubleType), asList=TRUE, optimize=FALSE)
 stopifnot(verifyModule(t1.c$mod))
 
 

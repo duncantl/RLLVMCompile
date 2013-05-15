@@ -36,7 +36,7 @@ function(expr, var = character(), recurse = FALSE, ...)
    expr
 }
 
-`fixIfAssign.=` = `fixIfAssign.<-`  =
+`fixIfAssign.=` =  #  `fixIfAssign.<-`  =
   #
   # If the variable to which we are assigning the result of the if
   # does not already exist, then we have problems when we generate the code.

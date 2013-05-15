@@ -30,8 +30,8 @@ declareFunction(list(REALSXPType), "R_my_allocVector", mod)
 declareFunction(list(REALSXPType), "R_my_allocVectorInit", mod)
 
 declareFunction(list(REALSXPType, Int32Type), "R_NEW_NUMERIC", mod)
-
-dyn.load("testAlloc.so")
+if(file.exists("testAlloc.so")) {
+ dyn.load("testAlloc.so")
 llvmAddSymbol("R_my_allocVector", "R_my_allocVectorInit", "R_NEW_NUMERIC")
 
 # fc = compileFunction(vf2, REALSXPType, Int32Type, module = mod)
@@ -39,3 +39,4 @@ fc = compileFunction(g, REALSXPType, Int32Type, module = mod)
 #fc = compileFunction(vf, VoidType, Int32Type, module = mod)
 #.llvm(fc, 1L)
 #fc = compileFunction(f, REALSXPType, Int32Type)
+}

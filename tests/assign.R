@@ -1,3 +1,4 @@
+library(RLLVMCompile)
 # assign.R - tests in compiling R assignment
 #
 # When these are more solified; make each test an element in a vector

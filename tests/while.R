@@ -15,11 +15,13 @@ class(.llvm(fc, 10))
 library(compiler)
 nfc = cmpfun(f)
 
+if(FALSE) {
 a = system.time(f(1e6))
 b = system.time(nfc(1e6))
 c = system.time(.llvm(fc, 1e6))
 info = sessionInfo()
 save(a,b,c, info, file = sprintf("whileSpeed_%s.rda", Sys.info()["sysname"]))
+}
 
 # This version shows that we don't need the integer types
 # 

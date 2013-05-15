@@ -7,8 +7,11 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
    funName = as.character(call[[1]])
    
    if(funName == "<-" || funName == "=")
-     return(`compile.<-`(call, env, ir, ...))  #XXX should lookup the env$.compilerHandlers[["<-"]] or "="
-   else if(funName %in% c("numeric", "integer", "character", "logical")) { 
+     return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
+   else if(funName %in% c("numeric", "integer", "character", "logical")) {
+     if(length(call) == 1)
+       call[[2]] = 1L #XXX or 0 for an empty vector?
+     
      call[[3]] = call[[2]]
      call[[2]] = getSEXPTypeNumByConstructorName(funName)
      call[[1]] = as.name(funName <- "Rf_allocVector")     

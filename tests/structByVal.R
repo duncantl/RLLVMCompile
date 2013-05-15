@@ -1,5 +1,6 @@
 library(RLLVMCompile)
 
+if(FALSE) { #XXX Fix
 h = function(cur, parent, data)
 {
    ctr = ctr + 1L
@@ -18,3 +19,4 @@ fp = structure(getPointerToFunction(fc, ee)@ref, class = "NativeSymbol")
 library(RCIndex)
 tu = createTU("testAlloc.c", includes = sprintf("%s/%s", R.home(), c("include", "../src/include")))
 visitTU(tu, fp)
+}

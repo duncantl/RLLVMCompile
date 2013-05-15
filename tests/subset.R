@@ -12,7 +12,7 @@ t1 <- function(x, i) {
 
 t1.c <- compileFunction(t1, DoubleType, list(x = DoublePtrType, i = Int32Type), asList = TRUE, optimize = TRUE)
 stopifnot(verifyModule(t1.c$mod))
-stopifnot(run(t1.c$fun, c(1, 2, 3), 1L) == 2)
+stopifnot(run(t1.c$fun, c(1, 2, 3), 2L) == 2)
 
 
 t2 <- function(x, i) {  
@@ -22,7 +22,7 @@ t2 <- function(x, i) {
 
 t2.c <- compileFunction(t2, DoubleType, list(x = DoublePtrType, i = Int32Type), asList = TRUE, optimize = FALSE)
 stopifnot(verifyModule(t2.c$mod))
-stopifnot(run(t2.c$fun, c(1, 2, 3), 1L) == 2)
+stopifnot(run(t2.c$fun, c(1, 2, 3), 2L) == 4.1)
 
 
 
@@ -35,14 +35,14 @@ t3 <- function(x, i) {
 
 t3.c <- compileFunction(t3, DoubleType, list(x=DoublePtrType, i=Int32Type), asList=TRUE, optimize=FALSE)
 stopifnot(verifyModule(t3.c$mod))
-stopifnot(run(t3.c$fun, c(1, 2, 3), 1L) == 2)
+stopifnot(run(t3.c$fun, c(1, 2, 3), 2L) == 22)
 
 
 t4 <- function(x, i)
   x[i] + 20
 
 t4.c <- compileFunction(t4, DoubleType, list(x = DoublePtrType, i = Int32Type), asList = TRUE, optimize = TRUE)
-stopifnot(run(t4.c$fun, c(1, 2, 3), 1L) == 22)
+stopifnot(run(t4.c$fun, c(1, 2, 3), 2L) == 22)
 
 
 #====================================================================
@@ -54,4 +54,5 @@ function(x, i) {
 }
 
 t5.c <- compileFunction(t5, DoublePtrType, list(x = DoublePtrType, i = Int32Type))
+.llvm(t5.c, c(1, 2, 3), 2)
 

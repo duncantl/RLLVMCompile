@@ -64,7 +64,7 @@ function(call)
     as.character(tmp[[1]]) %in% c("[", "[[")
 }
 
-`compile.=` = `compile.<-`  = assignHandler =
+assignHandler = `compile.=` =   # `compile.<-` 
   # Second version here so I don't mess the other one up.
   #
   # XXX   This is now getting to long. Break it up and streamline.
@@ -428,7 +428,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
        }
 
 #XXX     env is not yet defined. What do we want here?
-       compileGlobalVariables(.globals$variables, module, env, ir)
+       compileGlobalVariables(.globals$variables, module, nenv, ir)
     }
     
     block <- Block(llvm.fun, "entry")
@@ -595,7 +595,8 @@ function()
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "for", "if", "while",
-                        "repeat", "(", "!", "^")  # for now
+                        "repeat", "(", "!", "^",
+                        "sapply")  # for now
 
 
 compileCalledFuncs =
@@ -609,7 +610,7 @@ function(globalInfo, mod, .functionInfo = list())
      # Skip the ones we already have in the module.
      # Possibly have different types!
   funs = funs[!(funs %in% names(getModuleFunctions(mod))) ]
-  funs = funs[!(sapply(names(funs), isIntrinsic))]  
+  funs = funs[!(sapply(funs, isIntrinsic))]  
   
   funs = structure(lapply(funs, get), names = funs)
 
@@ -621,10 +622,10 @@ function(globalInfo, mod, .functionInfo = list())
                compileFunction(funs[[id]],
                                types$returnType,
                                types = types$params,
-                               mod = mod, name = id
+                               module = mod, name = id
                                )
              } else
-               compileFunction(funs[[id]], mod = mod, name = id)
+               compileFunction(funs[[id]], module = mod, name = id)
            })
 }
 

@@ -26,7 +26,7 @@ cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayTy
 pointerCursorType = pointerType(cursorType)
 
 llvmAddSymbol("clang_getCursorSpelling", "clang_getCString")
-declareFunction(list(
+declareFunction()
 
 library(RCIndex) # here because we need to find CXChildVisit_Recurse
 llvmAddSymbol("printInt")
@@ -35,7 +35,7 @@ declareFunction(list(VoidType, Int32Type), "printInt", mod)
 fc = compileFunction(h, Int32Type, list( pointerCursorType, pointerCursorType, pointerType(Int8Type)), module = mod,
                       structInfo = list(CXCursor = cursorType))
 
-if(TRUE) {
+if(FALSE) {
     # This commented out code is when we generate the IR from actual C code to see what llvm really generates for our
     # struct definition.
  # ir = "tests/clang.ll"

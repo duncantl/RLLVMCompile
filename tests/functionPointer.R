@@ -11,7 +11,7 @@ fc = compileFunction(f, Int32Type, Int32Type, module = mod)
 fn = getPointerToFunction(fc, ee)
 
 if(!file.exists("functionPointer.so"))
-  system("R CMD SHLIB functionPointer.c")
+  system(sprintf("%s/bin/R CMD SHLIB functionPointer.c", R.home()))
 
 dyn.load("functionPointer.so")
   # manually written

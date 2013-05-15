@@ -1,6 +1,6 @@
 library(RLLVMCompile)
 f = function(x) { x }
-ty = Rllvm:::getSEXPType("REAL")
+ty = REALSXPType
 fc = compileFunction(f, ty, list(ty), name = "f")
 
 x = rnorm(10)

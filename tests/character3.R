@@ -12,9 +12,11 @@ function(n)
 
    tmp
 }
+if(FALSE) {##XXXX
 fun = compileFunction(readTo, StringType, list(Int32Type), optimize = FALSE)
 
 showModule(fun)
 .llvm(fun, 2)
 .llvm(fun, 1)
+}
 

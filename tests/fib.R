@@ -12,6 +12,7 @@ fc = compileFunction(fib, Int32Type, list(n = Int32Type))
 
 .llvm(fc, 4)
 
+if(FALSE) {
 a = system.time(fib(30))
 c = system.time(.llvm(fc, 30))
 
@@ -20,4 +21,5 @@ ff = cmpfun(fib)
 b = system.time(ff(30))
 
 a/c  # on OS X 1000 times faster.
+}
 

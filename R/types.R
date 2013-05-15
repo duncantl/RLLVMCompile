@@ -11,7 +11,7 @@ function(obj, env, elementType = FALSE)
      ans = if(id %in% names(env$.types))
               env$.types[[ id ]]
            else if(id %in% names(env$.module)) {
-              getTypes(getGlobalVariable(mod, id), env)
+              getTypes(getGlobalVariable(env$.module, id), env)
            } else
                 # look in additional environments if necessary.
               getVariableType(id)
@@ -118,7 +118,7 @@ function(type)
                    LGLSXPType = Int32Type,
                    REALSXPType = DoubleType,
                    STRSXPType = StringType,
-                   VECSXP = getEXPType(),
+                   VECSXP = getSEXPType(),
                    stop("don't know element type of this SEXP")))
  
   if(isPointerType(type))

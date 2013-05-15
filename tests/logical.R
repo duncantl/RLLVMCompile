@@ -1,5 +1,7 @@
 # logical.R - test compilation of logical operators and functions
 
+library(RLLVMCompile)
+
 t1 <- function(x) {
   return(!x)
 }

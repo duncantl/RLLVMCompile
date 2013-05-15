@@ -9,6 +9,16 @@
 <items>
 
 <item>
+tests/ with a XXX or a FIX
+globalArrayAccessors.R  vectorize.R structByVal.R  character3.R
+</item>
+
+<item>
+Add a mechanism to differentiate between integer() 
+meaning INTSXPType or Int32Type in R code.
+</item>
+
+<item>
 Test the other code now that we switched load = TRUE for subsetHandler
 </item>
 

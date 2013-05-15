@@ -11,7 +11,7 @@ subsetHandler =
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
-
+browser()
   objType = getElementAssignmentContainerType(call, env)
   if(is(objType, "SEXPType")) {  # is this already in compile.=? If so, consolidate.
     if(SEXPToPrimitive) {

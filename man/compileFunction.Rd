@@ -35,11 +35,19 @@
   Each element is of the form returnType and params.
 }
 \usage{
-compileFunction(fun, returnType, types = list(), mod = Module(name),
-                name = NULL, NAs = FALSE, asFunction = FALSE, optimize = TRUE, ...,
-                .functionInfo = list(...), .routineInfo = list(),
-               .compilerHandlers = OPS,
-               .globals =  findGlobals(fun, merge = FALSE))
+compileFunction(fun, returnType, types = list(), module = Module(name), name = NULL,
+         NAs = FALSE,
+         asFunction = FALSE, asList = FALSE,
+         optimize = TRUE, ...,
+         .functionInfo = list(...),
+         .routineInfo = list(),
+         .compilerHandlers = getCompilerHandlers(),
+         .globals = findGlobals(fun, merge = FALSE, .ignoreDefaultArgs),
+         .insertReturn = !identical(returnType, VoidType),
+         .builtInRoutines = getBuiltInRoutines(),
+         .constants = getConstants(),
+         .vectorize = character(), .execEngine = NULL,
+         structInfo = list(), .ignoreDefaultArgs = TRUE)
 }
 \arguments{
   \item{fun}{the R function to be compiled.}
@@ -52,7 +60,7 @@ compileFunction(fun, returnType, types = list(), mod = Module(name),
     specified if the function has an \code{llvmType} attribute.  Also, this
     can be omitted if the function has no parameters.
   }
-  \item{mod}{the LLVM \code{Module} object.}
+  \item{module}{the LLVM \code{Module} object.}
   \item{name}{the name to use for the function, typically obtained from
     deparsing \code{fun}, but which can be specified explicitly if
     not referencing the function directly in the call.
@@ -89,9 +97,33 @@ compileFunction(fun, returnType, types = list(), mod = Module(name),
   }
   \item{.globals}{a character vector giving the names of functions
     which are to be compiled also in this module. These are typically
-    the names of functions that are called within the body of this function.}
-}
-\details{
+    the names of functions that are called within the body of this
+    function.}
+  \item{.execEngine}{the execution object which, if present and we are
+  creating an R function to hide the compiled routine, is added as a
+  default value of a parameter so that the caller doesn't have to
+  specify it.}
+  \item{structInfo}{a list with an element for each struct type we might
+  reference in the code. Each element should be a named list giving the
+  field names in the struct and their types.}
+  \item{.builtInRoutines}{a list of available routines we know about
+  along with their return type and parameter types, i.e. signature}
+  \item{.insertReturn}{whether we need to add explicit calls to
+    \code{return} in the R function before we compile it.
+  If we know that the code already contains the \code{return} calls in
+  the appropriate places, we can save time by not doing this, but it is
+  very small and never hurts to do this.}
+  \item{.constants}{the names of variables that are to be considered constants}
+  \item{.vectorize}{a logical value controlling whether to make the code
+  vectorized in its first argument, or if this is a parameter name then
+  that parameter.}
+  \item{asList}{a logical value that controls what is returned. If this
+  is \code{TRUE}, we return a list with the module, the compiled routine
+  and the compiler object containing all of its state}
+  \item{.ignoreDefaultArgs}{a logical value which controls whether we
+  look at the code  for the default values of the parameters in the R
+  function. Currently we use this to avoid working with global variables
+  in R that we will not actually reference.}  
 }
 \value{
  If \code{asFunction}, this returns an R function that has the same
@@ -134,13 +166,18 @@ function(x, y)
   return ( sqrt(foo(x, y)) )
 }
 
+ foo.c = compileFunction(foo, DoubleType, list(DoubleType, DoubleType),
+                      .routineInfo = list( sqrt = list(DoubleType, DoubleType) ))
+
 
  fb = compileFunction(foobar, DoubleType, list(DoubleType, DoubleType),
+                       module = as(foo.c, "Module"),
                       .routineInfo = list( sqrt = list(DoubleType, DoubleType) ),
                        foo = list(returnType = DoubleType,
                                   params = c(DoubleType, DoubleType)))
 
  run(fb, 4, 5) # gives 3 = sqrt(4 + 5)
+ .llvm(fb, 4, 5)
 
 
   # Here we return an R function that is directly callable.
@@ -161,7 +198,7 @@ myDate = function() {
         return(Sys.Date())
      }
 
-myOPS = CompilerHandlers
+myOPS = getCompilerHandlers()
 myOPS[["Sys.Date"]] =
    function(call, env, ir, ...) {
        cat("In Sys.Date handler\n")
@@ -174,6 +211,8 @@ myOPS[["Sys.Date"]] =
   # we won't end up calling.
 f = compileFunction(myDate, Int32Type, optimize = FALSE,
                      .compilerHandlers = myOPS, .globals = NULL)
+
+.llvm(f)
 
 
 myPlus = function() {
