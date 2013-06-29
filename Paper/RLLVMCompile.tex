@@ -1,0 +1,91 @@
+\documentclass[article]{jss}
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shadows,trees}
+\usepackage{fancyvrb}
+\usepackage{cprotect}
+\usepackage{listings}
+
+\usepackage[firstpage]{draftwatermark}
+\SetWatermarkLightness{.95}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+% To finish
+% Memory management
+% using different backends, e.g. PTX, C++
+% assertions terminating R.  (compile without debug-assertions)
+%  show() method for the parameters.
+% make parseIR() and readBitcode() consisitent
+
+
+
+%% almost as usual
+\author{Duncan Temple Lang\\University of California at Davis}
+\title{The \Rpkg{RLLVMCompile} package: a simple compiler for \R{} code.}
+
+%% for pretty printing and a nice hypersummary also set:
+\Plainauthor{Duncan Temple Lang}
+\Plaintitle{}
+\Shorttitle{RLLVMCompile}
+
+%% an abstract and keywords
+\Abstract{ 
+
+
+} 
+\Keywords{\R, \Rpkg{Rllvm} package, compiled code}
+\Plainkeywords{R, RCIndex} %% without formatting
+%% at least one keyword must be supplied
+
+%% publication information
+%% NOTE: Typically, this can be left commented and will be filled out by the technical editor
+%% \Volume{13}
+%% \Issue{9}
+%% \Month{September}
+%% \Year{2004}
+%% \Submitdate{2004-09-29}
+%% \Acceptdate{2004-09-29}
+
+%% The address of (at least) one author should be given
+%% in the following format:
+\Address{
+  Duncan Temple Lang\\
+  4210 Math Sciences Building, \\
+  University of California at Davis \\
+  One Shields Avenue\\
+  Davis, CA 95616\\
+  E-mail: \email{duncan@r-project.org}\\
+  URL: \url{http://www.omegahat.org}
+}
+
+
+\usepackage[T1]{fontenc} 
+\catcode`\_=12
+
+\input{jssMacros}
+\def\RClang{\Rpkg{RCIndex}}
+\def\Rllvm{\Rpkg{Rllvm}}
+\def\IR{intermediate representation}
+\def\Ins#1{\textbf{#1}}
+
+\begin{document}
+
+
+\section{Overview and Motivation}\label{sec:Introduction}
+
+
+
+\section{Related Work}
+
+\section{Future Work}
+
+
+
+
+\bibliography{rllvm}
+\end{document}

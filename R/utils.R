@@ -157,7 +157,7 @@ function(ir, toType, fromType, val)
     stop(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
 
 #XXX    
- browser()
+ #browser()
 
   ## checking needed here
   fun = casters[[i]]
