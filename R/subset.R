@@ -44,6 +44,7 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
   p = ir$createGEP(obj, idx)
   if(load)
     return(ir$createLoad(p))
+  
   return(p)
 }
 
