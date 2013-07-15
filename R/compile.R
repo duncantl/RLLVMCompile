@@ -351,7 +351,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
-         structInfo = list(), .ignoreDefaultArgs = TRUE)
+         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE)
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -451,6 +451,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.NAs = NAs
     nenv$.structInfo = structInfo
     nenv$.loopDepth = 0L
+
+    nenv$.useFloat = .useFloat
 
 
     if (.insertReturn)
@@ -557,15 +559,32 @@ getBuiltInRoutines =
   #
   # See FunctionTypeInfo also 
   #
-function()
+function(env = NULL, useFloat = FALSE)
 {
+
+  if(!is.null(env) && exists(".builtInRoutines", env))
+    return(get(".builtInRoutines", env))
+
+  
   SEXPType = getSEXPType()
+
+  
+  basic = if(useFloat)
+             list(exp = list(FloatType, FloatType),
+                  log = list(FloatType, FloatType),       
+                  pow = list(FloatType, FloatType, FloatType),
+                  sqrt = list(FloatType, FloatType))    
+          else
+             list(exp = list(DoubleType, DoubleType),
+                  log = list(DoubleType, DoubleType),       
+                  pow = list(DoubleType, DoubleType, DoubleType),
+                  sqrt = list(DoubleType, DoubleType))      
+
+
+  
   
         # These should be understood to be vectorized also.  
-  list(exp = list(DoubleType, DoubleType),
-       log = list(DoubleType, DoubleType),       
-       pow = list(DoubleType, DoubleType, DoubleType),
-       sqrt = list(DoubleType, DoubleType),
+ ans =  list(
        length = list(Int32Type, getSEXPType("REAL")),
        Rf_length = list(Int32Type, getSEXPType("REAL")),        # same as length. Should rewrite name length to Rf_length.
        INTEGER = list(Int32PtrType, getSEXPType("INT")),
@@ -588,7 +607,10 @@ function()
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),
        dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))
-      )  
+      )
+
+  ans[names(basic)] = basic
+  ans
 }
 
 # Should this just be names of CompilerHandlers?
