@@ -3,7 +3,7 @@ function(fun, types, module = ModuleForNVVM(name), name = NULL,
          .compilerHandlers = getGPUCompilerHandlers(),
          .insertReturn = TRUE,
          .builtInRoutines = getGPUBuiltInRoutines(),
-         .useFloat = TRUE)
+         .useFloat = TRUE, ...)
           
 {
    if(missing(name))
@@ -13,7 +13,7 @@ function(fun, types, module = ModuleForNVVM(name), name = NULL,
    f = compileFunction(fun, VoidType, types, module = module, name = name,
                        .compilerHandlers = .compilerHandlers,
                        .builtInRoutines = .builtInRoutines, 
-                       .useFloat = .useFloat, .insertReturn = FALSE
+                       .useFloat = .useFloat, .insertReturn = FALSE, ...
                       )
   # add the terminator createRet() in the correct block
 

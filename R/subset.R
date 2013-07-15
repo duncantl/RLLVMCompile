@@ -11,6 +11,7 @@ subsetHandler =
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
+#browser()
   objType = getElementAssignmentContainerType(call, env)
   if(is(objType, "SEXPType")) {  # is this already in compile.=? If so, consolidate.
     if(SEXPToPrimitive) {
@@ -31,6 +32,7 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
     #XXX Need to handle subsetting generally and need to ensure we get an integer
 
   zeroBased = is.name(call[[3]]) && as.character(call[[3]]) %in% names(env$.zeroBased)
+
   if(!zeroBased)
      call[[3]] = subtractOne(call[[3]])
 

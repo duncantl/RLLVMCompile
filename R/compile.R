@@ -115,6 +115,9 @@ function(call, env, ir, ...)
 
                  # No existing variable; detect type and create one.
           if(is.null(type)) 
+            type = env$.localVarTypes[[var]]
+
+          if(is.null(type)) 
              type = getDataType(var, env)
 
                  # didn't get a type from the variable, so look at the RHS.
@@ -142,7 +145,7 @@ function(call, env, ir, ...)
            val = getGetElementPtr(gvar, ctx = ctx)
            type = StringType
          }
-
+cat("creating local variable", var, "\n")
          assign(var, ref <- createFunctionVariable(type, var, env, ir), envir = env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
@@ -161,6 +164,14 @@ function(call, env, ir, ...)
    }
 
    if(!is.null(val)) {
+      if(!sameType(getType(val), getElementType(getType(ref)))) {
+#XXX
+#cat("fix this cast\n")
+#if(var == "subthread") browser()
+#         val = Rllvm::createCast(ir, "SIToFP", val, getElementType(getType(ref)))
+	  val = createCast(ir, getElementType(getType(ref)), getType(val), val)
+      }
+        
       store = ir$createStore(val, ref)
       if(!is.null(tmp <- attr(val, "zeroBasedCounting"))) {
          attr(ref, "zeroBasedCounting") = tmp
@@ -356,7 +367,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
-         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE)
+         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
+         .localVarTypes = list())
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -459,7 +471,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.NAs = NAs
     nenv$.structInfo = structInfo
     nenv$.loopDepth = 0L
-    nenv$.zeroBased = logical()
+    nenv$.zeroBased = .zeroBased
+    nenv$.localVarTypes = .localVarTypes
 
     nenv$.useFloat = .useFloat
 
