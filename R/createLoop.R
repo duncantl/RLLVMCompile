@@ -95,7 +95,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
         ty = getTypes(lim[[2]], env)
         if(is(ty, "SEXPType")) {
              # declare Rf_length()
-           R.length = declareFunction(getBuiltInRoutines()[["length"]], "Rf_length", env$.module)
+           R.length = declareFunction(getBuiltInRoutines(env)[["length"]], "Rf_length", env$.module)
            sym = as.character(lim[[2]])
            var = getVariable(sym, env, ir)
 #XXXXXX
