@@ -10,7 +10,7 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
-browser()  
+
 # if(FALSE && length(call) == 2)  {
 #    # unary operator - most likely -
 #    val = compile(call[[2]], env, ir, ...)
