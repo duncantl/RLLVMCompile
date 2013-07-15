@@ -1,11 +1,11 @@
 getTypes =
-function(obj, env, elementType = FALSE)
+function(obj, env, elementType = FALSE, .useFloat = env$.useFloat)
 {
    if(is(obj, "integer"))
       Int32Type
-   else if(is(obj, "numeric"))
-      DoubleType   
-   else if(is.name(obj)) {
+   else if(is(obj, "numeric")) {
+      if(.useFloat) FloatType else DoubleType   
+   } else if(is.name(obj)) {
 
      id = as.character(obj)
      ans = if(id %in% names(env$.types))
@@ -23,21 +23,24 @@ function(obj, env, elementType = FALSE)
    } else if(is.call(obj)) {
           # temporarily deal with x[ expr ]
        if(obj[[1]] == as.name("[")) # XXX not in any way general And doesn't handle vectors being returned.
-          return(getTypes(obj[[2]], env, TRUE))
+          return(getTypes(obj[[2]], env, TRUE, .useFloat))
 
        fun = as.character(obj[[1]])
        if(fun == "(")
-         return(getTypes(obj[[2]], env))
+         return(getTypes(obj[[2]], env, .useFloat = .useFloat))
        
        if(fun %in% names(env$.functionInfo))
          return( get(fun, env$.functionInfo)$returnType )
+       else if(fun %in% names(env$.builtInRoutines)) {
+          return(env$.builtInRoutines[[fun]][[1]])
+       }
        else if(fun %in% names(FunctionTypeInfo)) 
-         return(getFunctionTypeInfo(fun, obj, env, elementType, FunctionTypeInfo))
+         return(getFunctionTypeInfo(fun, obj, env, elementType, FunctionTypeInfo, .useFloat = .useFloat))
        else if(fun %in% c("+", "-", "*")) {
           argTypes = lapply(obj[-1], getTypes, env)
           #XXX Make the following more general and more comprehensive test
           if(any(sapply(argTypes, function(x) sameType(x, DoubleType))))
-            return(DoubleType)
+            return(if(.useFloat) FloatType else DoubleType)
           else
             return(argTypes[[1]])
        }
@@ -68,21 +71,23 @@ function(name, constants = ConstantInfo)
 }
 
 getFunctionTypeInfo =
-function(funName, call, env, elementType = FALSE, info = FunctionTypeInfo)
+function(funName, call, env, elementType = FALSE, info = FunctionTypeInfo, .useFloat = FALSE)
 {
    i = info[[funName]]
    ans = i$"return"
    if(is.character(ans))
-      mapRTypeToLLVM(ans)
+     mapRTypeToLLVM(ans, .useFloat)
    else
-      ans
+     ans
+
 }
 
 mapRTypeToLLVM =
-function(name)
+function(name, .useFloat = FALSE)
 {
   switch(name,
-         "numeric" = DoubleType,
+         "numeric" = if(.useFloat) FloatType else DoubleType,
+         "single" = FloatType,
          "integer" = Int32Type,
          stop("don't know mapping from ", name, " to LLVM"))
 }
@@ -94,6 +99,9 @@ getMathOpType =
 # will be what we should coerce to).
 function(types)
 {
+   if(length(types) == 1)
+     return(types[[1]])
+  
    types = lapply(types, function(x) if(is(x, "Type")) x@ref else x)
    
    if( identical(types[[1]], types[[2]]) )
