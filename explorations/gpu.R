@@ -18,8 +18,6 @@ fun = compileGPUKernel(f, list(x = Int32PtrType))
 
 if(require(Rnvvm)) {
 m = as(fun, "Module")
-#setDataLayout(m, RLLVMCompile:::DefaultGPULayout)
-#setGPUKernel(fun, m)
 
 code = as(m, "character")
 code = RLLVMCompile:::fixPTXCodeForNVVM(code)
