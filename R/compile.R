@@ -143,7 +143,7 @@ function(call, env, ir, ...)
            type = StringType
          }
 
-         assign(var, ref <- createFunctionVariable(type, var, env, ir), envir=env) ## Todo fix type and put into env$.types
+         assign(var, ref <- createFunctionVariable(type, var, env, ir), envir = env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
    } else {
@@ -161,7 +161,12 @@ function(call, env, ir, ...)
    }
 
    if(!is.null(val)) {
-      ir$createStore(val, ref)
+      store = ir$createStore(val, ref)
+      if(!is.null(tmp <- attr(val, "zeroBasedCounting"))) {
+         attr(ref, "zeroBasedCounting") = tmp
+         if(is.name(call[[2]]))
+           env$.zeroBased[as.character(call[[2]])] = TRUE
+      }
    }
 
    val  # return value - I (Vince) changed this to val from ans (the createStore() return).
@@ -421,6 +426,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     if(length(.globals$variables)) {
 
+       .globals$variables = setdiff(.globals$variables, ExcludeGlobalVariables)
+
+
        i = .globals$variables %in% names(module)
        if(any(i)) {
               #XXX should check that they are actual variables and not functions.
@@ -451,6 +459,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.NAs = NAs
     nenv$.structInfo = structInfo
     nenv$.loopDepth = 0L
+    nenv$.zeroBased = logical()
 
     nenv$.useFloat = .useFloat
 
@@ -617,7 +626,7 @@ function(env = NULL, useFloat = FALSE)
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "for", "if", "while",
-                        "repeat", "(", "!", "^",
+                        "repeat", "(", "!", "^", "$", "$<-",
                         "sapply")  # for now
 
 
