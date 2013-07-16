@@ -118,11 +118,9 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
     # XXX Have to deal with different types.
   if(isIntType)
      codes = c("+" = Add, "-" = Sub, "*" = Mul, "/" = SDiv, "%/%" = SRem)
-  else {
-cat("math\n")
-browser()
+  else 
      codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "/" = FDiv, "%/%" = FRem)
-  }
+
 
   opName = as.character(call[[1]]) 
   op = codes[ opName ]
@@ -133,7 +131,6 @@ browser()
   } else {
     
      if(opName == "^") {
-#    browser()
          # also see callHandler() in call.R
        f = declareFunction(getBuiltInRoutines(env)[["pow"]], "pow", env$.module)
        env$addCallInfo("pow")       
