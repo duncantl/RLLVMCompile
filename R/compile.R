@@ -145,7 +145,7 @@ function(call, env, ir, ...)
            val = getGetElementPtr(gvar, ctx = ctx)
            type = StringType
          }
-cat("creating local variable", var, "\n")
+
          assign(var, ref <- createFunctionVariable(type, var, env, ir), envir = env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
