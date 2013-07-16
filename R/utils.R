@@ -167,16 +167,20 @@ function(ir, toType, fromType, val)
 createCastIntType =
 function(ir, val, toType, fromType, ...)
 {
-browser()
   if(sameType(toType, DoubleType) || sameType(toType, FloatType))
       return(createSIToFP(ir, val, toType))
 
-  w = getIntegerBitWidth(fromType)
-  if(isIntegerType(toType))
-     return(ir$createZExt(val, getIntegerBitWidth(toType)))
+  w.from = getIntegerBitWidth(fromType)
+  if(isIntegerType(toType)) {
+     w.to = getIntegerBitWidth(toType)
+     if(w.to > w.from)
+       return(ir$createZExt(val, w.to))
+     else
+       return(ir$createTrunc(val, toType)) 
+  }
 
 # This was here for some reason. (July 15th, 2013)
-#  if(w == 1)
+#  if(w.from == 1)
 #     return(ir$createZExt(val, toType))      
 
   return(ir$createIntCast(val, toType))  
