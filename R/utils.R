@@ -127,7 +127,6 @@ createCast =
 # and unsafe in some cases).  FIXME - XXX
 function(ir, toType, fromType, val)
 {
-
   # The logic seems to be off here. We have to find
   # use both the from and to types rather than
   # matching on the from type and then picking a function.
@@ -135,6 +134,9 @@ function(ir, toType, fromType, val)
   if (sameType(toType, fromType))
     stop("No need to cast: toType and fromType are same.")
 
+   # convert from Double to Float.
+  if(sameType(toType, FloatType) && sameType(fromType, DoubleType))
+    return(ir$createFPTrunc(val, toType))
 
   if(isIntegerType(fromType))
     return(createCastIntType(ir, val, toType, fromType))
@@ -156,9 +158,6 @@ function(ir, toType, fromType, val)
   if (!length(i))
     stop(sprintf("Don't know how to handle this fromType (reverseLookupType says type '%s)", reverseLookupType(fromType)))
 
-#XXX    
- #browser()
-
   ## checking needed here
   fun = casters[[i]]
   ins = fun(ir, val, toType)
@@ -168,12 +167,21 @@ function(ir, toType, fromType, val)
 createCastIntType =
 function(ir, val, toType, fromType, ...)
 {
-  if(sameType(toType, DoubleType))
-    return(createSIToFP(ir, val, toType))
+  if(sameType(toType, DoubleType) || sameType(toType, FloatType))
+      return(createSIToFP(ir, val, toType))
 
-  w = getIntegerBitWidth(fromType)
-  if(w == 1)
-  return(ir$createZExt(val, toType))      
+  w.from = getIntegerBitWidth(fromType)
+  if(isIntegerType(toType)) {
+     w.to = getIntegerBitWidth(toType)
+     if(w.to > w.from)
+       return(ir$createZExt(val, w.to))
+     else
+       return(ir$createTrunc(val, toType)) 
+  }
+
+# This was here for some reason. (July 15th, 2013)
+#  if(w.from == 1)
+#     return(ir$createZExt(val, toType))      
 
   return(ir$createIntCast(val, toType))  
 #  return(ir$createBitCast(val, toType))
