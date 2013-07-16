@@ -40,7 +40,7 @@ cat("compiling g\n")
 #if(FALSE)
 globalFloatPtrType = pointerType(FloatType, , 1L)
 g.fun = compileGPUKernel(g, list(x = globalFloatPtrType), module = m, .zeroBased = c(idx = TRUE), 
-                          .localVarTypes = list(idx = Int64Type, myblock = Int64Type, blocksize = Int64Type, subthread = Int64Type)
+                         .localVarTypes = list(idx = Int64Type, myblock = Int64Type, blocksize = Int64Type, subthread = Int64Type)
                         )
 
 ptx = tryCatch({
