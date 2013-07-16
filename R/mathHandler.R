@@ -10,7 +10,7 @@ mathHandler =
   #
 function(call, env, ir, ..., isSubsetIndex = FALSE)  
 {
-browser()  
+
 # if(FALSE && length(call) == 2)  {
 #    # unary operator - most likely -
 #    val = compile(call[[2]], env, ir, ...)
@@ -46,6 +46,8 @@ browser()
 
   call[2:length(call)] = lapply(call[-1], rewriteExpressions, env, isSubsetIndex = isSubsetIndex)
 
+  origCall = call
+
   lit <- sapply(call[-1], is.numeric) # literals
 
   if(all(lit)) {
@@ -63,9 +65,12 @@ browser()
 
      # we are getting the types here w/o compiling the expressions (?). So they may not be what we end up with.
   types = lapply(call[-1], getTypes, env)
-  if(any(sapply(types, is.null)))
-     stop("NULL value for component type in math operation")
-    
+  if(any(nulls <- sapply(types, is.null))) {
+     i = which(nulls) + 1L
+     call[i] = lapply(call[i], compile, env, ir, ...)
+     types = lapply(call[-1], getType)
+#     stop("NULL value for component type in math operation")
+  }
 
 
 
@@ -88,10 +93,12 @@ browser()
        toCast = as.list(call[-1])[[which(!typeMatches)]]
   }
 
-  isIntType = sameType(targetType, Int32Type)
+  isIntType = sameType(targetType, Int32Type) || sameType(targetType, Int64Type)
   e = lapply(call[-1], function(x)
-                       if(is(x, "numeric")) {
-#if(as.character(call[[1]])== "^") browser()                         
+                       if(is(x, "Value"))
+                          x
+                       else if(is(x, "numeric")) {
+
                           if(isIntType)
                             createIntegerConstant(as.integer(x))
                           else if(sameType(targetType, DoubleType))
@@ -111,19 +118,19 @@ browser()
     # XXX Have to deal with different types.
   if(isIntType)
      codes = c("+" = Add, "-" = Sub, "*" = Mul, "/" = SDiv, "%/%" = SRem)
-  else
+  else 
      codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "/" = FDiv, "%/%" = FRem)
+
 
   opName = as.character(call[[1]]) 
   op = codes[ opName ]
 
 
   if(!is.na(op)) {
-      ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(call))
+      ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(origCall))
   } else {
     
      if(opName == "^") {
-#    browser()
          # also see callHandler() in call.R
        f = declareFunction(getBuiltInRoutines(env)[["pow"]], "pow", env$.module)
        env$addCallInfo("pow")       
