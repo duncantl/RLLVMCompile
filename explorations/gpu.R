@@ -54,7 +54,7 @@ ptx = tryCatch({
 
 
   library(RCUDA)
-  cu.mod = cuModuleLoadDataEx(ptx)
+  cu.mod = loadModule(I(ptx)) # cuModuleLoadDataEx(ptx)
 
   N = 32
   ans = integer(N)
