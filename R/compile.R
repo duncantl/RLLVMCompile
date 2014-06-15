@@ -115,6 +115,9 @@ function(call, env, ir, ...)
 
                  # No existing variable; detect type and create one.
           if(is.null(type)) 
+            type = env$.localVarTypes[[var]]
+
+          if(is.null(type)) 
              type = getDataType(var, env)
 
                  # didn't get a type from the variable, so look at the RHS.
@@ -143,7 +146,7 @@ function(call, env, ir, ...)
            type = StringType
          }
 
-         assign(var, ref <- createFunctionVariable(type, var, env, ir), envir=env) ## Todo fix type and put into env$.types
+         assign(var, ref <- createFunctionVariable(type, var, env, ir), envir = env) ## Todo fix type and put into env$.types
          env$.types[[var]] = type
        }
    } else {
@@ -161,7 +164,20 @@ function(call, env, ir, ...)
    }
 
    if(!is.null(val)) {
-      ir$createStore(val, ref)
+      if(!sameType(getType(val), getElementType(getType(ref)))) {
+#XXX
+#cat("fix this cast\n")
+#if(var == "subthread") browser()
+#         val = Rllvm::createCast(ir, "SIToFP", val, getElementType(getType(ref)))
+	  val = createCast(ir, getElementType(getType(ref)), getType(val), val)
+      }
+        
+      store = ir$createStore(val, ref)
+      if(!is.null(tmp <- attr(val, "zeroBasedCounting"))) {
+         attr(ref, "zeroBasedCounting") = tmp
+         if(is.name(call[[2]]))
+           env$.zeroBased[as.character(call[[2]])] = TRUE
+      }
    }
 
    val  # return value - I (Vince) changed this to val from ans (the createStore() return).
@@ -351,7 +367,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
-         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE)
+         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
+         .localVarTypes = list())
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -421,6 +438,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     if(length(.globals$variables)) {
 
+       .globals$variables = setdiff(.globals$variables, ExcludeGlobalVariables)
+
+
        i = .globals$variables %in% names(module)
        if(any(i)) {
               #XXX should check that they are actual variables and not functions.
@@ -451,6 +471,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.NAs = NAs
     nenv$.structInfo = structInfo
     nenv$.loopDepth = 0L
+    nenv$.zeroBased = .zeroBased
+    nenv$.localVarTypes = .localVarTypes
 
     nenv$.useFloat = .useFloat
 
@@ -617,7 +639,7 @@ function(env = NULL, useFloat = FALSE)
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "for", "if", "while",
-                        "repeat", "(", "!", "^",
+                        "repeat", "(", "!", "^", "$", "$<-",
                         "sapply")  # for now
 
 

@@ -17,13 +17,16 @@ S3method(compile,logical)
 S3method(compile,name)
 S3method(compile,Value)
 S3method(compile,"{")
-         
-
 
 export(insertReturn)
 S3method(insertReturn, "function")
 
-
 export(vectorizeFunction)
 
 export(createProxy)
+
+
+export(compileGPUKernel, DefaultGPULayout, ModuleForNVVM, setGPUKernel)
+export(fixPTXCodeForNVVM )
+
+

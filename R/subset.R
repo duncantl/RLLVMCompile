@@ -30,7 +30,11 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
   obj = getVariable(call[[2]], env, ir, load = TRUE) #???? for load = FALSE. Now back to TRUE. Based on fgets.Rdb.
 
     #XXX Need to handle subsetting generally and need to ensure we get an integer
-  call[[3]] = subtractOne(call[[3]])
+
+  zeroBased = is.name(call[[3]]) && as.character(call[[3]]) %in% names(env$.zeroBased)
+
+  if(!zeroBased)
+     call[[3]] = subtractOne(call[[3]])
 
   i = compile(call[[3]], env, ir, isSubsetIndex = TRUE) # getVariable(call[[3]], env, ir)
   #i = getVariable(call[[3]], env, ir)
