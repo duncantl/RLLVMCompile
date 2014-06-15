@@ -14,7 +14,7 @@ if(FALSE) {
  fc = compileFunction(fib, types = list( n = Int32Type), returnType = Int32Type)
 
    # check results
- sappy(0:11, function(n) run(fc, n))
+ sapply(0:11, function(n) run(fc, n))
 
    # compare times
  ti = system.time(fib(50))
