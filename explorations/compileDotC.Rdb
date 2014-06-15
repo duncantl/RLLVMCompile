@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude"
+	 xmlns:c="http://www.C.org"
+	 xmlns:omg="http://www.omegahat.org">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+The idea in this vignette is to show how
+we can take <r/> code and compile it with <omg:pkg>RLLVMCompile</omg:pkg> when it
+has a call to a C routine via <r:func>.C</r:func>.
+We'll look at a simple example that illustrates the concepts.
+We'll discuss some of the limitations after the example.
+We'll ignore the <r:func>.Call</r:func> interface here
+as that involves passing <r/> objects to a routine.
+For this, we have  to create <r/> objects or 
+already be dealing with those as inputs to our compiled routine.
+This is a different  example which we will address in a separate document.
+</para>
+
+<para>
+For simplicity, we will use a very simple <c/> routine:
+<c:code><![CDATA[
+void
+threshold(const double * const threshold, double *values, const int * const len, double *totalSum)
+{
+   double total = 0;
+   for(int i = 0; i < *len; i++)
+      if(values[i] < *threshold) 
+         values[i] = 0.0;
+      else
+         total + values[i];
+
+   *totalSum= total;
+}
+]]></c:code>
+This sets any of the elements in the collection
+<c:var>values</c:var> which are less than 
+<c:var>threshold</c:var> to 0.
+It computes the total of the values that are not thresholded and returns
+this via <c:arg>totalSum</c:arg>.
+<!-- We  have taken  the opportunity to explicitly identi -->
+This is an artificial example, but it illustrates the point.
+</para>
+
+
+<para>
+Typically we would have a dedicated <r/> function
+that called this routine and we would use this in
+higher-level <r/> computations.
+However, to illustrate, we'll show how we can compile
+a function that calls this as part of the computations.
+<r:function><![CDATA[
+f = function(n, threshold = 1.0)
+{
+  x = rnorm(n)
+  .C("threshold", as.numeric(threshold), abs(x - mean(x)), length(x))
+}
+]]></r:function>
+
+</para>
+
+
+
+
+
+<para>
+The  <c/> routine may be written as a wrapper
+to a more  conventional routine where
+<c:var>threshold</c:var> and 
+<c:var>len</c:var> are passed directly as a scalar values
+rather than <r/>'s requirement each be a pointer.
+<c:code><![CDATA[
+void
+threshold(double threshold, double *values, int len)
+{
+   for(i = 0; i < *len; i++)
+      if(values[i] < threshold)
+         values[i] = 0.0;
+}
+]]></c:code>
+If this was declared as such so that <llvm/>
+knew about  this signature, it could
+pass the arguments in this manner rather than as
+pointers.
+
+</para>
+
+
+</section>
+</article>

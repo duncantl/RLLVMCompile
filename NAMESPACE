@@ -2,6 +2,7 @@
 #exportPattern(".*")
 
 import(Rllvm)
+import(codetools)
 
 export(compileFunction) #, compile)
 export(getCompilerHandlers)

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title>Compiling a Classification or Regression Tree</title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title>Overview</title>
+
+<para>
+The idea is to take a classification tree and to convert its
+series of rules to compiled code.
+We'll hopefully then take this code and compile it for a GPU
+and then do predictions in parallel.
+</para>
+<para>
+The idea is quite simple.
+We fit a tree model using <r:pkg>rpart</r:pkg>.
+We then take that tree and convert the rules in the tree into compiled code.
+</para>
+<para>
+Consider the tree from <r:func>rpart</r:func>'s example:
+<r:code>
+library(rpart)
+fit = rpart(Kyphosis ~ Age + Number + Start, data = kyphosis)
+</r:code>
+</para>
+<para>
+Each rule can 
+</para>
+
+</section>
+</article>

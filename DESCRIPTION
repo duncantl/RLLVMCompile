@@ -1,12 +1,13 @@
 Package: RLLVMCompile
 Title: LLVM-based compiler for R code
 Version: 0.2-0
-Description: A prototype for a compiler for R code
-  that uses LLVM to generate machine code.
+Description: A prototype for a compiler for R code that uses LLVM to generate machine code.
 Author: Vince Buffalo, Duncan Temple Lang
 Maintainer: Duncan Temple Lang <duncan@r-project.org>
-License: BSD
-Depends: codetools, Rllvm
-Imports: Rllvm
+License: BSD_3_clause + file LICENSE
+Comment: Need to depend on Rllvm as variables such as Int32Type are defined at load time, not in the code
+         for the package directly.
+Depends: Rllvm
+Imports: codetools
 xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R 
 
