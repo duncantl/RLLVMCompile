@@ -4,7 +4,6 @@ function(expr, where = globalenv())
 {
   f = function() {}
   body(f) = expr
-  library(codetools)
   g = findGlobals(f, merge = FALSE)
 
   types = sapply(g$var, function(x) getDataType(get(x, where)))
