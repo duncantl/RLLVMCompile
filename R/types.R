@@ -48,9 +48,9 @@ function(obj, env, elementType = FALSE, .useFloat = env$.useFloat)
        getDataType(obj, env)
 
    } else if(is(obj,  "GlobalVariable"))
-      getElementType(Rllvm:::getType(obj))
+      getElementType(Rllvm::getType(obj))
    else if(is(obj,  "Value"))
-      Rllvm:::getType(obj)
+      Rllvm::getType(obj)
    else {
      stop("Can't determine type for ", class(obj))
    }

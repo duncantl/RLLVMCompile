@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+This document shows how we can compile a call to an <r/> function.
+The idea is that we start by compiling <r/> code to native instructions.
+In the midst of those <r/> expressions, we find one that cannot
+be compiled or that we want to leave as <r/> code.
+We then need to evaluate that expression in our native code.
+</para>
+
+<para>
+There are three different but somewhat similar situations.
+The very simplest is that we have the <r/> expression and we can 
+evaluate it with a call to the native routine <c:func>R_tryEval</c:func>.
+<!-- We have to R_PreserveObject the expression. -->
+The second situation  is that we have the <r/> expression
+but we have to populate it with the current values of local variables
+in our native code.
+In this case, we populate the relevant parts of the expression and 
+again call <c:func>R_tryEval</c:func>.
+The third situation requires that we can create the expression
+from scratch and then evaluate it.
+</para>
+
+<para>
+A common example in <r/> for this kind of callback to an <r/> function
+or simply evaluating an <r/> expression is numerical optimization.
+<c/> code performs the steps of the generic optimization algorithm,
+and calls the <r/> function (and its gradient) to evaluate different 
+possible solutions.
+We can emulate that here. However, before we do this,
+we should note that it would be preferable to compile the 
+<r/> function to be optimized rather than compiling
+the generic optimization code and calling back to  the <r/>
+function.  There may be situations where this is useful, e.g.  debugging.
+
+</para>
+
+
+<para>
+We'll consider calling the <r:func>system</r:func> from our compiled code.
+The example will be a little contrived but we try to show why we might compile
+the <r/> function.
+<r:code>
+cond = TRUE
+while(cond) {
+
+  system("") 
+
+}
+</r:code>
+</para>
+
+
+
+</section>
+</article>

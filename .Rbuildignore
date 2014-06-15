@@ -2,3 +2,4 @@
 \.o$
 \.so$
 TAGS
+tests/structByVal.R

@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="http://www.omegahat.org/OmegaTech.css">
+<title>RLLVMCompile</title>
+</head>
+
+<body>
+<h1>The RLLVMCompile Package</h1>
+<p align=right><a href="https://github.com/duncantl/RLLVMCompile">RLLVMCompile on github</a></p>
+<p align=right><a href="RLLVMCompile_0.2-0.tar.gz">RLLVMCompile_0.2-0.tar.gz</a></p>
+
+
+The RLLVMCompile package is a functioning prototype of a customizable
+and extensible compiler for simple R code and specific, but common, R
+idioms.  The compiler functions are written entirely in R and use the
+<a href="../Rllvm">Rllvm</a> package to generate the native code.
+The result is code that is competitive with compiled C/C++ code,
+but generated directly from R implementations.
+
+<h2>How it works</h2>
+<p>
+The compiler is intentionally quite simple at present.
+It takes an R function or collection of expressions and
+translates the R calls to corresponding LLVM instructions.
+For example,
+<pre>
+  x = exp( ((x - mu)/sigma)^2 )
+</pre>
+is recognized as an assignment call (=) with two elements - the left
+hand side and the right hand side.
+We compile the right-hand side, by traversing this sub-expression.
+We recognize this as a call to exp() with one argument.
+This one argument is an expression which is a call to ^ with two inputs:
+<code>(x - mu)/sigma</code> and the literal value 2.
+We compile the first of these expression, finally getting to binary
+operators for / and -.
+<p>
+
+<h2>Performance</h2>
+The compiler is written in R and we have made no effort
+yet to make it fast. The resulting code however is fast,
+competitive with C code. Results depend greatly on the particular
+problem and implementation in R or C.
+However, we do see significant improvements in performance
+for common problems, ranging from
+<ol>
+  <li> making interpreted R code essentially equivalent in performance to R internal functions
+         implemented in C,
+  <li> 200 for a 2 dimensional random walk implemented in R,
+  <li> a 50% speedup over heavily vectorized versions of the 2-D
+      random walk
+  <li> a factor of 600 for the naieve, simple Fibonacci sequence implementation,
+  <li> a 20x speedup over reading data from a large file by changing
+      the nature of the computations, but doing them all in R and compiling
+  <li> 4 - 6x speedup over native C code in R for computing distances
+      by avoiding redundant computations and memory consumption due to
+      the rigid C code in R.
+</ol>
+See <a href="http://www.omegahat.org/Rllvm/timings.html">timings</a>.
+
+
+<h2>Generating PTX Code</h2>
+
+<p> Recently (July 2013), I added a customized version of the compiler
+that compiles a variation of R code that targets GPUs.  We can compile
+an R function as a GPU kernel.  The R code can refer to CUDA terms
+such as threadIdx, blockIdx, blockDim and gridDim.  We access the x,
+y, z components as if these were R lists, e.g.
+<code>threadIdx$x</code> and <code>gridDim$x</code>.  We rewrite these
+expressions to calls to access the corresponding registers.
+
+<p>
+When we have created the LLVM IR code for a routine, we don't
+compile it to native code, but use the LLVM backend.
+We can then load this code via the <a href="../RCUDA">RCUDA</a>
+package and then  invoke it with the <code>.gpu()</code> function.
+
+
+<p>
+This is an example  of how we can easily customize the compiler
+to handle non-standard R code in target-specific ways.
+
+<p> We plan to improve the compiler and also add additional processing
+steps that analyzes memory usage to avoid copies and also attempt to
+reuse memory.  The <a href="../CodeDepends">CodeDepends</a> package is
+a useful aid in this, allowing us to calculate data flow in a sequence
+of R expressions.  We also plan to identify parallelism and map the
+computations to GPUs or multiple CPUs.
+
+
+
+<h2>Documentation</h2>
+<dl>
+  <dt>
+  <li> Examples in <a href="tests/">tests</a>
+  <dd>
+  
+  <dt>
+  <li> <img src="../new.jpg"> (July 16, 2013)  <a href="../Rllvm/ptxNVVMExample.html">Compiling GPU kernels</a>      
+  <dd>
+</dl>
+
+
+<h2>Features and Issues</h2>
+This does not handle all R code by any means.
+It handles
+<ul>
+  <li> arithmetic (integer and floating point)
+  <li> logical operations (&amp;&amp;, ||, negation)
+  <li> element-wise integer index subsetting and assignment (adjusting to 0-based counting),      
+  <li> if() statements,
+  <li> for() and while() loops,
+  <li> sapply() calls,
+  <li> recursively compile functions that are called by other
+      functions,
+  <li> use and call native routines
+  <li> work with some R objects in the compiled code
+</ul>
+
+It cannot handle calls to <code>eval()</code>
+and will never be able to do this generally.
+(It might be able to handle specific cases.)
+
+<h3>Type Specification</h3>
+The compiler needs the caller to provide type information for the
+parameters and the return type. However, these can be determined dynamically given
+sample R arguments the code will be called with.
+We are also developing a type inference package.
+
+<h2>License</h2>
+This is distributed under the BSD License.
+
+
+<hr>
+<address><a href="http://www.stat.ucdavis.edu/~duncan">Duncan Temple Lang</a>
+<a href=mailto:duncan@wald.ucdavis.edu>&lt;duncan@wald.ucdavis.edu&gt;</a></address>
+<!-- hhmts start -->
+Last modified: Thu Jul 18 17:06:11 PDT 2013
+<!-- hhmts end -->
+
+</body> </html>

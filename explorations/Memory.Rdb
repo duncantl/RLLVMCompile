@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+Consider the problem of reading ragged data, e.g the robot logs
+at <ulink url="http://eeyore.ucdavis.edu/stat141/Homeworks/robots.pdf"/>.
+(Thanks to Sam Buttrey and his colleagues at the Naval Postgraduate School.)
+An issue is that we break each line into a vector of values.
+For certain rows, we extract the 1st, 8th and 9th elements.
+We can do this and create either a list of vectors each with 3 elements,
+or we can create a matrix with <r:func>lapply</r:func> or <r:func>sapply</r:func>, 
+respectively.  We have to transpose the matrix
+to get the orientation correctly.  We can then convert the matrix
+to a data frame but have to convert the values to numeric somewhere 
+in the process. If we have a list, we can call <r:func>rbind</r:func>
+via <r:func>do.call</r:func>. Again, at some point we have to call <r:func>as.numeric</r:func>.
+With <r:func>rbind</r:func>, we end up with a matrix so have to call <r:func>as.data.frame</r:func>.
+The key point is that there is a lot of memory being used for intermediate representations
+of the data. We need to find a more direct mechanism to get to the final form.
+</para>
+<para>
+As somebody with a lot of experience with R and S and how to think about problems,
+it isn't immediately clear which of the different paths mentioned above
+(using <r:func>lapply</r:func> or <r:func>sapply</r:func>)
+is most efficient in the current setup. Should we convert 
+individual lines or 3-vectors to numeric
+or do them all in on call to <r:func>as.numeric</r:func>
+</para>
+<para>
+
+How might we improve matters?
+First, let's look at a reasonably straightforward to read a log file.
+<r:function>
+<xi:include href="/Users/duncan/Projects/CaseStudies/Robots/readAll2.R"/>
+</r:function>
+
+
+
+
+</para>
+
+</section>
+</article>

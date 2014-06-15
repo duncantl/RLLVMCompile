@@ -47,7 +47,7 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
-         structInfo = list(), .ignoreDefaultArgs = TRUE)
+         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE)
 }
 \arguments{
   \item{fun}{the R function to be compiled.}
@@ -123,7 +123,9 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
   \item{.ignoreDefaultArgs}{a logical value which controls whether we
   look at the code  for the default values of the parameters in the R
   function. Currently we use this to avoid working with global variables
-  in R that we will not actually reference.}  
+  in R that we will not actually reference.}
+ \item{.useFloat}{a logical value. This controls whether we use double
+  or float data type for numeric variables.}
 }
 \value{
  If \code{asFunction}, this returns an R function that has the same

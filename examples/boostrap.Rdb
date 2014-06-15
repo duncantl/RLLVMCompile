@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+
+Consider the following code to perform a general bootstrap operation:
+<r:code>
+  ans = numeric(B)
+  for(i in 1:B) {
+    d.star = data[sample(n, n, replace = TRUE), ]
+    ans[[i]] = T(d.star)
+  }
+</r:code>
+We perform <r:var>B</r:var> bootstrap replications.
+We resample (with replacement) the rows in the data frame.
+For each new sample, we use the function <r:func>T</r:func> to compute the
+relevant statistic.
+We can also write this more succinctly as 
+<r:code>
+ans = replicate(B, {
+                    d.star = data[sample(n, n, replace = TRUE), ]
+                    ans[[i]] = T(d.star)
+                   })
+</r:code>
+Let's think about the function <r:func>T</r:func> being
+<r:function><![CDATA[
+ mean(d$x)
+]]></r:function>
+
+<r:function><![CDATA[
+ cor(d$x, d$y)
+]]></r:function>
+and
+<r:function><![CDATA[
+ coefs(lm(y ~ ., d))
+]]></r:function>
+or
+<r:function><![CDATA[
+ lm(y ~ ., d)$coefficients
+]]></r:function>
+<note>This last version allows us to directly
+access the field <r:el>coefficients</r:el> in the result
+resturned by <r:func>lm</r:func>. This allows us to potentially
+compile <r:func>lm</r:func> in a way that removes unnecessary 
+computations such as the code at the end of the function, i.e., 
+<r:code><![CDATA[
+    class(z) <- c(if (is.matrix(y)) "mlm", "lm")
+    z$na.action <- attr(mf, "na.action")
+    z$offset <- offset
+    z$contrasts <- attr(x, "contrasts")
+    z$xlevels <- .getXlevels(mt, mf)
+    z$call <- cl
+    z$terms <- mt
+    if (model) 
+        z$model <- mf
+    if (ret.x) 
+        z$x <- x
+    if (ret.y) 
+        z$y <- y
+    if (!qr) 
+        z$qr <- NULL
+]]></r:code></note>
+</para>
+
+<para>
+When evaluating either of the bootstrap loops, <r/>
+will allocate a vector for the result of the call to <r:func>sample</r:func>.
+Similarly, it will create a new data frame and insert the relevant values 
+from the sampled rows.  Potentially, the call to <r:func>T</r:func> will
+make a copy of the data frame. This memory usage will occur in each iteration of the loop.
+</para>
+<para>
+It is clear that we could save memory.
+We start by cloning the data frame before we enter the loop.
+We can then modify this copy without affecting the original data.
+Within each loop, we can reuse the memory from the new data frame
+by copying the relevant rows from the original data frame into our 
+single copy. 
+We also do not need to allocate the vector of indices in 
+the call to <r:func>sample</r:func>.
+Instead, we could allocate a single vector. 
+Alternatively, we could fuse the loop in the <r:func>sample</r:func> 
+function with the subsetting operation to copy each row into the new data frame.
+<r:code><![CDATA[
+ i = 1
+ while(i < n) {
+   d.star[i,] = data[ sample(n, 1), ]
+ }
+]]></r:code>
+(Note this calls <r:func>sample</r:func> <r:var>n</r:var> times rather than once to get <r:var>n</r:var> values.
+Since we are sampling with replacement, this is equivalent in this specific case.)
+</para>
+
+
+<para>
+If we know that the function <r:func>T</r:func> does not modify the data frame we pass it, 
+then we can ensure we do not copy it when calling <r:func>T</r:func>.
+However, in this computation, we also know that the current contents of <r:var>d.star</r:var> 
+are not used again. As a result, we can always  pass the original contents of <r:var>d.star</r:var>
+to <r:func>T</r:func> regardless of whether that function modifies its input(s).
+</para>
+
+
+</section>
+<section>
+<title>Compiling the Code</title>
+<para>
+We'll start by putting the code into a function.
+This isn't necessary as we can do this programmatically with <r:func>wrapAsFunction</r:func>,
+which identifies the free variables, declaring those as formal parameters,
+using the code as the body of the function.
+<r:code>
+f = wrapAsFunction(quote({  ans = numeric(B);
+                            for(i in 1:B) {
+                              d.star = data[sample(1:n, n, replace = TRUE), ];
+                              ans[[i]] = T(d.star, ...)
+                            }
+                          }))
+</r:code>
+We can now compile this function <r:func>f</r:func>.
+</para>
+
+
+<para>
+<r:code>
+compileFunction(f, ArrayType(DoubleType), list(Int32Type, ??, Int32Type))
+</r:code>
+<note>This doesn't work at present, of course!
+How do we represent a data frame to LLVM.
+There are several choices:
+<ol>
+<li>as a collection of columns, each with a specific type?</li>
+<li>as an opaque data type? with number of columns?</li>
+</ol>
+Can we avoid specifying the types of each column?
+Can we write the <r/> code so that things are opaque
+and then have the compiler generate specific code.
+</note>
+<note>
+For the regression function, we don't need to know the 
+</note>
+<note>
+We have <r:func>vectorType</r:func>
+</note>
+<note>
+How do we define new types for R types?
+</note>
+</para>
+
+
+
+<para>
+How do we compile the
+ <r:expr>d.star = data[sample(n, n, replace = TRUE) ]</r:expr>
+expression?
+Firstly, we have difficulty because the <r:func>sample</r:func> function
+is (ultimately) implemented not as an <r/> function but rather a
+<c/> routine.
+If this were implemented in <r/>, we could compile it with
+modifications, e.g. to take the output vector.
+Fortunately, <r/> implements this internally with
+<c:routine>ProblSampleReplace</c:routine> and
+<c:routine>walker_ProbSampleReplace</c:routine>.
+Unfortunately, the logic of which is called is tied up in the <c:routine>do_sample</c:routine>
+routine and we have to understand  this.
+</para>
+<para>
+Let's ignore the issues with sample and assume we can generate the index of rows.
+We can always call <r/>'s <r:func>sample</r:func> function if we need to.
+</para>
+
+
+
+</section>
+</article>
