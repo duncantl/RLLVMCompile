@@ -4,7 +4,6 @@ function(fun, types, module = ModuleForNVVM(name), name = NULL,
          .insertReturn = TRUE,
          .builtInRoutines = getGPUBuiltInRoutines(),
          .useFloat = TRUE, ...)
-          
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -96,7 +95,10 @@ function (id = Sys.time(), context = NULL,
 
 
 
-setGPUKernel = 
+setGPUKernel =
+    #
+    # Add nvvm annotation kernel = 1 for each Function object.
+    #
 function(funs, module)
 {
   if(is.character(funs)) 

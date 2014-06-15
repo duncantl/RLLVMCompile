@@ -47,7 +47,8 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
-         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE)
+         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE,
+         .zeroBased = logical(), .localVarTypes = list())
 }
 \arguments{
   \item{fun}{the R function to be compiled.}
@@ -125,7 +126,13 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
   function. Currently we use this to avoid working with global variables
   in R that we will not actually reference.}
  \item{.useFloat}{a logical value. This controls whether we use double
-  or float data type for numeric variables.}
+   or float data type for numeric variables.}
+ \item{.zeroBased}{logical value. This controls whether we use 0-based
+  counting. This is needed for the compilation of code for the GPU (?)}
+ \item{.localVarTypes}{a named list giving the type objects for any of
+         the local variables. These are "hints". The types should be
+  LLVM types, i.e. objects in the \code{Rllvm} package representing
+    explicit types.}
 }
 \value{
  If \code{asFunction}, this returns an R function that has the same

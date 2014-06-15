@@ -28,5 +28,3 @@ export(createProxy)
 
 export(compileGPUKernel, DefaultGPULayout, ModuleForNVVM, setGPUKernel)
 export(fixPTXCodeForNVVM )
-
-
