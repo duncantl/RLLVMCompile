@@ -34,6 +34,9 @@ apply(tm.1e4, 2, function(x) x/min(x))
 #byte   61.2619      Inf  61.34921
 #ll      1.0000      NaN   1.00000
 
+# OS X much faster machine
+# r = 102.68675  byte = 26.73494  ll = 1.00000 
+
 g = function(n1, n2) {
    ctr = 0L
    for(i in 1:n1)

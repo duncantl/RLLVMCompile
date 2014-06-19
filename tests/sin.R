@@ -1,5 +1,7 @@
 # Exploring using different intrnsic signatures.
 # Problem with return Int32Type and so invalid module
+#
+# Update: Currently, error is "Can't reference function sin in module"
 
 library(RLLVMCompile)
 

@@ -55,4 +55,12 @@ function(x, i) {
 
 t5.c <- compileFunction(t5, DoublePtrType, list(x = DoublePtrType, i = Int32Type))
 .llvm(t5.c, c(1, 2, 3), 2)
-
+# This returns a double*. We have to get the values.
+# We should be able to write the code in R for this and compile it.
+# e.g. function(src, n) {
+#          ans = numeric(n)
+#          for(i in 1:n)
+#             ans[i] = src[i]
+#          ans
+#  }
+# See copyArray.R in explorations/
