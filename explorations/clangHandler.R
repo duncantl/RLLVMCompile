@@ -7,11 +7,25 @@
 
 library(RLLVMCompile)
 
+# do we need to add the inbounds to the getelementptr for cur kind
+# Do we need the align 8 on the byval parameters
+# Should we have %struct.CXCursor rather than CXCursor
+# compare code we generate with clangStruct.ll
+ 
 h = function(cur, parent, data)
 {
+      # put the kind of the current cursor at the end of the kinds array
+      # so there will be an entry for each cursor we visit.
    ctr = ctr + 1L
-   kinds[ctr] = cur$kind
+   kinds[ctr] =  cur$kind
    CXChildVisit_Recurse
+}
+
+h = function(cur, parent, data) {
+   ctr = ctr + 1L
+   tmp = cur$kind
+   kinds[ctr] =  2 #
+   CXChildVisit_Recurse    
 }
 
 mod = Module()

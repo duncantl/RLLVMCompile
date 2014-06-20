@@ -1,0 +1,1 @@
+# clang -S -emit-llvm -o globalArray.ll globalArray.c

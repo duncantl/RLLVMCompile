@@ -46,9 +46,11 @@ findCall <-
 function(call, OPS)
 {
   op <- match(as.character(call), names(OPS))
-  if (is.na(op))
+  if (is.na(op)) {
+    warning("did not find ", as.character(call), "in ops")
     return(NA) # TODO Some (specified) builtins need to be passed directly,
                # i.e. as.double()
+  }
   return(OPS[[op]])
 }
 
