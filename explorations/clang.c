@@ -11,3 +11,12 @@ foo(CXCursor *cur, CXCursor *parent)
 }
 
 
+int
+bar(CXCursor cur, CXCursor parent)
+{
+    kind = cur.kind;
+    xdata= cur.xdata;
+    return(2);
+}
+
+

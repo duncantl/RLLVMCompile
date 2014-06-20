@@ -4,6 +4,6 @@ int ctr = 0;
 int fun()
 {
     ctr = ctr + 1;
-    kinds[1] = 1;
+    kinds[ctr] = 1;
     return(0);
 }

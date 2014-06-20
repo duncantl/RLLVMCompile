@@ -95,7 +95,6 @@ function(expr, env = NULL, ir = NULL)
 getVariable =
 function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
 {
-
   sym = as.character(sym)
   var = if(exists(sym, env)) {
                # The local variables we create in the function
@@ -111,8 +110,9 @@ function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
         } else {
             # find in the module.
           v = getGlobalVariable(env$.module, sym)
+
 #load = FALSE  # don't load a global, just access it. ??          
-          if(load && !is.null(ir))
+          if(load && !is.null(ir) && ! (isPointerType(getType(v)) && isArrayType(getElementType(getType(v)))))
              ir$createLoad(v)
           else
              v
