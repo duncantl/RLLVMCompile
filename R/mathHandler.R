@@ -131,7 +131,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
     
      if(opName == "^") {
          # also see callHandler() in call.R
-       f = declareFunction(getBuiltInRoutines(env)[["pow"]], "pow", env$.module)
+       f = declareFunction(getBuiltInRoutines(env = env)[["pow"]], "pow", env$.module)
        env$addCallInfo("pow")       
        ins = ir$createCall(f, e[[1]], e[[2]])
      } else

@@ -3,3 +3,7 @@
 \.so$
 TAGS
 tests/structByVal.R
+^[^/]+.R$
+^convolve.c$
+^Python$
+Web

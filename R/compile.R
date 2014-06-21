@@ -581,7 +581,7 @@ getBuiltInRoutines =
   #
   # See FunctionTypeInfo also 
   #
-function(env = NULL, useFloat = FALSE)
+function(..., env = NULL, useFloat = FALSE)
 {
 
   if(!is.null(env) && exists(".builtInRoutines", env))
@@ -625,13 +625,21 @@ function(env = NULL, useFloat = FALSE)
        logical = list(LGLSXPType, Int32Type),
        character = list(LGLSXPType, Int32Type),
 
+       Rprintf = list(VoidType, StringType, "..." = TRUE),
+       printf = list(Int32Type, StringType, "..." = TRUE),     
+     
 #XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),
        dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))
+
       )
 
   ans[names(basic)] = basic
+
+  others = list(...)
+  ans[names(others)] = others
+  
   ans
 }
 
@@ -640,7 +648,9 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "for", "if", "while",
                         "repeat", "(", "!", "^", "$", "$<-",
-                        "sapply")  # for now
+                        "sapply",
+                        "printf"
+                       )  # for now
 
 
 compileCalledFuncs =

@@ -8,6 +8,20 @@
 
 <items>
 
+<item>inbounds for accessing elements of an array</item>
+
+<item>byval for parameters when passing a struct object directly to a routine. explorations/clangHandler2.R
+<br/>
+See call.R::callHandler.  Need to determine which argument has a byval attribute.
+How do we query this?
+<r:code>
+arg = mod$clang_CXCursor_getName[[1]]
+hasByValAttr(arg)
+</r:code>
+But it appears we don't need to set this if the declaration of the Function
+has this information.
+</item>
+
 <item>
 tests/ with a XXX or a FIX
 globalArrayAccessors.R  vectorize.R structByVal.R  character3.R
@@ -24,6 +38,8 @@ Test the other code now that we switched load = TRUE for subsetHandler
 
 <item>
 Compile rw2d
+<br/>
+Didn't we do this for the StatSci paper?
 </item>
 <item>
 Compile vectorized fibonacci (Rllvm/explorationts/fib.R)

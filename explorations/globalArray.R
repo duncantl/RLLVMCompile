@@ -14,3 +14,6 @@ ctr = createGlobalVariable("ctr", mod, Int32Type, createIntegerConstant(0L))
 # debug(createGEP)
 
 fc = compileFunction(fun, Int32Type, module = mod)
+
+ee = ExecutionEngine(mod)
+.llvm(fc, .ee = ee)

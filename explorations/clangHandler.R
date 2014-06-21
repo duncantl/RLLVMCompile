@@ -21,7 +21,7 @@ h = function(cur, parent, data)
    CXChildVisit_Recurse
 }
 
-h = function(cur, parent, data) {
+hh = function(cur, parent, data) {
    ctr = ctr + 1L
    tmp = cur$kind
    kinds[ctr] =  2 #
@@ -33,17 +33,19 @@ createGlobalVariable("ctr", mod, Int32Type, createIntegerConstant(0L))
 createGlobalVariable("kind", mod, Int32Type, createIntegerConstant(0L))
 createGlobalVariable("kinds", mod, arrayType(Int32Type, 1000000))
 
-cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(Int8Type, 3L)), "CXCursor")
+cursorType = structType(list(kind = Int32Type, xdata = Int32Type, data = arrayType(pointerType(Int8Type), 3L)), "CXCursor")
 
 library(RCIndex) # here because we need to find CXChildVisit_Recurse
 fc = compileFunction(h, Int32Type, list( cursorType, cursorType, pointerType(Int8Type)), module = mod,
                        structInfo = list(CXCursor = cursorType))
 
+reset = function() ctr <- 0L
+creset = compileFunction(reset, VoidType, module = mod)
 
 ee = ExecutionEngine(mod)
 fp = structure(getPointerToFunction(fc, ee)@ref, class = "NativeSymbol")
 
-tu = createTU("testAlloc.c", includes = sprintf("%s/%s", R.home(), c("include", "../src/include")))
+tu = createTU("../tests/testAlloc.c", includes = sprintf("%s/%s", R.home(), c("include", "../src/include")))
 visitTU(tu, fp)
 num = mod[["ctr", ee = ee]]  # value
 kinds = mod[["kinds", ee = ee ]][1:num]
@@ -62,7 +64,14 @@ f = function(cur, parent)
 visitTU(tu, f)
 
 all(table(kinds) == table(rkinds))
-identical(kinds, rkinds)
+stopifnot(identical(kinds, rkinds))
 
+i = match(rkinds, CXCursorKind)
+names(rkinds) = names(CXCursorKind)[i]
+
+.llvm(creset, .ee = ee)
+
+tm.ll = system.time(visitTU(tu, fp))
+tm.rr = system.time(visitTU(tu, f))
 
 

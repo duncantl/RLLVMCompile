@@ -9,7 +9,8 @@
   This is merely a compilation of a call to \code{sapply}.
 }
 \usage{
-vectorizeFunction(f, fc = NULL, typeInfo = NULL, module = as(fc, "Module"), scalarFunName = getName(fc), vectorArgName = names(parms)[1])
+vectorizeFunction(f, fc = NULL, typeInfo = NULL, module = as(fc, "Module"),
+                  scalarFunName = getName(fc), vectorArgName = names(parms)[1])
 }
 \arguments{
   \item{f}{the scalar R function}

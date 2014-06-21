@@ -25,13 +25,13 @@ We describe some experiments and an approach to compiling
 R code to native machine instructions.
 The primary goal is to make R code execute significantly
 faster, e.g. by a factor of 100 or 500 or more.
-
-An important part of our approach is exploiting information
-about the type of R objects. We rely on the caller providing 
-this information at present.
-
 </para>
-
+<para>
+An important part of our approach is exploiting information about the
+type of R objects, resolving symbols at compile time, avoiding
+unnecessary memory usage.  We rely on the caller providing much of
+this information, at present.
+</para>
 </abstract>
 
 <section>
@@ -58,6 +58,20 @@ Motivated by this expectation, we have developed a prototype system
 for compiling R code to machine code that exploits the types of the
 different R objects to attain significant speed-up in the execution of the code.
 </para>
+
+
+<para>
+Importantly, we have developed R-level functionality that we and
+others can use to explore different compilation strategies.  This is
+quite different from providing an actual compiler for the R language,
+or a subset of it. Instead, we provide facilities by which numerous
+people can experiment with developing such a compiler - or compilers -
+for the R language or new domain specific languages directly within R
+itself. This means that we don't have to modify the 
+
+</para>
+
+
 <para>
 This paper describes our initial experiments with compiling R code to
 machine instructions by leveraging a third party library - LLVM, the

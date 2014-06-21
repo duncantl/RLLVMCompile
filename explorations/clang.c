@@ -1,5 +1,7 @@
 #include <clang-c/Index.h>
 
+const char *clang_CXCursor_getName(CXCursor cur);
+
 int kind = 10;
 int xdata = 0;
 int
@@ -11,11 +13,17 @@ foo(CXCursor *cur, CXCursor *parent)
 }
 
 
+#include <stdio.h>
+
 int
-bar(CXCursor cur, CXCursor parent)
+bar(CXCursor cur, CXCursor parent, void *unused)
 {
+/*
     kind = cur.kind;
     xdata= cur.xdata;
+*/
+    clang_CXCursor_getName(cur);
+    printf("1\n");
     return(2);
 }
 

@@ -54,9 +54,14 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
    args = lapply(as.list(call[-1]), compile, env, ir, ...)  # ... and fun, name,
 
    env$addCallInfo(funName)
+  
    call = ir$createCall(ofun, .args = args)
    if(isTailFunction(env$.Rfun, env$.hints))
      setTailCall(call)
+
+   # If pass an aggregate by value
+   #     setArgByVal(call, 1L)
+   
    
    call
 }
