@@ -71,6 +71,8 @@ assignHandler = `compile.=` =   # `compile.<-`
   #
 function(call, env, ir, ...)
 {
+#browser()
+    
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL
@@ -368,15 +370,16 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
-         .localVarTypes = list())
+         .localVarTypes = list(), .fixIfAssign = TRUE)
 {
    if(missing(name))
      name = deparse(substitute(fun))
 
   if(!missing(types) && !is.list(types))
     types = structure(list(types), names = names(formals(fun))[1])
-  
-  #fun = fixIfAssign(fun)
+
+   if(.fixIfAssign)
+     fun = fixIfAssign(fun)
   
   ftype <- typeof(fun)
   if (ftype == "closure") {
