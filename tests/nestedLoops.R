@@ -17,6 +17,8 @@ fcc = cmpfun(f)
 
 n = 1e4
 ee = ExecutionEngine(as(fc, "Module"))
+print(.llvm(fc, n, .ee = ee))
+
 tm.1e4 = rbind(r = system.time(f(n)),
                byte = system.time(fcc(n)),
                ll = system.time(.llvm(fc, n, .ee = ee)))[, 1:3]
@@ -36,6 +38,8 @@ apply(tm.1e4, 2, function(x) x/min(x))
 
 # OS X much faster machine
 # r = 102.68675  byte = 26.73494  ll = 1.00000 
+#        r      byte        ll 
+#     109.08235  29.34118   1.00000
 
 g = function(n1, n2) {
    ctr = 0L

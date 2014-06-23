@@ -45,7 +45,11 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
          (isPointerType(ty) && isArrayType(getElementType(ty))))
     idx = list(createIntegerConstant(0L, getContext(env$.module)), idx)
 
+  if(!isPointerType(ty) && !isArrayType(ty))
+      stop("attempting to create a GEP for a non-pointer type")
+
   p = ir$createGEP(obj, idx)
+#browser()  
   if(load)
     return(ir$createLoad(p))
   

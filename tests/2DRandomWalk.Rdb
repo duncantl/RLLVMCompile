@@ -1,0 +1,333 @@
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude"
+	 xmlns:c="http://www.C.org"
+	 xmlns:omg="http://www.omegahat.org">
+
+<articleinfo>
+
+<title>Compiling the Simple 2D Random Walk Code</title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+
+<para>
+In this document, we discuss code for a 2-D random walk.
+Specifically, we compile the simple implementation in <r/>
+using <omg:pkg>RLLVMCompile</omg:pkg>.
+We discuss some issues with organizing the computations.
+</para>
+
+
+<para>
+We should note that this is a discussion of how we might build a
+compiler for some <r/> code and about its design. It is not intended
+to be what regular users would have to do to compile code.  This is an
+article for people who are interested in discussing strategies for
+compiling code, i.e. developers of compilers or those who are
+interested in how it may work. We can hide all the details from the
+end-user, however, it is important to be able to develop different
+compilers for different purposes. It is somewhat ironic that those
+developing on top of LLVM aren't making their compilers extensible at
+the user level :-)
+</para>
+
+
+<para>
+This is different from the document Rllvm/tests/rw2d.Rdb
+as here we are focusing on programmatically compiling the 
+2D random-walk "automatically" rather than manually.
+This focuses on higher-level decisions. The
+mechanics of generating the code is similar to 
+the manual approach and also the regular compiler/translator
+mechanism in <omg:pkg>RLLVMCompile</omg:pkg>.
+</para>
+
+
+<para>
+The <r/> function that implements the 2D random walk is given as:
+<r:function><![CDATA[
+rw2d1 =
+function(n = 100) {
+    xpos = ypos = numeric(n)
+    for(i in 2:n) {
+          # Decide whether we are moving horizontally or vertically.
+      delta = if(runif(1) > .5) 1 else -1
+      if (runif(1) > .5) {
+        xpos[i] = xpos[i-1] + delta
+        ypos[i] = ypos[i-1]
+      }
+      else {
+        xpos[i] = xpos[i-1]
+        ypos[i] = ypos[i-1] + delta
+      }
+    }
+    list(x = xpos, y = ypos)
+}
+]]></r:function>
+This is quite easy to understand.
+</para>
+
+<para>
+Generating LLVM code for these computations is quite straightforward.
+The looping is the same as we have done before.
+The subsetting of <r:var>xpos</r:var> and <r:var>ypos</r:var> is 
+also as before, as is the addition. The
+<r:func>if-else</r:func> blocks are also as we have seen before
+in compiling other functions.
+The two aspects that are slightly different are the entry point, i.e.
+how we call the function, and how it returns the results.
+</para>
+<para>
+As the function is written, it creates two numeric vectors,
+populates them and then returns a list containing the two vectors.
+An alternative approach is that we pass 
+<r:function><![CDATA[
+function(n = 100, xpos = numeric(n), ypos = numeric(n)) {...}
+]]></r:function>
+Then the function would populate these vectors and return them via the <r/> list.
+An alternative is that the routine is passed <r:arg>xpos</r:arg>  and <r:var>ypos</r:var>
+as pointers to a collection of <c:type>double</c:type> values.
+What are the advantages and disadvantages of these three approaches, i.e. 
+creating the <r:type>numeric</r:type> within the body of the function,
+allowing the caller to specify the <r:type>numeric</r:type> containers,
+and passing pointers to collection of <c:type>double</c:type>s?
+</para>
+<para>
+The first approach is the most restrictive. The routine 
+allocates the <c:type>SEXP</c:type> objects and
+then returns them. This is tied to being called from <r/>
+or compiled code that works with <r/> objects.
+If we want to use the resulting sequence of positions in
+comiled code, we have to access them through the <r/> object.
+This is not a serious issue as we can access the numeric sequence
+as a <c:type>double *</c:type> via the <r/> routine <c:func>REAL</c:func>.
+However, this is unncessary.
+</para>
+<para>
+If we allow the caller to specify vectors, then the caller can choose
+to reuse vectors or not. Also, they can provide vectors that are longer
+than necessary or specify a different starting position.
+This might be useful if the number of steps is variable, or if we
+want continue an earlier walk. (We may want to also be able to specify the
+starting point for the current walk, but this is trivial by adding two parameters x0 and y0
+each with default values of 0.)
+</para>
+
+<para>
+The way the <r:func>.llvm</r:func> function passes <r:type>numeric</r:type>
+values from <r/> to LLVM-compiled code means that we can pass a <r:type>numeric</r:type>
+vector as a <c:type>double *</c:type>. So if we define the new routine to take
+<c:type>double *</c:type>  for <r:arg>xpos</r:arg> and <r:arg>ypos</r:arg>,
+we can call it directly from <r/> and from other compiled code.
+If we want to call it from compiled code that has <r/> objects, they can access the
+<c:type>double *</c:type> via <c:func>REAL</c:func> from the <r/> object.
+</para>
+
+<para>
+What happens if we wan to run numerous 2D random walks in succession
+and compute overall/aggregate statistics on each of them? Instead of
+computing all the random walks and then iterating over the collection
+of results to compute the statistics, we can compute the statistics at
+the end of each walk. This allows us to reuse the same memory for the
+sequence of X and Y positions for each random walk.  The results for
+iteration i-1 are no longer needed after we start iteration i. So
+there is no need to allocate more memory, even if it will be garbage
+collected! 
+</para>
+<para>
+If the compiled routine accepts <c:type>double *</c:type>, then
+the results are returned in-place to the arrays provided by the caller.
+We don't have to explicitly  return them.
+</para>
+<para>
+Of course, having the caller be responsible for allocating the arrays
+shifts the burden to all of those calling routines.  Since we expect
+to call this directly from <r/> and can pass <r:numeric/> vectors
+directly, this is not an issue.  If we want to call this from other
+LLVM-generated code, we can arrange to programmatically generate the
+calls to allocate the arrays.  And since we are generating this code
+in <r/>, it is less likely that we will create this in <r/> and use it
+elsewhere in code that is not also programmatically generated. It is
+entirely possible and reasonable, but less common.
+</para>
+
+<para>
+With all of this consider, everything tells us that we want to compile our function
+to expect <c:type>double *</c:type> for each of the two arrays.
+So we will either explicitly or implicitly identify the signature of the new routine as 
+<c:code>
+void rw2d1(int n, double *xpos, double *ypos)
+{
+}
+</c:code>
+This corresponds to the signature
+<r:code>
+fun = Function("rw2d1", VoidType, list(DoublePtrType, DoublePtrType))
+</r:code>
+</para>
+<para>
+We remove the first expression in the body of the function, i.e.
+<r:expr>xpos = ypos = numeric(n)</r:expr>.
+We also remove the final expression <r:expr>list(x = xpos, y = ypos)</r:expr>.
+To call the resulting routine from <r/> as we would call <r:func>rw2d1</r:func>,
+we need an <r/> function:
+<r:function>
+rw2d = function(n, xpos = numeric(n), ypos = numeric(n))
+           .llvm(fun, as.integer(n), xpos, ypos, .all = TRUE)[c(2, 3)]
+</r:function>
+Thus
+<r:code>
+N = 1e6
+rw2d(N)
+rw2d1(N)
+</r:code>
+are equivalent.
+</para>
+
+<note>
+<para>
+Since the generated code uses <r/>'s random number generator (RNG), 
+it is important that this be initialized. 
+We can add code to ensure this - either in our rw2d function or in the 
+compiled code. For now however, just make certain to initialize
+the RNG mechanism before calling the compiled code.
+For example, use <r:func>rnorm(1)</r:func> .
+
+</para>
+</note>
+
+
+<para>
+However we make these modifications (either programmatically or via the <r/> programmer manually modifying the function definition),
+we are left to compile
+<r:function id="tmp"><![CDATA[
+tmp =
+function(n, xpos, ypos) {
+
+    for(i in 2:n) {
+
+          # Decide whether we are moving horizontally or vertically.
+      delta = if(runif(1) > .5) 1. else -1.
+
+      if (runif(1) > .5) {
+        xpos[i] = xpos[i-1] + delta
+        ypos[i] = ypos[i-1]
+      }
+      else {
+        xpos[i] = xpos[i-1]
+        ypos[i] = ypos[i-1] + delta
+      }
+    }
+}
+]]></r:function>
+<r:code eval="false" id="">
+fun = compileFunction(tmp, VoidType, list(Int32Type, DoublePtrType, DoublePtrType))
+</r:code>
+Before we call this, we have to determine how to map calls to <r:func>runif</r:func>
+to a compiled routine. This is quite simple since the <r/> engine contains
+the routine <c:expr>double Rf_runif(double min, double max)</c:expr>.
+The expression <r:expr>runif(1)</r:expr>  corresponds to the <c/>
+call <c:expr>Rf_runif(0., 1.)</c:expr>.
+</para>
+
+<para>
+We have two possible approaches to dealing with mapping the
+<r:expr>runif(1)</r:expr> calls to the call <c:expr>Rf_runif(0.,
+1.)</c:expr>.  One approach is to rewrite the function in <r/> before
+we compile it and replace the <r:expr>runif(1)</r:expr> calls with the
+equivalent <c/> calls.  Another approach is provide an alternative
+operator for compiling calls. When it sees the <r:func>runif</r:func>
+calls, it maps those to calls to native calls to
+<c:func>Rf_runif</c:func>, but passes other calls to the regular
+handler.  This is a good place to define a derived sub-class for the
+compiler so we can inherit methods and override others, but still call
+super-methods.  We can use <s4/> or reference classes for this.
+If we use this second approach, we have to tell the <r:func>compileFunction</r:func>
+to ignore <r:func>runif</r:func> and not try to compile it.
+For better or worse, the <r:func>compileFunction</r:func> will first identify
+the other functions called and attempt to compile them.
+If we used approach one,  <r:func>compileFunction</r:func>  would
+not see <r:func>runif</r:func>, but <r:func>Rf_runif</r:func> and we could
+declare that as a built-in routine.
+So we probably want functionality to implement both  approaches for different circumstances.
+The rewriting approach can be done entirely in <r/> using, for example, <r:pkg>codetools</r:pkg>
+or direct manipulation of the body of the function and its expressions.
+<footnote><para>This is analogous to walking the CXCursor tree in the <omg:pkg>RCIndex</omg:pkg> package.</para></footnote>
+</para>
+<para>
+Perhaps the second approach of intercepting the <r:expr>runif(1)</r:expr> calls is currently the simplest in terms of
+involving the least amount of new code.
+We can fake out the need to compile <r:func>runif</r:func> before we generate the code for the function
+by specifying <r:func>runif</r:func> as a built-in function:
+<r:code>
+builtIns = getBuiltInRoutines(runif = list(DoubleType, list(DoubleType, DoubleType))
+</r:code>
+We can specify our own call method via the <r:arg>.compilerHandlers</r:arg> parameter
+of <r:func>compileFunction</r:func>. We need to be able to call the regular handler,
+so we can fetch it and assign it to a variable we can call in our method:
+<r:code>
+basicCallHandler = getCompilerHandlers()$call
+</r:code>
+We can then specify the new collection of handlers with our own version 
+in place for call expressions with
+<r:code eval="false">
+handlers = getCompilerHandlers(call = runifCallHandler)
+</r:code>
+where <r:func>runifCallHandler</r:func> is our own method.
+We can define this <r:func>runifCallHandler</r:func> function 
+quite simply: if we see <r:func>runif(1)</r:func>, we create a new call
+<r:func>Rf_runif(0.0, 1.0)</r:func> and then pass this to the regular call handler;
+otherwise, we just pass the call to the regular handler.
+This doesn't handle more complex calls to <r:func>runif</r:func>, but that is fine for now.
+We can extend this easily for different minimum and maximum for the range, e.g. <r:expr>runif(1, a, b)</r:expr>.
+Calls that create more than one random value are more complex but do not fit in this computational model.
+We'll generalize to these later.
+</para>
+<para>
+So our replacement call handler function can be written as
+<r:function><![CDATA[
+runifCallHandler = 
+function (call, env, ir, ..., fun = env$.fun, name = getName(fun)) 
+{
+print(call)
+   if(call[[1]] == "runif" && call[[2]] == 1 && length(call) == 2)  
+       call = quote(Rf_runif(0.0, 1.0))
+
+   basicCallHandler(call, env, ir, ..., fun = fun, name = name)
+}
+]]></r:function>
+</para>
+
+<para>
+So we are now ready to compile our function:
+<r:code id="compile">
+basicCallHandler = getCompilerHandlers()$call
+handlers = getCompilerHandlers(call = runifCallHandler)
+builtIns = getBuiltInRoutines(runif = list(DoubleType, DoubleType, DoubleType),
+                              Rf_runif = list(DoubleType, DoubleType, DoubleType))
+
+fun = compileFunction(tmp, VoidType, list(Int32Type, DoublePtrType, DoublePtrType),  
+                      .compilerHandlers = handlers,
+                      .builtInRoutines = builtIns)
+</r:code>
+
+Before we can run the
+<r:code>
+
+</r:code>
+</para>
+
+
+<r:code>
+library(RLLVMCompile); library(XML)
+xmlSourceFunctions("2DRandomWalk.Rdb")
+xmlSource("2DRandomWalk.Rdb", ids = "compile")
+</r:code>
+
+
+</article>
