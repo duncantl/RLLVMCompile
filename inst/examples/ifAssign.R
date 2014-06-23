@@ -40,3 +40,10 @@ function(x)
 
    z + 3L
 }
+
+
+
+f = function(n) {
+  delta = if(runif(1) > .5) 1 else -1
+  delta
+}

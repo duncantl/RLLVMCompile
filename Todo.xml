@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<?xml-stylesheet type="text/xsl" href="../OmegahatXSL/XSL/OmegahatXSL/Todo.xsl" ?>
+<?xml-stylesheet type="text/xsl" href="Admin/XSL/Todo.xsl" ?>
 
 <topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org">
 
@@ -8,9 +8,60 @@
 
 <items>
 
-<item>inbounds for accessing elements of an array</item>
+<item status="high">
+Rather than having the createLoopCode() check to see if 
+compile.if (or any other compile method) has made the incrBlock
+the current insertion block. If it has, then createLoopCode  needs to avoid 
+adding the branch instruction. But really, the other methods should try to 
+aoid changing the insertion block except into blocks that they created.
+</item>
 
-<item>byval for parameters when passing a struct object directly to a routine. explorations/clangHandler2.R
+
+<item>
+Handle the <r:expr>pragma(IfAssign, var, updatedExpressions)</r:expr>
+</item>
+
+<item status="check">
+Handle assignments from RHS being if-else
+<r:code>
+z = if(cond) val1 else val2
+</r:code>
+See 2DRandomWalk.Rdb.
+<br/>
+Either have  the assignment determine that the RHS is complicated 
+or have the RHS's compile method return information about the two branches.
+In either case, this <r:expr>assignHandler = `compile.=` = </r:expr>
+method for the compiler needs to understand that this is special and requires
+modifying the code. (Same for ifelse).
+Need to ensure the types from the two branches are the same.
+<br/>
+IMPORTANT: we have the ifAssign.R file for rewriting if statements.
+[Done] FIX THIS:  see inst/examples/ifAssign.R and specifically bar.
+And export these functions and use them in compile.
+Also, we may want to "declare" variable before the if. But don't know its type there.
+But we can go back and set it
+</item>
+
+<item>
+getBlocks() seg faults.
+2DRandomWalk.Rdb in the if handler.
+</item>
+
+<item status="news">
+Do we have functions in Rllvm to get the current block, i.e. the block with the insertion point?
+Yes  getInsertBlock()
+</item>
+
+<item>
+Why are we exiting out of R when a module is not valid? Would like to get an error in R.
+See 2DRandomWalk.Rdb.
+</item>
+
+<item>inbounds for accessing elements of an array.
+Rllvm now has isInBounds methods to query and set.
+</item>
+
+<item status="done">byval for parameters when passing a struct object directly to a routine. explorations/clangHandler2.R
 <br/>
 See call.R::callHandler.  Need to determine which argument has a byval attribute.
 How do we query this?
@@ -22,9 +73,22 @@ But it appears we don't need to set this if the declaration of the Function
 has this information.
 </item>
 
+<item status="verify">
+In tests/structByVal.R, if we don't have the return(2L), we get an error about no terminator.
+<br/>
+This seems to work again. But I saw it in globalArrayAccessors.R once after this.
+So perhaps some memory problem in Rllvm.
+</item>
+
+<item>
+What is .vectorize  doing? Does it actually generate vectorized code.
+</item>
+
 <item>
 tests/ with a XXX or a FIX
-globalArrayAccessors.R  vectorize.R structByVal.R  character3.R
+vectorize.R  character3.R
+<br/>
+Fixed: structByVal.R  globalArrayAccessors.R
 </item>
 
 <item>
@@ -39,8 +103,11 @@ Test the other code now that we switched load = TRUE for subsetHandler
 <item>
 Compile rw2d
 <br/>
-Didn't we do this for the StatSci paper?
+See tests/2DRandomWalk.Rdb
+<br/>
+Didn't we do this for the StatSci paper? Yes, but manually.
 </item>
+
 <item>
 Compile vectorized fibonacci (Rllvm/explorationts/fib.R)
 and compare with closed form solution approach.
@@ -89,6 +156,7 @@ Use clone() to copy the module for a new instance. In other words,
 the call to the generator function is just a call to clone of the
 routines.
 </item>
+
 <item>
 Recognize/identify idioms of the form
 <r:code>
@@ -291,8 +359,25 @@ For || the second approach won't work as we don't want to evaluate the RHS.
 Checking with  how llvm does it on a .c file, it is the multi branch/block setup.
 </item>
 
+<item>
+When comparing to a literal and the literal has an integer value,
+don't use a double/floating point comparison when the other value is an integer, e.g.
+<r:code>
+if(i &lt; 2) ...
+</r:code>
+then the compiler currently treats 2 as a numeric, not an integer and promotes i.
+</item>
 
 <item>
+Is the code generated for the tests/simpleFor.R correct?
+It works, but the incrementing of the loop counter is in the body.
+Also, the condition block has an extra instruction that seems irrelevant.
+<pre>
+%3 = load i32* %ctr
+</pre>
+</item>
+
+<item status="high">
 Create a class and constructor to represent the compiler.
 (Maybe a reference class).
 Then allow this to be reused to compile different functions.

@@ -8,7 +8,7 @@ library(RLLVMCompile)
 h = function(cur, parent, data)
 {
    ctr = ctr + 1L
-   kind = cur$xdata # kind
+   kind = cur$xdata # $kind
    kinds[ctr] = kind
 #   printInt(kind)
    CXChildVisit_Recurse
