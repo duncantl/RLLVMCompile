@@ -78,7 +78,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    on.exit(popNextBlock(env))
    pushContinueBlock(env, incrBlock)
    on.exit(popContinueBlock(env))   
-  
+
    iv = createFunctionVariable(Int32Type, var, env, ir)  #  ir$createLocalVariable(Int32Type, var)
    assign(var, iv, env)
    env$.types[[var]] = Int32Type
@@ -131,7 +131,12 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
            #XXX have to put the code for the actual  body, not just the incrementing of i
 
      compile(body, env, ir)
-     ir$createBr(incrBlock)
+     if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
+         cat("In createLoop: browser()\n")
+# It is possible that the compile() has put us into the incrBlock in which case we don't want to add a Branch.
+#         browser()
+       ir$createBr(incrBlock)
+     }
 
    ir$setInsertPoint(incrBlock)
 
