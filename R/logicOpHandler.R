@@ -41,8 +41,9 @@ function(call, env, ir, ...)
     # Coerce type TODO replace with more generic type coercion?
 #    browser()
     vars = list(a, b)
-    convert.i = which(sapply(types, function(x) !identical(x, targetType)))
-    vars[[convert.i]] = createCast(ir, targetType, types[[convert.i]], vars[[convert.i]])
+    convert.i = which(sapply(types, function(x) !sameType(x, targetType)))   # sameType replaces identical
+    if(length(convert.i))
+       vars[[convert.i]] = createCast(ir, targetType, types[[convert.i]], vars[[convert.i]])
     a = vars[[1]]
     b = vars[[2]]
   }
