@@ -7,15 +7,15 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
 
    # This is not elegant, but brute force.
    # We basically create blocks for each of the if conditions
-   # and blocks for each of the bodies, including a trailing else
-   # block if present.  It adds a new block at the end which is where
-   # we will end up at the conclusion of the if....
+   # and blocks for each of the bodies, including a trailing else-clause
+   # block, if it is present.  The function also  adds a new block at the end which is where
+   # we will end up at the conclusion of the if.... regardless of how we get through it.
    # Then we create the code for each condition and each body
    # knowing where we will branch. If the condition is
    # true, we jump to the body; if it is false, we jump to the next
    # condition block or the trailing else block. If this is not present,
    # we jump to the next block after the if....
-  
+#browser()  
     label = paste(deparse(call[[2]]), collapse = "")
 
 
@@ -29,6 +29,7 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
     cur = call
 
     hasTrailingElse = FALSE
+      # This loop just creates the Blocks, not the code within those blocks
     while(TRUE) {
          if(is(cur, "if")) {
             tmp = paste(deparse(cur[[2]]), collapse = "")
@@ -44,23 +45,27 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
            break
          }
 
-         if(length(cur) == 4)
+         if(length(cur) == 4)  # so there is an else
             cur = cur[[4]]
          else
            break
-    }
+     }
 
       # This is the block that all branches of the if statement
       # will end up in. This is where start the code for the next statement
       # after the if statement.
-if(length(env$.remainingExpressions))
-    nextBlock = Block(fun, sprintf("next.%s", label))
-else
-    nextBlock = NULL
+#??? How do we know the label    
+   if(length(env$.remainingExpressions))
+       nextBlock = Block(fun, sprintf("next.%s", label))
+   else {
+#       nextBlock = NULL
+#nextBlock = env$.nextBlock[[1]]
+nextBlock = getNextBlock(env)
+   }
 
     condBlocks[["final"]] = if(hasTrailingElse) bodyBlocks[[length(bodyBlocks)]] else nextBlock
 
-      # Jump to the first condition block
+      # Jump to the first condition block. We could probably execute the condition test code in the current block. But ....
     ir$createBr(condBlocks[[1]])
 
     #??? Does this code end up jumping to the trailing else ?
@@ -68,6 +73,7 @@ else
     ctr = 1
     while(TRUE) {
       body = bodyBlocks[[ctr]]
+           # alt is a bad name. Should be conditionBlock or curConditionBlock
       alt = if(ctr <= length(condBlocks))
                condBlocks[[ctr]]
             else
@@ -83,8 +89,17 @@ else
            ir$setInsertPoint(body)
            compile(cur, env, ir)                      
        }
-      if(length(getTerminator(ir$getInsertBlock())) == 0 && !is.null(nextBlock))
-         ir$createBr(nextBlock)  # jump to the end of the entire if statement           
+      if(length(getTerminator(ir$getInsertBlock())) == 0) {
+        if(!is.null(nextBlock)) 
+             ir$createBr(nextBlock)  # jump to the end of the entire if statement
+         else if(!is.null(condBlocks[["final"]]) && length(getTerminator(condBlocks[["final"]])) == 0) {
+#XXX TIDY THIS MESS UP after all the explorations relating to the compile.if and 2DRandomWalk.Rdb.
+       #  ir$createBr(condBlocks[["final"]])
+      } else if(length(env$.nextBlock)) {  # THIS IS PROBABLY THE WRONG THING TO DO AND SHOULD GO. IT WAS JUST A NEVER WORKING EXPERIMENT.
+         ir$createBr(env$.nextBlock[[1]])
+      } else
+         stop("need a terminator")
+    }
 
       if(!is(cur, "if") || length(cur) < 4)
            break
@@ -93,5 +108,18 @@ else
     }
 
     if(!is.null(nextBlock))
-      ir$setInsertPoint(nextBlock)
+       ir$setInsertPoint(nextBlock)
 }
+
+
+getNextBlock =
+function(env)
+{
+  if(length(env$.continueBlock))
+      return(env$.continueBlock[[1]])
+
+  if(length(env$.nextBlock))
+      return(env$.nextBlock[[1]])  
+
+  NULL
+}    
