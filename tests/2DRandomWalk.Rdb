@@ -323,6 +323,23 @@ Before we can run the
 </para>
 
 
+<para>
+<r:code>
+rtm = system.time(rw2d1(1e7))
+lltm = system.time(rw2d(1e7))
+</r:code>
+Comparing the times on an OSX machine (16GB RAM, Mavericks, SSD)
+<r:code>
+rtm/lltm
+<r:output><![CDATA[
+     user    system   elapsed 
+ 161.5620 3478.5000  178.9816 
+]]></r:output>
+</r:code>
+</para>
+
+
+
 <r:code>
 library(RLLVMCompile); library(XML)
 xmlSourceFunctions("2DRandomWalk.Rdb")

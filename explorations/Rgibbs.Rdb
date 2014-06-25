@@ -1,0 +1,206 @@
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude"
+	 xmlns:c="http://www.C.org"
+	 xmlns:omg="http://www.omegahat.org">
+
+<articleinfo>
+
+<title>Compiling the Simple 2D Random Walk Code</title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+
+<para>
+This example comes from Doug Bates, back in 2012
+in a comparison of <r/>, <r:pkg>Rcpp</r:pkg> and Julia.
+The blog post is at <ulink url="http://dmbates.blogspot.com/"/>
+(Before anyone says anything, we started devloping this 
+R-LLVM compilation approach around the same time as Julia. We just let it sit for
+a long time. So we are not copying Julia, but just further behind in the same idea but with
+all the baggage of <r/>, and also all the existing functionality.)
+</para>
+
+
+<para>
+We'll take the opportunity to make this work for both matrices  and data frames.
+</para>
+
+
+
+<para>
+The <r/> code is simple and defined as 
+<r:function><![CDATA[
+Rgibbs <- function(N,thin) {
+    mat <- matrix(0,ncol=2,nrow=N)
+    x <- 0
+    y <- 0
+    for (i in 1:N) {
+        for (j in 1:thin) {
+            x <- rgamma(1,3,y*y+4)
+            y <- rnorm(1,1/(x+1),1/sqrt(2*(x+1)))
+        }
+        mat[i,] <- c(x,y)
+    }
+    mat
+}
+]]></r:function>
+(I prefer spaces after ,'s and around ='s, but that's okay.)
+</para>
+
+
+<para>
+For now, we'll make this slightly easier for us to work with given the 
+current implementation of the compiler. (We'll add the other features later, but they are
+just more specific than we currently have but easy to add, i.e. subsetting 2 dimensional matrices.)
+We'll write the code as
+<r:function><![CDATA[
+Rgibbs <- function(N, thin, mat = matrix(0, ncol = 2, nrow = N)) 
+{
+    x <- 0
+    y <- 0
+    for (i in 1:N) {
+        for (j in 1:thin) {
+            x <- rgamma(1,3,y*y+4)
+            y <- rnorm(1,1/(x+1),1/sqrt(2*(x+1)))
+        }
+        mat[i, 1] <- x
+        mat[i, 2] <- y
+    }
+    mat
+}
+]]></r:function>
+We've moved the definition of <r:var>mat</r:var> to be a parameter
+with the value specified by the caller. See 2DRandomWalk.Rdb for why this is more flexible.
+Secondly, we changed the assignment to the first and second column of the i-th row 
+to be direct. Again, this is just a trivial simplification. The compiler will be able to 
+deal with <r:expr>mat[i,] &lt;- c(x, y)</r:expr>.
+However, it is not clear we want to do this as it involves creating a new vector object.
+So this modified version may actually be preferable. If we want the other version,
+we should at least recognize that we can perform a one-time allocation of a vector  of length 2 to hold x and y
+and then fill that in.
+</para>
+
+
+<para>
+Our compiler will recognize that x and y are local and so we can actually remove their initializations at the start of the function.
+So we have
+<r:function><![CDATA[
+Rgibbs <- function(N, thin, mat = matrix(0, ncol = 2, nrow = N)) 
+{
+    x = 0
+    y = 0
+    for (i in 1:N) {
+        for (j in 1:thin) {
+printf("%d, %d\n", i, j)
+            x <- rgamma(1, 3, y*y + 4)
+#            y <- rnorm(1, 1/(x+1), 1/sqrt(2*(x+1)))
+        }
+        mat[i, 1] <- x
+#        mat[i, 2] <- y
+    }
+    mat
+}
+]]></r:function>
+</para>
+
+
+<para>
+As with the 2D random walk in <ulink url="2DRandomWalk.Rdb"/> document, 
+we need to susbtitute calls to <r:func>rgamma</r:func> of the form
+<r:expr>rgamma(1, a, b)</r:expr> to <r:expr>Rf_rgamma(a, b)</r:expr>
+to correspond to the C routines <r/> provides in the Rmath library to access the
+random number generation facilities.
+We can either rewrite those or specify a method for handling all calls and 
+rewrite these before using the regular call handler.
+</para>
+
+<para>
+Currently, the only additional aspect we have to add is assigning to rows and cells in a matrix.
+We need to implement a mechanism to address the memory corresponding to the cell 
+<r:expr>mat[i, 1]</r:expr> and <r:expr>mat[i, 2]</r:expr>.
+If <r:var>mat</r:var> is a data frame, we can easily extract the specific column and then
+index to the i-th element. We would need to know  the type of the column ahead of time if
+we are to avoid determining this at run-time.
+For a matrix, we need to know the number of rows, i.e. <r:var>N</r:var>
+and be able to associate this with <r:var>mat</r:var>.
+If we know this, <r:expr>mat[i, 1]</r:expr> corresponds to the 
+the i-th element in the 2 * N long array of elements.
+<r:expr>mat[i, 2]</r:expr> corresponds to  N  + i.
+This is due to <r/> storing the matrix column-wise, i.e, in column order.
+</para>
+
+<para>
+How can we determine the number of rows in  mat?
+Ideally, we are trying to get away from <r/> data structures
+and "compile around the interpreter" in order to get it out of the way.
+As a result, we would like to have this information provided externally.
+This is not essential and probably unnecessary and silly for many 
+scenarios. 
+Instead, we can determine this at compile- or run-time.
+In this particular example, the matrix is defined by 
+the single argument <r:arg>N</r:arg>.
+Alternatively,  we can have the caller provide the matrix to us and
+we can determine the dimensions.
+If we want to allow very flexible inputs, we can have the caller
+specify the 
+
+</para>
+
+<para>
+
+<r:function><![CDATA[
+runifCallHandler = 
+function (call, env, ir, ..., fun = env$.fun, name = getName(fun)) 
+{
+   if(call[[1]] %in% c("runif", "rgamma", "rnorm") && call[[2]] == 1 && length(call) == 2)  
+       call = substitute(fun(0.0, 1.0), list(fun = as.name(sprintf("Rf_%s", as.character(call[[1]])))))
+
+   basicCallHandler(call, env, ir, ..., fun = fun, name = name)
+}
+]]></r:function>
+
+</para>
+<para>
+<r:code id="compile">
+library(RLLVMCompile)
+
+#basicCallHandler = getCompilerHandlers()$call
+#handlers = getCompilerHandlers(call = runifCallHandler)
+
+builtIns = getBuiltInRoutines(Rf_runif = list(DoubleType, DoubleType, DoubleType),
+                              Rf_rgamma = list(DoubleType, DoubleType, DoubleType),
+                              Rf_rnorm = list(DoubleType, DoubleType, DoubleType)
+                             )
+Rgibbs1 = traverseExpressions(Rgibbs, rewriteRNGCalls)
+fc = compileFunction(Rgibbs1, VoidType, list(Int32Type, Int32Type, pointerType(DoubleType)),
+                       # .compilerHandlers = handlers, 
+                       .builtInRoutines = builtIns)
+</r:code>
+
+<r:code>
+runif(1)
+.llvm(fc, 100L, 20L, matrix(0, 100, 2))
+</r:code>
+</para>
+
+<para>
+Undo the lifting of x and y to the top of the function.
+Determine why we are trying to resolve rgamma, etc. even when we say they are builtins.
+</para>
+
+
+
+<r:code>
+library(RLLVMCompile); library(XML)
+invisible(xmlSourceFunctions("Rgibbs.Rdb"))
+source("../R/traverseExpressions.R")
+xmlSource("Rgibbs.Rdb", ids = "compile")
+</r:code>
+
+
+</article>

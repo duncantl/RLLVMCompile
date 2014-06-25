@@ -16,6 +16,12 @@ adding the branch instruction. But really, the other methods should try to
 aoid changing the insertion block except into blocks that they created.
 </item>
 
+<item>
+Compile Doug Bate's Rgibbs example
+<br/>
+It involves matrix subset assignment, and combining values on the RHS of the assignment.
+</item>
+
 
 <item>
 Handle the <r:expr>pragma(IfAssign, var, updatedExpressions)</r:expr>

@@ -1,0 +1,107 @@
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude"
+	 xmlns:c="http://www.C.org"
+	 xmlns:omg="http://www.omegahat.org"
+	 xmlns:c="http://www.C.org">
+
+<articleinfo>
+
+<title>Compiling Access to Matrix Elements</title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+This is a simplified version of the Rgibbs example in Rgibbs.Rdb.
+Here we want to assign values to elements in a matrix.
+We will grow this to loop over the rows and set all cells.
+However, the key  for the example is to set elements in the matrix.
+So we'll the simple function:
+<r:function><![CDATA[
+f =
+function(m)
+{
+  m[2, 2] = 10
+}
+]]></r:function>
+The input is an n x c matrix. Later we will consider a data frame.
+Unfortunately, nowhere in the function is there information that this is a matrix.
+We could infer this based on the expression <r:expr>m[2, 2]</r:expr> as this indicates a matrix or data frame.
+However, we need the user to tell us that this is matrix and not a data frame.
+(Type inference may help us here, but we need a context.)
+</para>
+
+<para>
+We will assume that the matrix does not change dimensions within the body function.
+We can deal with this situation, but it is not important here.
+</para>
+
+
+<para>
+As we discussed in <ulink url="2DRandomWalk.Rdb"/>, we often find it
+useful to pass an <r/> vector as a pointer to the collection of
+elements, e.g. a <c:type>double *</c:type> corresponding to a
+<r:numeric/> vector.  The <r:func>.llvm</r:func> function handles
+passing the pointer for the <r/> object.  However, if we do this in
+this case, how do we know the dimensions of the matrix?
+We have several choices:
+<ol>
+<li>pass the matrix object as a SEXP and extract the dimensions in the <llvm/> code</li>
+<li>pass the matrix as a <c:type>double *</c:type> and two additional parameters that give the number of rows and columns</li>
+<li> pass the matrix as a pointer, and the two dimensions as an integer vector with two elements</li>
+</ol>
+We can hide the details of the latter from the user by creating an <r/> function  that invokes the <llvm/>
+routine and passes the dimension parameters on behalf of the user, e.g.
+<r:function><![CDATA[
+cf = function(m)
+       .llvm(fc, m, nrow(m), ncol(m), .all = TRUE)[[1]]
+]]></r:function>
+</para>
+
+<para>
+The critical thing for us is that the user specifies the type of the
+<r:arg>m</r:arg> parameter as a matrix with numeric elements. With
+this, we can implement any of the three approaches above.  How can we
+specify the matrix type? We can use the "native" <llvm/> types and
+create new composites.  We might create an array of arrays. Are these
+arrays of rows ? or arrays of columns?  Perhaps we don't care as we
+can query the dimensions without being concerned about what the
+dimensions mean.
+</para>
+<para>
+We could also represent the type using an <r/> class, e.g.,
+<r:expr>LLVMMatrix(pointerType(DoubleType))</r:expr>
+which would create an object of class <r:class>LLVMMatrix</r:class>.
+Our compiler would then recognize this and decide whether to add parameters or accept the <c:type>SEXP</c:type> object
+and compute the dimensions in the body of the new routine.
+</para>
+
+<para>
+We could also create a new <llvm/> Type class that represents a matrix.
+We would then be able to create instances of this class within <r/>
+(via a <r:func>.Call</r:func> routine) and populate it with
+the element type, the number of rows and columns.
+This may be problematic as we can only create one instance of each LLVM Type class.
+This makes it problematic to have dynamic content that differentiates data types from the same class.
+</para>
+
+
+<para>
+Perhaps the simplest approach is to represent the type entirely in <r/>, i.e. with 
+the <r:func>LLVMMatrix</r:func> call.
+
+</para>
+
+
+
+</section>
+
+
+</article>
