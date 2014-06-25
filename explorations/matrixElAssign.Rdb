@@ -1,6 +1,5 @@
 <article xmlns:r="http://www.r-project.org"
          xmlns:xi="http://www.w3.org/2003/XInclude"
-	 xmlns:c="http://www.C.org"
 	 xmlns:omg="http://www.omegahat.org"
 	 xmlns:c="http://www.C.org">
 
@@ -77,8 +76,8 @@ dimensions mean.
 </para>
 <para>
 We could also represent the type using an <r/> class, e.g.,
-<r:expr>LLVMMatrix(pointerType(DoubleType))</r:expr>
-which would create an object of class <r:class>LLVMMatrix</r:class>.
+<r:expr>MatrixType(pointerType(DoubleType))</r:expr>
+which would create an object of class <r:class>MatrixType</r:class>.
 Our compiler would then recognize this and decide whether to add parameters or accept the <c:type>SEXP</c:type> object
 and compute the dimensions in the body of the new routine.
 </para>
@@ -88,19 +87,31 @@ We could also create a new <llvm/> Type class that represents a matrix.
 We would then be able to create instances of this class within <r/>
 (via a <r:func>.Call</r:func> routine) and populate it with
 the element type, the number of rows and columns.
-This may be problematic as we can only create one instance of each LLVM Type class.
+This may be problematic as we can only create one instance of each <llvm/> Type class.
 This makes it problematic to have dynamic content that differentiates data types from the same class.
+</para>
+<para>
+Perhaps the simplest approach is to represent the type entirely in <r/>, i.e. with 
+the <r:func>MatrixType</r:func> call.
+It is easy to define an <r/> class to represent this information. 
+However, how easy is it to work with when processing the input?
+Much of the type processing mechanism is based on the native <llvm/> types.
+So this would introduce a two-tier system.
 </para>
 
 
 <para>
-Perhaps the simplest approach is to represent the type entirely in <r/>, i.e. with 
-the <r:func>LLVMMatrix</r:func> call.
+So let's use the <r:func>MatrixType</r:func>.
+<r:code>
+library(XML)
+xmlSourceFunctions("matrixElAssign.Rdb")
 
+library(RLLVMCompile)
+numericMatrixType = MatrixType(DoubleType, NA, NA)
+fc = compileFunction(f, VoidType, list(numericMatrixType))
+
+</r:code>
 </para>
-
-
-
 </section>
 
 

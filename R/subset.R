@@ -11,7 +11,12 @@ subsetHandler =
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
-#browser()
+browser()
+
+  if(length(call) > 3)
+                    # perhaps make this a separate method and have the generic dispatcher call it.
+      return(multiSubset(call, env, ir, ..., load = load, SEXPToPrimitive = SEXPToPrimitive))
+
   objType = getElementAssignmentContainerType(call, env)
   if(is(objType, "SEXPType")) {  # is this already in compile.=? If so, consolidate.
     if(SEXPToPrimitive) {

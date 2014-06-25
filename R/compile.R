@@ -71,8 +71,6 @@ assignHandler = `compile.=` =   # `compile.<-`
   #
 function(call, env, ir, ...)
 {
-#browser()
-    
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL
@@ -393,9 +391,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
           returnType = .typeInfo$returnType
      }
      
-
     args <- formals(fun) # for checking against types; TODO
-
 
     if(length(args)  > length(types))
       stop("need to specify the types for all of the arguments")
@@ -505,6 +501,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
   } else if(!isIntrinsic(name))
      stop("compileFunction can only handle closures. Failing on ", name)
 }
+
+
 
 Rf_routines = c("length")
 RewrittenRoutineNames = c("numeric", "integer", "logical", "character", "list", "double")
