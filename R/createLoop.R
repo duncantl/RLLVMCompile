@@ -132,7 +132,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
 
      compile(body, env, ir)
      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
-         cat("In createLoop: browser()\n")
+#         cat("In createLoop: browser()\n")
 # It is possible that the compile() has put us into the incrBlock in which case we don't want to add a Branch.
 #         browser()
        ir$createBr(incrBlock)
