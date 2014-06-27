@@ -30,7 +30,7 @@ function(elTypes, nrow = NA, ncol = length(elTypes))
   else
       dim = nrow
     
-  new("ArrayType", elType = elTypes, dim = as.integer(dim))
+  new("DataFrameType", elTypes = elTypes, nrow = as.integer(nrow), ncol = as.integer(ncol))
 }
 
 
