@@ -39,9 +39,16 @@ function(x, ...)
 {
 #    print(x)
  if(is(x, "call") && as.character(x[[1]]) %in% c("rgamma", "rnorm", "runif") && x[[2]] == 1) {
-     x[[1]] = as.name(sprintf("Rf_%s", as.character(x[[1]])))
+
      x = x[-2]
-     i = seq(along = x)[-1]
+
+     if(as.character(x[[1]]) == "rgamma")
+            # Rf_rgamma is called by change the rate to scale and passing scale. So use 1/rate
+         x[[3]] = substitute(1/(x), list(x = x[[3]]))
+
+     x[[1]] = as.name(sprintf("Rf_%s", as.character(x[[1]])))
+         
+     i = seq(along = x)[-1]     
      x[i] = lapply(x[i], traverseExpressions, rewriteRNGCalls, ...)
   }
 
