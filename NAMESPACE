@@ -44,3 +44,5 @@ S3method("fixIfAssign", "name")
 
 
 export(MatrixType, DataFrameType)
+
+export(traverseExpressions, rewriteRNGCalls)

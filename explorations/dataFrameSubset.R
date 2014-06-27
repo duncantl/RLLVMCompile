@@ -3,14 +3,15 @@ library(RLLVMCompile)
 f =
 function(l, i)
 {
-   el = l[[i]]
-    length(el)
+   l[i, 2]
 }
 
-dfType = dataFrameType(list(a = SEXPType, b = SEXPType)
+# 
+#dfType = DataFrameType(list(a = SEXPType, b = SEXPType)
+dfType = DataFrameType(list(a = getSEXPType("INT", TRUE), b = getSEXPType("REAL", TRUE)))
 fc = compileFunction(f, Int32Type, list(dfType, Int32Type))
 if(FALSE) {
-x = list(a = 1:10, b = rnorm(20))
+x = data.frame(a = 1:10, b = 1:10 + 25.5)
 .llvm(fc, x, 1L)
 }
 

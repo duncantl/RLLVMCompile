@@ -98,6 +98,7 @@ Rgibbs <- function(N, thin, mat = matrix(0, ncol = 2, nrow = N))
         for (j in 1:thin) {
             x <- rgamma(1, 3, y*y + 4)
             y <- rnorm(1, 1/(x+1), 1/sqrt(2*(x+1)))
+#printf("%d %d %lf %lf\n", i, j, x, y)
         }
         mat[i, 1] <- x
         mat[i, 2] <- y
@@ -157,7 +158,7 @@ runifCallHandler =
 function (call, env, ir, ..., fun = env$.fun, name = getName(fun)) 
 {
    if(call[[1]] %in% c("runif", "rgamma", "rnorm") && call[[2]] == 1 && length(call) == 2)  
-       call = substitute(fun(0.0, 1.0), list(fun = as.name(sprintf("Rf_%s", as.character(call[[1]])))))
+      call = substitute(fun(0.0, 1.0), list(fun = as.name(sprintf("Rf_%s", as.character(call[[1]])))))
 
    basicCallHandler(call, env, ir, ..., fun = fun, name = name)
 }
@@ -181,9 +182,31 @@ fc = compileFunction(Rgibbs1, VoidType, list(Int32Type, Int32Type, numericMatrix
                        # .compilerHandlers = handlers, 
                        .builtInRoutines = builtIns)
 </r:code>
+</para>
+
+
+
+
+<para>
+Let's invoke the resulting compiled routine.
+We need to initialize the RNG engine in <r/> (otherwise this just hangs),
+so we set the seed.
+<r:code>
+set.seed(102L) 
+ans = .llvm(fc, 4L, 3L, matrix(0, 4, 2), .all = TRUE)[[3]]
+</r:code>
+Let's run the original <r/> function  and see if we get the same results
+if we use the same seed:
+<r:code>
+set.seed(102L) 
+rans = Rgibbs(4, 3)
+</r:code>
+<r:code>
+all.equal(ans, rans)
+</r:code>
 
 <r:code>
-set.seed(102L) # runif(1)
+set.seed(102L) 
 ans = .llvm(fc, 100L, 20L, matrix(0, 100, 2), .all = TRUE)[[3]]
 </r:code>
 </para>
@@ -198,9 +221,33 @@ Determine why we are trying to resolve rgamma, etc. even when we say they are bu
 <r:code>
 library(RLLVMCompile); library(XML)
 invisible(xmlSourceFunctions("Rgibbs.Rdb"))
-source("../R/traverseExpressions.R")
 xmlSource("Rgibbs.Rdb", ids = "compile")
 </r:code>
 
 
+
+<section>
+<title>Test our calls to Rf_rgamma.</title>
+
+<para>
+<r:code>
+test = function() {
+   Rf_rgamma(3, 1/4)
+}
+testc = compileFunction(test, DoubleType, list(), .builtInRoutines = builtIns)
+</r:code>
+<r:code>
+set.seed(102L); rgamma(1, 3, 4)
+set.seed(102L); .llvm(testc)
+</r:code>
+
+<r:code>
+test = function(x) {
+   Rf_rgamma(3, 1/x)
+}
+testc = compileFunction(test, DoubleType, list(DoubleType), .builtInRoutines = builtIns)
+.llvm(testc)
+</r:code>
+</para>
+</section>
 </article>
