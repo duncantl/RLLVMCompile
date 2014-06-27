@@ -132,8 +132,9 @@ if(any(w <- sapply(e, is, "Constant"))) {
        k = e[[ which(w) ]]
        v = getValue(k)
        if( (v == 0 && names(op) %in% c("+", "-")) ||
-            v == 1 && names(op) %in% c("*", "/") )
-           return(e[!w][[1]])
+           (v == 1 && names(op) == "*") ||
+            (v == 1 && names(op) == "/" && which(w) == 2))
+                      return(e[!w][[1]])
     }
  }
 
