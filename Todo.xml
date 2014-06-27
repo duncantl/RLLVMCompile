@@ -8,8 +8,9 @@
 
 <items>
 
-<item status="high">
-Doug Bate's Rgibbs example is giving NaNs
+<item status="high"> 
+Element subsetting with a data frame.
+See dataFrameSubset.R
 </item>
 
 <item status="high">
@@ -20,17 +21,17 @@ adding the branch instruction. But really, the other methods should try to
 aoid changing the insertion block except into blocks that they created.
 </item>
 
-<item>
+<item status="done">
+Doug Bate's Rgibbs example is giving NaNs
+</item>
+
+<item status="done">
 [Done but see above]Compile Doug Bate's Rgibbs example
 <br/>
 It involves matrix subset assignment, and combining values on the RHS of the assignment.
 <br/>
 Assignment seems to work and looping fine. But the values we get are  NaN.
 First few are not, but then they go nuts.
-</item>
-
-<item status="high"> 
-Element subsetting with a data frame.
 </item>
 
 <item>
