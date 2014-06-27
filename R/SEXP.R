@@ -61,22 +61,7 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
    
 
    if(length(call) > 2) {
-      # dealing with a matrix for now. Basically,
-      # we have something of the form x[i, j], and i and j could be expressions.
-      # We calculate the number of rows in x and then multiply that by j and add i
-      # using zero-based calculations for i and j.
-      #
-      # We also eliminate unnecessary computations if we know at compile time that they are not necesary, e.g.
-      # if 1st column, don't need number of rows, if first row, don't need to add row offset.
-
-      ee = substitute( (j - 1L) * Rf_nrows(x) + (i - 1L), list(i = call[[3]], j = call[[4]], x = call[[2]] ))
-         # see if we know this is the first column and if so, we don't need the number of rows.
-      if(is.numeric(call[[4]]) && call[[4]] == 1L)
-          ee = ee[[3]]
-      else if(is.numeric(call[[3]]) && call[[3]] == 1L)
-           ee = ee[[2]]
-
-      i = compile(ee, env, ir)
+      i = createMultiDimGEPIndex(call, env, ir, ...)
    } else {
       i = compile(subtractOne(call[[3]]), env, ir)
    }
@@ -173,4 +158,27 @@ function(type)
       "REAL"
    else
      stop("problem getting R data accessor routine name")
+}
+
+
+
+createMultiDimGEPIndex =
+function(call, env, ir, ...)
+{
+      # dealing with a matrix for now. Basically,
+      # we have something of the form x[i, j], and i and j could be expressions.
+      # We calculate the number of rows in x and then multiply that by j and add i
+      # using zero-based calculations for i and j.
+      #
+      # We also eliminate unnecessary computations if we know at compile time that they are not necesary, e.g.
+      # if 1st column, don't need number of rows, if first row, don't need to add row offset.
+
+      ee = substitute( (j - 1L) * Rf_nrows(x) + (i - 1L), list(i = call[[3]], j = call[[4]], x = call[[2]] ))
+         # see if we know this is the first column and if so, we don't need the number of rows.
+      if(is.numeric(call[[4]]) && call[[4]] == 1L)
+          ee = ee[[3]]
+      else if(is.numeric(call[[3]]) && call[[3]] == 1L)
+           ee = ee[[2]]
+
+      compile(ee, env, ir, ...)
 }
