@@ -1,7 +1,8 @@
 setClass("RTypeDesc", contains = "VIRTUAL")
-setClass("MatrixType", representation(elType = "ANY", dim = "integer"), contains = "RTypeDesc")
+setClass("DimensionedType", contains = c("RTypeDesc", "VIRTUAL"))
+setClass("MatrixType", representation(elType = "ANY", dim = "integer"), contains = "DimensionedType")
 #setClass("ArrayType", contains = "MatrixType")
-setClass("DataFrameType", representation(elTypes = "list", nrow = "integer", ncol = "integer"))
+setClass("DataFrameType", representation(elTypes = "list", nrow = "integer", ncol = "integer"), contains = "DimensionedType")
 
 MatrixType =
 function(elType, nrow = NA, ncol = NA)

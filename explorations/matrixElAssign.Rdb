@@ -25,9 +25,10 @@ However, the key  for the example is to set elements in the matrix.
 So we'll the simple function:
 <r:function><![CDATA[
 f =
-function(m)
+function(m, i)
 {
-  m[2, 2] = 10
+  m[i, 2L] = 10
+#  m[i, 1] = 107   # works for numeric, i.e. 1 rather than 1L
 }
 ]]></r:function>
 The input is an n x c matrix. Later we will consider a data frame.
@@ -101,15 +102,73 @@ So this would introduce a two-tier system.
 
 
 <para>
-So let's use the <r:func>MatrixType</r:func>.
+So let's use the <r:func>MatrixType</r:func> as our input.
+We have to specify the element type, i.e. <r:var>DoubleType</r:var>.
+We don't specify the dimensions as these will be determined when we call the function.
+So we define the type with
+<r:code>
+library(RLLVMCompile)
+numericMatrixType = MatrixType(DoubleType)
+</r:code>
+</para>
+
+<para>
+We'll compile the function with the call
+<r:code>
+fc = compileFunction(f, VoidType, list(m = numericMatrixType))
+</r:code>
+(Note that we used an explicit argument name here. This will make following what happens easier. It is not essential as our compiler will add an argument name.)
+What does this produce?
+It will pass the <r/> object to the routine and we will calculate the 
+dimensions in the body of the code.
+The code this generates corresponds to the following <c/> code:
+<c:code>
+void
+f(SEXP m, Int32Type i)
+{
+    int m.nrow = Rf_nrows(m);
+    int m.ncol = Rf_ncols(m);
+    
+    double *m.els = REAL(m);
+
+    m.els[ (2 - 1) * m.nrow + i ] = 10
+}
+</c:code>
+<r/> provides <c:func>Rf_nrows</c:func> and <c:func>Rf_ncols</c:func> 
+for matrices.
+</para>
+<para>
+Our function <r:func>compileFunction</r:func> then identifies 
+the matrix type and replaces it with a regular <c:type>SEXP</c:type> for
+the purposes of the signature. 
+It keeps the more complete <c:class>MatrixType</c:class> information about that
+parameter, associating it with the parameter name.
+Since we know the element type at compile-time, we know that we can obtain a pointer to the 
+sequence of elements of the matrix by calling <c:func>REAL</c:func>. So
+the compiler will declare and initialize <r:arg>m.els</r:arg> either at the start of the routine
+or when it is needed.
+When code in our <r/> function uses <r:arg>m</r:arg>  in any way that requires the 
+the dimensions, the compiler generates code to define <r:var>m.nrow</r:var> and <r:var>m.ncol</r:var>.
+(Again, we could rewrite the <r/> function <r:func>f</r:func> and add the lines.
+
+</para>
+
+
+
+<para>
+
+
 <r:code>
 library(XML)
 xmlSourceFunctions("matrixElAssign.Rdb")
 
 library(RLLVMCompile)
-numericMatrixType = MatrixType(DoubleType, NA, NA)
-fc = compileFunction(f, VoidType, list(numericMatrixType))
-
+numericMatrixType = MatrixType(DoubleType) # REALSXPType # # no dimensions known at compile time.
+fc = compileFunction(f, VoidType, list(numericMatrixType, Int32Type))
+</r:code>
+<r:code>
+x = matrix(1:10 + .5, 5, 2)
+.llvm(fc, x, 3L, .all = TRUE)[[1]]
 </r:code>
 </para>
 </section>

@@ -96,12 +96,11 @@ Rgibbs <- function(N, thin, mat = matrix(0, ncol = 2, nrow = N))
     y = 0
     for (i in 1:N) {
         for (j in 1:thin) {
-printf("%d, %d\n", i, j)
             x <- rgamma(1, 3, y*y + 4)
-#            y <- rnorm(1, 1/(x+1), 1/sqrt(2*(x+1)))
+            y <- rnorm(1, 1/(x+1), 1/sqrt(2*(x+1)))
         }
         mat[i, 1] <- x
-#        mat[i, 2] <- y
+        mat[i, 2] <- y
     }
     mat
 }
@@ -177,14 +176,15 @@ builtIns = getBuiltInRoutines(Rf_runif = list(DoubleType, DoubleType, DoubleType
                               Rf_rnorm = list(DoubleType, DoubleType, DoubleType)
                              )
 Rgibbs1 = traverseExpressions(Rgibbs, rewriteRNGCalls)
-fc = compileFunction(Rgibbs1, VoidType, list(Int32Type, Int32Type, pointerType(DoubleType)),
+numericMatrixType = MatrixType(DoubleType)
+fc = compileFunction(Rgibbs1, VoidType, list(Int32Type, Int32Type, numericMatrixType),
                        # .compilerHandlers = handlers, 
                        .builtInRoutines = builtIns)
 </r:code>
 
 <r:code>
-runif(1)
-.llvm(fc, 100L, 20L, matrix(0, 100, 2))
+set.seed(102L) # runif(1)
+ans = .llvm(fc, 100L, 20L, matrix(0, 100, 2), .all = TRUE)[[3]]
 </r:code>
 </para>
 

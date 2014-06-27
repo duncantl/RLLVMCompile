@@ -37,7 +37,7 @@ function(x, fun = function(x) x, ...)
 rewriteRNGCalls =
 function(x, ...)
 {
-    print(x)
+#    print(x)
  if(is(x, "call") && as.character(x[[1]]) %in% c("rgamma", "rnorm", "runif") && x[[2]] == 1) {
      x[[1]] = as.name(sprintf("Rf_%s", as.character(x[[1]])))
      x = x[-2]

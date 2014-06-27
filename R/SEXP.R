@@ -32,20 +32,62 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
      return(NULL)
    }
 
-   r = getSEXPTypeElementAccessor(type)
+     #XXX Check if is name and not call/expressions such as foo()
+   varName = as.character(call[[2]])
 
+      # if we have a dimensioned object, then, for now, we find how to access
+      # the elements (e.g. REAL, INTEGER) in a different way.
+   dimensioned = FALSE
+   if(length(call) > 2 && varName %in% ls(env$.dimensionedTypes)) {
+      dimType = env$.dimensionedTypes[[varName]]
+      r = getSEXPTypeElementAccessor(dimType@elType, env)
+      dimensioned = TRUE
+   } else 
+     r = getSEXPTypeElementAccessor(type, env)
+     
    fn = env$declFunction(r)
 
-#XXX Temporary test: Sun, May 5th 7:26
-#browser()
-   var = getVariable(call[[2]], env, ir)
+ # For data frames, we have to do things differently
+
+     # So get the variable and then call REAL(), INTEGER(), or whatever on it
+     # so that ptr is the collection of elements.
+   var = getVariable(varName, env, ir)
    ptr = ir$createCall(fn, var)
-   i = compile(subtractOne(call[[3]]), env, ir)
-   idx = ir$createSExt(i, 64L)   
+
+     # Now compute the index of the element - not elements.
+     # THIS IS NOT VECTORIZED but SCALAR
+
+    call[-(1:2)] = lapply(call[-(1:2)], function(x) if(is.numeric(x) && x == as.integer(x)) as.integer(x) else x)
+   
+
+   if(length(call) > 2) {
+      # dealing with a matrix for now. Basically,
+      # we have something of the form x[i, j], and i and j could be expressions.
+      # We calculate the number of rows in x and then multiply that by j and add i
+      # using zero-based calculations for i and j.
+      #
+      # We also eliminate unnecessary computations if we know at compile time that they are not necesary, e.g.
+      # if 1st column, don't need number of rows, if first row, don't need to add row offset.
+
+      ee = substitute( (j - 1L) * Rf_nrows(x) + (i - 1L), list(i = call[[3]], j = call[[4]], x = call[[2]] ))
+         # see if we know this is the first column and if so, we don't need the number of rows.
+      if(is.numeric(call[[4]]) && call[[4]] == 1L)
+          ee = ee[[3]]
+      else if(is.numeric(call[[3]]) && call[[3]] == 1L)
+           ee = ee[[2]]
+
+      i = compile(ee, env, ir)
+   } else {
+      i = compile(subtractOne(call[[3]]), env, ir)
+   }
+
+   idx = ir$createSExt(i, 64L)
+   
    gep = ir$createGEP(ptr, idx)
    return(gep)
 #
-   
+# rest ignored     
+##########################################   
          # call INTEGER(call[[1]]), etc.
    e = substitute(.tmp <- r(x), list(r = as.name(r), x = call[[2]]))
 
@@ -58,11 +100,11 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
 
 
 getSEXPTypeElementAccessor =
-function(type)
+function(type, env)
 {
    if(is(type, "INTSXPType") || is(type, "LGLSXP")) 
       "INTEGER"
-   else if(is(type, "REALSXPType")) 
+   else if(is(type, "REALSXPType") || sameType(type, DoubleType) ) # This DoubleType is for when we are dealing with a matrix and have the element type.
       'REAL'
    else
       stop("not done yet")

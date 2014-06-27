@@ -104,8 +104,8 @@ function(call, env, ir, ...)
     } else
       val = compile(args[[2]], env, ir)
 
-   if(is.name(args[[1]])) {
-      var = as.character(args[[1]])
+      if(is.name(args[[1]])) {
+         var = as.character(args[[1]])
 
       # We don't search parameters for the var name, since we don't
       # want to try to assign over a parameter name.
@@ -414,6 +414,15 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
      
     # Grab types, including return. Set up Function, block, and params.
+    isDimensionedType = sapply(types, is, "DimensionedType")
+
+       # The dimTypes need to have names or we need to be able to map them back to the particular arguments. They do!
+    if(any(isDimensionedType)) {
+       dimTypes = types[isDimensionedType]
+       types[isDimensionedType] = replicate(sum(isDimensionedType), SEXPType)
+    } else
+       dimTypes = list()
+     
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, module)
 
@@ -429,6 +438,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
 
 #XXX temporary to see if we should declare and load these individually when we encounter them
+# Really need the user to specify the DLL not just the name in case of ambiguities, so often easier to do this separately.
     if(length(.routineInfo))
         processExternalRoutines(module, .funcs = .routineInfo)
 
@@ -475,6 +485,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     nenv$.useFloat = .useFloat
 
+    nenv$.dimensionedTypes = dimTypes
 
     if (.insertReturn)
        fun = insertReturn(fun, env = nenv)        
@@ -621,6 +632,9 @@ function(..., env = NULL, useFloat = FALSE)
        SET_STRING_ELT = list(SEXPType, getSEXPType("STR"), Int32Type, getSEXPType("CHAR")), # XXX may need different type for the index for long vector support.       
        SET_VECTOR_ELT = list(SEXPType, getSEXPType("VEC"), Int32Type, SEXPType), # XXX may need different type for the index for long vector support.
 
+       Rf_nrows = list(Int32Type, SEXPType),
+       Rf_ncols = list(Int32Type, SEXPType),
+     
        numeric = list(REALSXPType, Int32Type),
        integer = list(INTSXPType, Int32Type),
        logical = list(LGLSXPType, Int32Type),

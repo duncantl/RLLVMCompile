@@ -20,10 +20,69 @@ aoid changing the insertion block except into blocks that they created.
 Compile Doug Bate's Rgibbs example
 <br/>
 It involves matrix subset assignment, and combining values on the RHS of the assignment.
+<br/>
+Assignment seems to work and looping fine. But the values we get are  NaN.
+First few are not, but then they go nuts.
+</item>
+
+<item status="high"> 
+Element subsetting with a data frame.
+</item>
+
+<item status="high">
+Test subsetting with a list(). Simple accessing an element. Then assign to an element.
+Need to  know the type of the element unless we use run-time information.
+Try
+<r:code>
+x = replicate(N, list(a = 2, b = 3))
+sapply(x, function(x) x[[1]])
+</r:code>
+Don't use names ("a"), but position.
+</item>
+
+<item>
+Constant folding.
+Arises in matrix subsetting in SEXP.R around line 60 when we create 2L - 1L.
+We know this is 1L.
+For 1L -1L convert this to 0 but recognize that we don't have to do the multiplication.
+Also, When one operand in multiplication is 1, don't do the multiplication.
+When adding, if one of the operands is 0, don't do the addition.
+</item>
+
+<item>
+When do constant folding elimination for arithmetic, i.e. remove a mult/dv or an add/sub since it is the same value,
+we  need to eliminate/remove the previously compiledinstructions.
+<br/>
+We may want to compile the operands sequentially and check after the first one to see if it or the second one is necessary,
+in contrast to lapply() to compile them both and then examine.
 </item>
 
 
 <item>
+Eliminate dead code. Does LLVM do this for us?
+See explorations/mathElim.R.
+We eliminate the addition. But we leave the n = 0, i.e. the store instruction.
+Is this a case where a compiler pass would be useful.
+</item>
+
+
+<item>
+<br/>
+When doing arithmetic such as 2 - 1L, recognize that the 2 is an integer value
+(not type). Add parameter/flag to compile for arithmetic to say make the result an integer.
+When computing the index for subsetting, we'd activate this.
+So in <r:expr>x[2, i]</r:expr> we want 2 - 1L to be an integer.
+</item>
+
+
+<item status="high">
+Compute the REAL(x) pointer just once for a matrix.
+See matrixElAssign.Rdb.
+Similarly, compute Rf_nrow(), etc. just once.
+But detect if the value could change.
+</item>
+
+<item status="high">
 Handle the <r:expr>pragma(IfAssign, var, updatedExpressions)</r:expr>
 </item>
 

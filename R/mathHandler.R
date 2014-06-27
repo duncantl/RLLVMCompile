@@ -42,7 +42,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      call = k
   }
 
-
+ 
   call[2:length(call)] = lapply(call[-1], rewriteExpressions, env, isSubsetIndex = isSubsetIndex)
 
   origCall = call
@@ -124,6 +124,18 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   opName = as.character(call[[1]]) 
   op = codes[ opName ]
 
+if(any(w <- sapply(e, is, "Constant"))) {
+      # if any of the operands are constants
+     if(all(w)) { # constant fold
+         warning("should constant fold here")
+     } else {
+       k = e[[ which(w) ]]
+       v = getValue(k)
+       if( (v == 0 && names(op) %in% c("+", "-")) ||
+            v == 1 && names(op) %in% c("*", "/") )
+           return(e[!w][[1]])
+    }
+ }
 
   if(!is.na(op)) {
       ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(origCall))
