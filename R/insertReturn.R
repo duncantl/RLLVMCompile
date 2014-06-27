@@ -69,6 +69,13 @@ function(expr, nested = FALSE, ...)
   expr
 }
 
+`insertReturn.=` = `insertReturn.<-` =
+function(expr, nested = FALSE, ...)
+{
+  substitute(return(x), list(x = expr))
+}
+
+
 `insertReturn.function` =
 function(expr, nested = FALSE, ...)
 {

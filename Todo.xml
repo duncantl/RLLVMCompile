@@ -9,6 +9,10 @@
 <items>
 
 <item status="high">
+Doug Bate's Rgibbs example is giving NaNs
+</item>
+
+<item status="high">
 Rather than having the createLoopCode() check to see if 
 compile.if (or any other compile method) has made the incrBlock
 the current insertion block. If it has, then createLoopCode  needs to avoid 
@@ -17,7 +21,7 @@ aoid changing the insertion block except into blocks that they created.
 </item>
 
 <item>
-Compile Doug Bate's Rgibbs example
+[Done but see above]Compile Doug Bate's Rgibbs example
 <br/>
 It involves matrix subset assignment, and combining values on the RHS of the assignment.
 <br/>
@@ -29,6 +33,12 @@ First few are not, but then they go nuts.
 Element subsetting with a data frame.
 </item>
 
+<item>
+Add optional bounds checking on <r/> objects when subsetting.
+Allow the caller to add hints to the compiler to say check these variables, but not these.
+Also, develop static analysis to identify which ones go over bounds, if possible.
+</item>
+
 <item status="high">
 Test subsetting with a list(). Simple accessing an element. Then assign to an element.
 Need to  know the type of the element unless we use run-time information.
@@ -38,6 +48,24 @@ x = replicate(N, list(a = 2, b = 3))
 sapply(x, function(x) x[[1]])
 </r:code>
 Don't use names ("a"), but position.
+</item>
+
+<item satus="done">
+Need a SEXP type for lists.
+<br/>
+Use VECSXPType. Same as getSEXPType("VEC").
+</item>
+
+<item>
+Really want to be able to distinguish between REALSXPType and INTSXPType.
+</item>
+
+<item status="verify">
+[Works now] Error in insertReturn when expecting a return value but none
+<r:code>
+f = function(x, i) { el = x[[i]]}
+fc = compileFunction(f, Int32Type, list(SEXPType, Int32Type))
+</r:code>
 </item>
 
 <item>

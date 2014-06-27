@@ -80,6 +80,7 @@ function(...)
                                # separate because it's unitary?
             'return'= returnHandler,
             '[' = subsetHandler,
+            '[[' = subsetDoubleHandler,       
             '[<-' = subsetAssignHandler,
             "break" = breakHandler,
             "next" = nextHandler,

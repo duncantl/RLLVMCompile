@@ -1,3 +1,15 @@
+
+subsetDoubleHandler =
+function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
+{
+ browser()
+ e = substitute(VECTOR_ELT(x, i), list(x = call[[2]], i = subtractOne(call[[3]])))
+ compile(e, env, ir, ...)
+#  objType = getElementAssignmentContainerType(call, env)
+#  index = compile(call[[3]], env, ir, ...)
+  
+}
+    
 subsetHandler =
 #
 # Attempt to handle subsetting a vector of any type.
@@ -11,8 +23,6 @@ subsetHandler =
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
-browser()
-
   if(length(call) > 3)
                     # perhaps make this a separate method and have the generic dispatcher call it.
       return(multiSubset(call, env, ir, ..., load = load, SEXPToPrimitive = SEXPToPrimitive))
@@ -54,7 +64,7 @@ browser()
       stop("attempting to create a GEP for a non-pointer type")
 
   p = ir$createGEP(obj, idx)
-#browser()  
+
   if(load)
     return(ir$createLoad(p))
   

@@ -631,7 +631,8 @@ function(..., env = NULL, useFloat = FALSE)
        STRING_ELT = list(getSEXPType("CHAR"), getSEXPType("STR"), Int32Type), # long vectors?
        SET_STRING_ELT = list(SEXPType, getSEXPType("STR"), Int32Type, getSEXPType("CHAR")), # XXX may need different type for the index for long vector support.       
        SET_VECTOR_ELT = list(SEXPType, getSEXPType("VEC"), Int32Type, SEXPType), # XXX may need different type for the index for long vector support.
-
+       VECTOR_ELT = list(SEXPType, getSEXPType("VEC"), Int32Type),
+     
        Rf_nrows = list(Int32Type, SEXPType),
        Rf_ncols = list(Int32Type, SEXPType),
      
@@ -661,7 +662,7 @@ function(..., env = NULL, useFloat = FALSE)
 # Should this just be names of CompilerHandlers?
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
-                        ":", "=", "<-", "[<-", '[', "for", "if", "while",
+                        ":", "=", "<-", "[<-", '[', "[[", "for", "if", "while",
                         "repeat", "(", "!", "^", "$", "$<-",
                         "sapply",
                         "printf"
