@@ -16,17 +16,18 @@ function(tmp)
 
 fc = compileFunction(f, VoidType, list(SEXPType), module = m)
 
-g = function(env)
+g = function()
 {
-  Rf_eval(Rcall, env)
+  Rf_eval(Rcall, R_GlobalEnv)
 }
 
-llvmAddSymbol(R_GlobalEnv = getNativeSymbolInfo("R_GlobalEnv"))
-#gv = createGlobalVariable("R_GlobalEnv", m, SEXPType)
+llvmAddSymbol(R_GlobalEnv = getNativeSymbolInfo("R_GlobalEnv")$address)
+gv = createGlobalVariable("R_GlobalEnv", m, SEXPType)
 
-gc = compileFunction(g, VoidType, list(SEXPType), module = m)
+gc = compileFunction(g, VoidType, list(), module = m)
 
 foo = function(i, predicate = FALSE) {
+    browser()
   cat("In foo: ", i, "  ", predicate, "\n")
   i + 1L
 }
@@ -35,5 +36,5 @@ if(FALSE) {
 ee = ExecutionEngine(m)
 .llvm(fc, quote(foo(1, TRUE)), .ee = ee)
 
-.llvm(gc, globalenv(), .ee = ee)
+.llvm(gc, .ee = ee)
 }
