@@ -9,21 +9,28 @@ function(to)
 }
 
 fc = compileFunction(f, Int32Type, list(Int32Type), name = "f")
-class(.llvm(fc, 10))
+i = .llvm(fc, 10)
+i
+class(i)
 
 
 library(compiler)
 nfc = cmpfun(f)
 
 if(FALSE) {
-a = system.time(f(1e6))
-b = system.time(nfc(1e6))
-c = system.time(.llvm(fc, 1e6))
+a = system.time(f(1e7))
+b = system.time(nfc(1e7))
+ee = ExecutionEngine(fc)
+.llvm(fc, 10, .ee = ee)
+c = system.time(.llvm(fc, 1e7, .ee = ee))
+a/b
+b/c
+a/c
 info = sessionInfo()
 save(a,b,c, info, file = sprintf("whileSpeed_%s.rda", Sys.info()["sysname"]))
 }
 
-# This version shows that we don't need the integer types
+# This version shows that we don't need the integer types on ctr and 1 in the loop.
 # 
 g =
 function(to)
