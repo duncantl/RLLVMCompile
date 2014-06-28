@@ -2,7 +2,7 @@
 subsetDoubleHandler =
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
- browser()
+# browser()
  e = substitute(VECTOR_ELT(x, i), list(x = call[[2]], i = subtractOne(call[[3]])))
  compile(e, env, ir, ...)
 #  objType = getElementAssignmentContainerType(call, env)
