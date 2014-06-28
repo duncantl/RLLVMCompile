@@ -21,6 +21,13 @@ function(expr, var = character(), ...)
      expr
 }
 
+fixIfAssign.while =
+function(expr, var = character(), ...)
+{
+   expr[[3]] = fixIfAssign(expr[[3]], var, ...)
+   expr
+}
+
 fixIfAssign.function =
 function(expr, var = character(), ...)
 {
