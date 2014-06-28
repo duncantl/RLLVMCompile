@@ -369,7 +369,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .vectorize = character(), .execEngine = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
          .localVarTypes = list(), .fixIfAssign = TRUE,
-         .CallableRFunctions = list())
+         .CallableRFunctions = list(), .ee = NULL)
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -377,6 +377,10 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
   if(!missing(types) && !is.list(types))
     types = structure(list(types), names = names(formals(fun))[1])
 
+  if(is.logical(.ee) && .ee)
+      .ee = ExecutionEngine(module)
+      
+   
    if(.fixIfAssign)
      fun = fixIfAssign(fun)
   
@@ -496,6 +500,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     nenv$.CallableRFunctions = .CallableRFunctions
 
+    nenv$.ExecEngine = .ee
+    nenv$.SetCallFuns = list()
+
     if (.insertReturn)
        fun = insertReturn(fun, env = nenv)        
     fbody <- body(fun)
@@ -506,11 +513,19 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     if(identical(returnType, VoidType))
       ir$createReturn()
 
+     if(length(nenv$.SetCallFuns)) {
+         lapply(nenv$.SetCallFuns,
+                function(x)
+                  compileSetCall(x$var, x$name, module))
+     }     
+
     ## This may ungracefully cause R to exit, but it's still
     ## preferably to the crash Optimize() on an unverified module
     ## creates.
     if(optimize && verifyModule(module))
        Optimize(module, execEngine = .execEngine)
+
+
      
     if(asFunction) 
        makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine, .lengthVars = lengthVars)
@@ -635,6 +650,7 @@ function(..., env = NULL, useFloat = FALSE)
        Rf_allocVector = list(SEXPType, Int32Type, Int32Type),
        Rf_protect = list(VoidType, SEXPType),
        Rf_unprotect = list(VoidType, Int32Type),
+       Rf_unprotect_ptr = list(VoidType, SEXPType),     
        R_PreserveObject = list(VoidType, SEXPType),
        Rf_mkChar = list(getSEXPType("CHAR"), StringType),
        Rf_PrintValue = list(VoidType, SEXPType),
@@ -655,6 +671,7 @@ function(..., env = NULL, useFloat = FALSE)
        printf = list(Int32Type, StringType, "..." = TRUE),
 
        Rf_eval = list(SEXPType, SEXPType, SEXPType),
+       Rf_asInteger = list(Int32Type, SEXPType),
      
 #XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),

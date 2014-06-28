@@ -7,8 +7,26 @@ function()
   printf("answer from R: %d\n", ans)
 }
 
-# Make a connection type class.
 
 fc = compileFunction(cb, VoidType, list(),
-                     .CallableRFunctions = list(foo = list(Int32Type, list())))
+                     .CallableRFunctions = list(foo = list(Int32Type, list())),
+                     .ee = TRUE)
+
+
+m = as(fc, "Module")
+ee = ExecutionEngine(m)
+.llvm(m$setCall_foo_expression, quote(foo()), .ee = ee)
+
+foo =
+function(x = 1, a = TRUE)
+{
+   cat("In foo: x =", x, "a =", a, "\n")
+   as.integer(x)
+}
+
+.llvm(fc, .ee = ee)
+
+# We can change the expression and add more arguments, refer to variables in R's global environment.
+.llvm(m$setCall_foo_expression, quote(foo(pi, FALSE)), .ee = ee)
+.llvm(fc, .ee = ee)
 

@@ -40,19 +40,64 @@ browser()
   #
   # Potentially, preserve the call by putting it in the environment of the R function that is a proxy for the
   # the LLVM routine.
-  id = sprintf("%s.expression", funName)
-#XXX fix
-  callVar = createGlobalVariable(id,  env$.module, SEXPType, call)
-  e = quote(rans <- Rf_eval(callVar, R_GlobalEnv))
-  compile(e, env, ir, ...)
+  id = sprintf("%s_expression", funName)
 
+  llvmAddSymbol(R_GlobalEnv = getNativeSymbolInfo("R_GlobalEnv"))
+  createGlobalVariable("R_GlobalEnv", env$.module, SEXPType)
+
+#XXX  We need to specify the caller. If the caller has given us the ExecutionEngine
+#  we could set this.  Check !is.null(env$.ExecEngine).
+  callVar = createGlobalVariable(id,  env$.module, SEXPType, getNULLPointer(SEXPType))
+
+#  compileSetCall(id, sprintf("setCall_%s", id), env$.module)
+ # Add info to .SetCallFuns to have the top-level compiler generate these routines when it is finished. 
+env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = list(var = id, name =  sprintf("setCall_%s", id))
+
+#  if(!is.null(env$.ExecEngine) ) {
+#      env$.module[[id, .ee = env$.ExecEngine]] = call
+#  }
+
+# Also in createLoop.R. So put into a function.
+# But we don't need them and actually introduced a bug since we spelled r_ans as rans in the Rf_eval() later on
+# So better to let the type specification work for us.
+#  tmp = createFunctionVariable(SEXPType, "r_ans", env, ir)
+#  assign("r_ans", tmp, env)
+#  env$.types[["r_ans"]] = SEXPType
+
+  e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
+  compile(e, env, ir, ...)
+  # Do we need to protect this?
+#  compile(quote(Rf_protect(r_ans)), env, ir, ...)
+#compile(quote(Rf_PrintValue(r_ans)), env, ir, ...)
+#  compile(quote(Rf_unprotect_ptr(rans)), env, ir, ...)
    # Now get the result and marshall it back
   if(sameType(funTypes[[1]], StringType)) {
         # memory management.
-      marshallAns = quote(ans <- strdup(R_CHAR(STRING_ELT(r_ans, 0))))
+      marshallAns = quote(ans <- strdup(R_CHAR(STRING_ELT(r_ans, 0)))) # XXXX Somebody needs to free this.
   } else  if(sameType(funTypes[[1]], Int32Type)) {
-      marshallAns = quote(ans <- INTEGER(r_ans)[1])
-  }
+      marshallAns = quote(ans <- Rf_asInteger(r_ans))
+  } else  if(sameType(funTypes[[1]], DoubleType)) {
+      marshallAns = quote(ans <- Rf_asReal(r_ans))
+  } 
 
   compile(marshallAns, env, ir)
+}
+
+
+compileSetCall =
+    #
+    # This creates a new function/routine in the module
+    #  that allows us to call it from R to set a SEXP type
+    # that is a call to a global variable that will then be used
+    # to callback to R from an LLVM-generated routine.
+function(varName, funName, module)
+{
+  f = function(tmp) {
+    R_PreserveObject(tmp)
+    var = tmp
+  }
+  body(f)[[3]][[2]] = as.name(varName)
+  browser()
+# Can we compile a new function while currently in the middle of compiling another with a different IRBuilder.
+  compileFunction(f, VoidType, list(SEXPType), module, name = funName)
 }

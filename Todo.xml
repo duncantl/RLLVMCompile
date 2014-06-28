@@ -7,10 +7,23 @@
 <title>General</title>
 
 <items>
-<item>
+<item status="done">
 How to make the global native variable in R R_GlobaEnv
 available to the module.
-AddSymbol
+AddSymbol? declare it locally?
+<br/>
+Seem to need $address rather than just getNativeSymbolInfo().
+</item>
+
+<item>
+Generate error or warning when use a wrong variable.
+If we change r_ans to rans in callRFunction.R on the LHS of the Rf_eval,
+then we just get the wrong answer.
+It is legitimate as we created the local variable (why did we need it?)
+</item>
+
+<item>
+Extend globalCallSEXP.R to process the return value.
 </item>
 
 <item status="done">

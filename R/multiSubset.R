@@ -4,7 +4,29 @@ multiSubset =
     #
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
- browser()
+# browser()
+
+   varName = as.character(call[[2]])
+   dimType = NULL
+   if(varName %in% names(env$.dimensionedTypes)) {
+        dimType = env$.dimensionedTypes[[varName]]
+#        r = getSEXPTypeElementAccessor(dimType@elType, env)
+        dimensioned = TRUE        
+   } else
+        stop("need type and dimension information for ", varName)
+
+
+   if(is(dimType, "DataFrameType")) {
+      ee = substitute(x[[i]][j], list(x = call[[2]], i = call[[3]], j = call[[4]]))
+      return(compile(ee, env, ir, ...))
+   } else if(is(dimType,  "MatrixType")) {
+       i = createMultiDimGEPIndex(call, env, ir, ...)
+       idx = ir$createSExt(i, 64L)
+       return(ir$createGEP(ptr, idx))
+   } # else ArrayType.
+
+
+ 
    objType = getElementAssignmentContainerType(call, env)
 
    obj = getVariable(call[[2]], env, ir, load = TRUE) #???? for load = FALSE. Now back to TRUE. Based on fgets.Rdb.
@@ -18,7 +40,6 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 
    # Now, matrix or data frame
    # What about > 2 way arrays.
-   
 
    p = ir$createGEP(obj, idx)
 

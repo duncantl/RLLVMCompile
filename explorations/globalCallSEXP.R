@@ -2,7 +2,7 @@ library(RLLVMCompile)
 
 m = Module()
 
-ptrNULL = .Call("R_ConstantPointerNull_get", SEXPType, PACKAGE = "Rllvm")
+ptrNULL = getNULLPointer(SEXPType)
 
 gv = createGlobalVariable("Rcall", m, SEXPType, ptrNULL) # , linkage = InternalLinkage)
 
