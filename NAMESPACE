@@ -41,6 +41,7 @@ S3method("fixIfAssign", "call")
 S3method("fixIfAssign", "function")
 S3method("fixIfAssign", "if")
 S3method("fixIfAssign", "name")
+S3method("fixIfAssign", "while")
 
 
 export(MatrixType, DataFrameType)

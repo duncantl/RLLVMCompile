@@ -7,10 +7,37 @@
 <title>General</title>
 
 <items>
+<item>
+How to make the global native variable in R R_GlobaEnv
+available to the module.
+AddSymbol
+</item>
+
+<item status="done">
+Get the globalCallSEXP.R sorted out.
+Problem with Rcall variable not being resolved.
+But the code in globalArray.R  does work.
+The Rcall declaration has an "external" qualifier.
+Is this because it is a pointer? because it has no initializer?
+The latter, so use ConstantPointerNull.
+</item>
+
+<item>
+Callbacks to R
+explorations/simpleCallback.R and explorations/conCall.R
+</item>
 
 <item status="high"> 
 Element subsetting with a data frame.
 See dataFrameSubset.R
+</item>
+
+<item>
+Recognize to compile <r:expr>sapply(v, `[[`, 1)</r:expr>,
+i.e. to rewrite this  either as a loop over v and insert  
+<r:expr>el[[i]]</r:expr> or to rewrite this as
+<r:expr>sapply(v, function(x) x[[1]])</r:expr>.
+The former is nicer as it is essentially inlining the body of the function.
 </item>
 
 <item status="high">
