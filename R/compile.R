@@ -368,7 +368,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
-         .localVarTypes = list(), .fixIfAssign = TRUE)
+         .localVarTypes = list(), .fixIfAssign = TRUE,
+         .CallableRFunctions = list())
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -394,7 +395,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     args <- formals(fun) # for checking against types; TODO
 
     if(length(args)  > length(types))
-      stop("need to specify the types for all of the arguments")
+       stop("need to specify the types for all of the arguments for the ", name, " function")
 
     if(length(names(types)) == 0)
       names(types) = names(args)
@@ -426,12 +427,18 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, module)
 
-
+    
     if(any(.globals$functions %in% names(.builtInRoutines))) {
        i = match(.globals$functions, names(.builtInRoutines), 0)
        .routineInfo = .builtInRoutines[ i ]
        .globals$functions = .globals$functions[i == 0]
     }
+
+    if(length(.CallableRFunctions)) {
+       i = match(names(.CallableRFunctions), .globals$functions, 0)
+       .globals$functions = .globals$functions[ i == 0]
+    }
+     
 
     if(name %in% .globals$functions && !(name %in% names(.functionInfo)))
        .functionInfo[[name]] = list(returnType = returnType, params = types)
@@ -486,6 +493,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.useFloat = .useFloat
 
     nenv$.dimensionedTypes = dimTypes
+
+    nenv$.CallableRFunctions = .CallableRFunctions
 
     if (.insertReturn)
        fun = insertReturn(fun, env = nenv)        
@@ -626,6 +635,7 @@ function(..., env = NULL, useFloat = FALSE)
        Rf_allocVector = list(SEXPType, Int32Type, Int32Type),
        Rf_protect = list(VoidType, SEXPType),
        Rf_unprotect = list(VoidType, Int32Type),
+       R_PreserveObject = list(VoidType, SEXPType),
        Rf_mkChar = list(getSEXPType("CHAR"), StringType),
        Rf_PrintValue = list(VoidType, SEXPType),
        STRING_ELT = list(getSEXPType("CHAR"), getSEXPType("STR"), Int32Type), # long vectors?
@@ -642,7 +652,9 @@ function(..., env = NULL, useFloat = FALSE)
        character = list(LGLSXPType, Int32Type),
 
        Rprintf = list(VoidType, StringType, "..." = TRUE),
-       printf = list(Int32Type, StringType, "..." = TRUE),     
+       printf = list(Int32Type, StringType, "..." = TRUE),
+
+       Rf_eval = list(SEXPType, SEXPType, SEXPType),
      
 #XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),
@@ -664,8 +676,9 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "[<-", '[', "[[", "for", "if", "while",
                         "repeat", "(", "!", "^", "$", "$<-",
-                        "sapply",
-                        "printf"
+                        "sapply", "lapply",
+                        "printf",
+                        "break"
                        )  # for now
 
 
