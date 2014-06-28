@@ -1,7 +1,7 @@
 getSApplyType =
   # returns NULL if not a case we would rewrite an sapply()
 function(call, env, funName = as.character(call[[1]])) {
- if(funName == "sapply" &&  isSEXPType(type <- getDataType(call[[2]], env))  )
+ if(funName %in% c("sapply", "lapply") &&  isSEXPType(type <- getDataType(call[[2]], env))  )
     type
  else
      NULL
@@ -24,7 +24,7 @@ rewriteSApply =
   #  we can insert them now. Otherwise, we could use special functions that our
   #  "compiler"  will know to replace
   #
-  #   When we compile this we need to know that INTGER() maps to  int *, etc.
+  #   When we compile this we need to know that INTEGER() maps to  int *, etc.
   # When we find these globals before we generate code, we need to register them.
   #
   #     ty = getDataType(sym, env)
@@ -36,10 +36,17 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
    len = quote(n <- Rf_length(x))
    len[[3]][[2]] = X  # assume just a symbol
 
-   #  get the raw data for the elements. Doesn't work for  character(). Need to call GET_STRING_ELT() within the loop.
-   els = quote(els <- foo(x))
-   els[[3]][[2]] = X
-   els[[3]][[1]] = as.name(getSEXPDataAccessor(vecType))  # get the INTEGER, REAL, etc. for the type
+
+   hasElsAccessor = !( is(vecType, "STRSXPType") || is(vecType, "VECSXPType"))
+
+   if(hasElsAccessor) {
+                   #  get the raw data for the elements. Doesn't work for  character(). Need to call GET_STRING_ELT() within the loop.
+       els = quote(els <- foo(x))
+       els[[3]][[2]] = X
+       els[[3]][[1]] = as.name(getSEXPDataAccessor(vecType))  # get the INTEGER, REAL, etc. for the type
+   } else {
+       els = NULL
+   }
 
 #XXX Could add the types for els and el right now.
    
@@ -69,7 +76,18 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
       # allocated separately from the type information that we know ahead of time.
    if(!is.null(env)) 
      env$.types$r_ans = getSEXPType(names(sexpTypeNum))
-   
+
+
+   if(!hasElsAccessor) {
+       accessorFun = if(is(vecType, "STRSXPType")) "STRING_ELT" else "VECTOR_ELT"
+       loop[[4]][[2]][[3]] =  substitute( f(x, i), list( f = as.name(accessorFun), x = X ) )
+   }
+
+   if(is(returnType, "VECSXPType"))
+       loop[[4]][[3]] = substitute(SET_VECTOR_ELT(r_ans, i, val), list(val = loop[[4]][[3]][[3]]))
+   else if(is(returnType, "STRSXPType"))
+       loop[[4]][[3]] = substitute(SET_STRING_ELT(r_ans, i, val), list(val = loop[[4]][[3]][[3]]))
+browser()   
    ans = c(len,
            els,
            alloc,
