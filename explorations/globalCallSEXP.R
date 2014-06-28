@@ -21,13 +21,13 @@ g = function()
   Rf_eval(Rcall, R_GlobalEnv)
 }
 
-llvmAddSymbol(R_GlobalEnv = getNativeSymbolInfo("R_GlobalEnv")$address)
+llvmAddSymbol(R_GlobalEnv = getNativeSymbolInfo("R_GlobalEnv")) # $address)
 gv = createGlobalVariable("R_GlobalEnv", m, SEXPType)
 
 gc = compileFunction(g, VoidType, list(), module = m)
 
 foo = function(i, predicate = FALSE) {
-    browser()
+#  browser()  to show can still interact with R as usual.
   cat("In foo: ", i, "  ", predicate, "\n")
   i + 1L
 }
