@@ -5,7 +5,7 @@ callHandler =
 function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
 {
    funName = as.character(call[[1]])
-   
+
    if(funName == "<-" || funName == "=")
      return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
    else if(funName %in% c("numeric", "integer", "character", "logical")) {
@@ -19,6 +19,12 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
       return(env$.compilerHandlers[["$"]](call, env, ir, ...))
    }
 
+
+    if(as.character(call[[1]]) %in% names(env$.CallableRFunctions)) {
+       return(callRFunction(call, env, ir, ...))
+    }
+
+   
        #XXX may not want this generally, but via an option in env or just have caller invoke compileSApply() directly.
        #  See fgets.Rdb in Rllvm/
    if(!is.null(type <- getSApplyType(call, env, funName))) {
