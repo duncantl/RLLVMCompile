@@ -530,10 +530,10 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                 function(x)         
                   compileCreateCallRoutine(nenv, ir, x$call, sprintf("create_%s", x$var), x$var))
 
-         if(!is.null(env$.ExecEngine))   # don't use .ee as this field in the compiler(env) may have been set as a side effect of compile()
+         if(!is.null(nenv$.ExecEngine))   # don't use .ee as this field in the compiler(env) may have been set as a side effect of compile()
              lapply(nenv$.SetCallFuns,
                 function(x)  {
-                   .llvm( module[[x$name]],  x$call, .ee = env$.ExecEngine) 
+                   .llvm( module[[x$name]],  x$call, .ee = nenv$.ExecEngine) 
                 })
 
      }
