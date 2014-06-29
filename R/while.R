@@ -17,7 +17,7 @@ function(call, env, ir, ..., fun = env$.fun)
    pushNextBlock(env, nextBlock)
    on.exit(popNextBlock(env))
    pushContinueBlock(env, cond)
-   on.exit(popContinueBlock(env))       
+   on.exit(popContinueBlock(env), add = TRUE)       
 
           # We have to explicitly jump from the current block
           # before the while() loop to our condition code.
@@ -28,7 +28,9 @@ function(call, env, ir, ..., fun = env$.fun)
 
      ir$setInsertPoint(bodyBlock)
        compile(call[[3]], env, ir)
-       ir$createBr(cond)
+#      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) 
+       if(length(getTerminator(ir$getInsertBlock())) == 0) 
+           ir$createBr(cond)
 
    ir$setInsertPoint(nextBlock)    
 }
