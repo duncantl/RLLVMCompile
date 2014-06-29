@@ -518,21 +518,22 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
       ir$createReturn()
 
      if(length(nenv$.SetCallFuns)) {
+           # This is for the callbacks to R. We have to get the expressions for the callback to the module.
+           # We have a way to set them, another way to create them (although this doesn't handle complex arguments)
+           # We might eliminate lots of these and just go with  serializing the expression and deserializing
+           # when it is needed.
          lapply(nenv$.SetCallFuns,
                 function(x)
                   compileSetCall(x$var, x$name, module))
-
-                #
-if(TRUE)
 
          lapply(nenv$.SetCallFuns,
                 function(x)         
                   compileCreateCallRoutine(nenv, ir, x$call, sprintf("create_%s", x$var), x$var))
 
-         if(!is.null(.ee)) 
+         if(!is.null(env$.ExecEngine))   # don't use .ee as this field in the compiler(env) may have been set as a side effect of compile()
              lapply(nenv$.SetCallFuns,
                 function(x)  {
-                   .llvm( module[[x$name]],  x$call, .ee = .ee) 
+                   .llvm( module[[x$name]],  x$call, .ee = env$.ExecEngine) 
                 })
 
      }
