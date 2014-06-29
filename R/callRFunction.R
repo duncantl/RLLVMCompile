@@ -38,9 +38,11 @@ function(call, env, ir, ...)
 #  compileSetCall(id, sprintf("setCall_%s", id), env$.module)
  # Add info to .SetCallFuns to have the top-level compiler generate these routines when it is finished. 
 env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id, name =  sprintf("setCall_%s", id), createCallFun = sprintf("create_%s", id), call = call)
-browser()
+
    cc = Function(createCall$createCallFun, VoidType, list(), module = env$.module)
-   e = substitute( if( var == NULL ) { printf(msg) ; mk()}, list(msg = sprintf("calling %s\n", createCall$createCallFun), var = as.name(createCall$var), mk = as.name(createCall$createCallFun)))
+   e = substitute( if( var == NULL )  mk(),
+                   list(var = as.name(createCall$var), mk = as.name(createCall$createCallFun),
+                        msg = sprintf("calling %s\n", createCall$createCallFun)))
    env$.remainingExpressions = list(NULL) #XXXX       
    compile(e, env, ir, ...)
 
@@ -52,6 +54,9 @@ browser()
    # Now, generate the code that puts the local variables into the call.
   insertLocalValues(call, id, env, ir, ...)
 
+#!!! debug: show the updated expressions.
+compile(substitute(Rf_PrintValue(var), list(var = as.name(id))) , env, ir, ...)
+   
    # Then evaluate the call
   e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
   compile(e, env, ir, ...)
@@ -95,7 +100,7 @@ compileSetCall =
     # to callback to R from an LLVM-generated routine.
 function(varName, funName, module)
 {
-browser()    
+
   f = function(tmp) {
     R_PreserveObject(tmp)
     var = tmp
@@ -137,7 +142,9 @@ function(env, ir, call, globalVarName = NA, ...)
              else if(is.logical(call[[i]]))
                  substitute(Rf_ScalarLogical(x), list(x = call[[i]]))
              else if(is.character(call[[i]]))
-                 substitute(Rf_mkString(x), list(x = call[[i]]))      
+                 substitute(Rf_mkString(x), list(x = call[[i]]))
+             else
+                  quote(Rf_install("<expr>"))
            
        tmp = substitute(SETCAR(cur, val), list(val = val))
        compile(tmp, env, ir, ...)
@@ -156,7 +163,7 @@ function(env, ir, call, globalVarName = NA, ...)
      compile(set, env, ir, ...)
    }
              
-#   compile(quote(Rf_PrintValue(zz)), env, ir, ...)
+ #  compile(quote({printf("expression: "); Rf_PrintValue(zz)}), env, ir, ...)
 }
 
 compileCreateCallRoutine =
@@ -166,8 +173,10 @@ compileCreateCallRoutine =
     #
 function(env, ir, call, name, globalVarName = NA)
 {
-#  f = Function(name, VoidType, list(), module = env$.module)
-browser()    
+    # The function should have already been declared in callRFunction.
+    # But here it is as it used to be:
+    #        f = Function(name, VoidType, list(), module = env$.module)
+
   f = env$.module[[name]]
   b = Block(f, "createCallEntry")
   ir$setInsertBlock(b)
@@ -191,35 +200,66 @@ insertLocalValues =
     # the 
 function(call, callVar, env, ir, ...)
 {
-    # For now, only deal with literals and symbols.
+
+    # For now, only deal with literals, symbols and calls!
+    # Probably just loop over all of them and determine if they involve local variables.
   call = call[-1]
-  w = sapply(call, is.name)
-  
+  w = sapply(call, function(x) is.name(x) || is.call(x))
+
   if(any(w)) {
+        # need to CDR() up to the first element. Then insert the value and go to the next one.
+        # Get the first argument, i.e. skip over the function name/obj.
+      compile(substitute(el <- CDR(v), list(v = as.name(callVar))), env, ir, ...)
+      jmp = substitute(el <- CDR(el), list(call = as.name(callVar)))
+      e = quote(SETCAR(el, val))
+      
+      for(i in seq(along = w)) {
+          if(w[i]) {
+              varName = call[[i]]
 
-     createCompilerLocalVariable("el", SEXPType, env, ir)
-     compile(substitute(el <- CDR(v), list(v = as.name(callVar))), env, ir, ...) 
-       # need to CDR() up to the first element. Then insert the value and go to the next one.
-     jmp = substitute(el <- CDR(call), list(call = as.name(callVar)))
-#     compile(jmp, env, ir, ...)
-     i = which(w)
-     replicate(i[1] -1L, compile(jmp, env, ir, ...))
-
-     e = quote(SETCAR(el, val))
-     varName = call[[i[1]]]
-     var = getVariable(as.character(varName), env, load = FALSE)
-     ty = Rllvm::getType(var)
-     v = if(sameType(ty, Int32Type))
-            substitute(Rf_ScalarInteger(x), list(x = varName))
-         else if(sameType(ty, DoubleType))
-             substitute(Rf_ScalarReal(x), list(x = varName))
-         else
-              stop("don't know how to handle this type yet")
-     e[[3]] = v
-     compile(e, env, ir, ...)
+              usesLocal = usesLocalVariables(call[[i]], env)
+          if(usesLocal) {
+              if(is.call(varName)) {
+                  var = compile(substitute(.tmp <- e, list(e = call[[i]])), env, ir, ...)
+                  varName = as.name(".tmp")
+              } else {
+                 var = getVariable(as.character(varName), env, load = FALSE, searchR = FALSE)
+              }
+              
+              ty = Rllvm::getType(var)
+              v = if(sameType(ty, Int32Type))
+                  substitute(Rf_ScalarInteger(x), list(x = varName))
+              else if(sameType(ty, DoubleType))
+                  substitute(Rf_ScalarReal(x), list(x = varName))
+              else if(sameType(ty, StringType))
+                  substitute(Rf_mkString(x), list(x = varName))              
+              else if(sameType(ty, SEXPType))
+                  as.name(varName)
+              else
+                  stop("don't know how to handle this type yet")
+              
+              e[[3]] = v
+              compile(e, env, ir, ...)
+          } # end of usesLocal
+              compile(jmp, env, ir, ...)
+          }
+      }
   }
 }
 
+usesLocalVariables =
+function(expr, env)
+{
+ f = function() e
+ body(f) = expr
+ info = findGlobals(f, FALSE)
+ localVarNames = c(names(env$.localVarTypes),  env$.params@names)
+ any(info$variables %in%  localVarNames)
+}
+
+
+
+# NOT USED
 isRAtomic =
 function(x)
    is.logical(x) || is.integer(x) || is.numeric(x) || is.character(x)

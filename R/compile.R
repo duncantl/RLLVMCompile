@@ -523,10 +523,17 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                   compileSetCall(x$var, x$name, module))
 
                 #
-if(TRUE)         
+if(TRUE)
+
          lapply(nenv$.SetCallFuns,
                 function(x)         
                   compileCreateCallRoutine(nenv, ir, x$call, sprintf("create_%s", x$var), x$var))
+
+         if(!is.null(.ee)) 
+             lapply(nenv$.SetCallFuns,
+                function(x)  {
+                   .llvm( module[[x$name]],  x$call, .ee = .ee) 
+                })
 
      }
 
