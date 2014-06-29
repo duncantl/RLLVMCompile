@@ -522,7 +522,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                 function(x)
                   compileSetCall(x$var, x$name, module))
 
-                # 
+                #
+if(FALSE)         
          lapply(nenv$.SetCallFuns,
                 function(x)         
                   compileCreateCallRoutine(nenv, ir, x$call, sprintf("create_%s", x$var), x$var))

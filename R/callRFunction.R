@@ -17,7 +17,6 @@ function(call, env, ir, ...)
 # How do we assign an R object to a global variable in a module.
 # We could serialize the call to a byte stream and restore it in the module.
 
-   # This is a very 
 
 # Use getVariable.
 # Need to compile any arguments that are expressions.
@@ -45,12 +44,17 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = list(var = id, name =  spri
 #  }
 
 
+   # Now, generate the code that puts the local variables into the call.
+  insertLocalValues(call, id, env, ir, ...)
+
+   # Then evaluate the call
   e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
   compile(e, env, ir, ...)
-  # Do we need to protect this?
+   
+# Do we need to protect this return value?
 #  compile(quote(Rf_protect(r_ans)), env, ir, ...)
-#compile(quote(Rf_PrintValue(r_ans)), env, ir, ...)
 #  compile(quote(Rf_unprotect_ptr(rans)), env, ir, ...)
+   
    # Now get the result and marshall it back
   if(sameType(funTypes[[1]], StringType)) {
         # memory management.
@@ -105,16 +109,11 @@ function(env, ir, call, globalVarName = NA, ...)
 {
   funName = as.character(call[[1]])
 
-#  createCompilerLocalVariable("zz", SEXPType, env, ir)
-#  createCompilerLocalVariable("cur", SEXPType, env, ir)
-
-# if we assign to zz, there is a
-#   'module verification: Instruction does not dominate all uses!'
-   e = substitute( zz <- Rf_allocVector(LANGSXP, nels) ,  # e <- , LANGSXP     Rf_protect( ) around the entire thing.
+    # Rf_protect( ) around the entire thing ?
+   e = substitute( zz <- Rf_allocVector(LANGSXP, nels) ,  # LANGSXP   
                       list(nels = length(call)))
-#  browser()
-  #XXX This caluses problems
    compile(e, env, ir, ...)
+
    tmp = substitute(SETCAR(zz, Rf_install(id)), list(id = funName))
    compile(tmp, env, ir, ...)
    compile(quote(cur <- CDR(zz)), env, ir, ...)
@@ -153,3 +152,45 @@ function(env, ir, call, name, globalVarName = NA)
   compileCreateCall(env, ir, call, globalVarName)
   ir$createRetVoid()
 }
+
+
+
+insertLocalValues =
+    #
+    # Given the call template, generate the code to insert local variables into 
+    # the 
+function(call, callVar, env, ir, ...)
+{
+    # For now, only deal with literals and symbols.
+  call = call[-1]
+  w = sapply(call, is.name)
+  
+  if(any(w)) {
+
+     createCompilerLocalVariable("el", SEXPType, env, ir)
+     compile(substitute(el <- CDR(v), list(v = as.name(callVar))), env, ir, ...) 
+       # need to CDR() up to the first element. Then insert the value and go to the next one.
+     jmp = substitute(el <- CDR(call), list(call = as.name(callVar)))
+#     compile(jmp, env, ir, ...)
+     i = which(w)
+     replicate(i[1] -1L, compile(jmp, env, ir, ...))
+
+     e = quote(SETCAR(el, val))
+     varName = call[[i[1]]]
+     var = getVariable(as.character(varName), env, load = FALSE)
+     ty = Rllvm::getType(var)
+     v = if(sameType(ty, Int32Type))
+            substitute(Rf_ScalarInteger(x), list(x = varName))
+         else if(sameType(ty, DoubleType))
+             substitute(Rf_ScalarReal(x), list(x = varName))
+         else
+              stop("don't know how to handle this type yet")
+     e[[3]] = v
+     compile(e, env, ir, ...)
+  }
+}
+
+isRAtomic =
+function(x)
+   is.logical(x) || is.integer(x) || is.numeric(x) || is.character(x)
+
