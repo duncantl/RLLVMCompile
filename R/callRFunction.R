@@ -40,7 +40,7 @@ function(call, env, ir, ...)
 env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id, name =  sprintf("setCall_%s", id), createCallFun = sprintf("create_%s", id), call = call)
 browser()
    cc = Function(createCall$createCallFun, VoidType, list(), module = env$.module)
-   e = substitute( if( var != NULL ) { printf(msg) ; mk()}, list(msg = sprintf("calling %s\n", createCall$createCallFun), var = as.name(createCall$var), mk = as.name(createCall$createCallFun)))
+   e = substitute( if( var == NULL ) { printf(msg) ; mk()}, list(msg = sprintf("calling %s\n", createCall$createCallFun), var = as.name(createCall$var), mk = as.name(createCall$createCallFun)))
    env$.remainingExpressions = list(NULL) #XXXX       
    compile(e, env, ir, ...)
 
