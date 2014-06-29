@@ -55,7 +55,7 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
   insertLocalValues(call, id, env, ir, ...)
 
 #!!! debug: show the updated expressions.
-compile(substitute(Rf_PrintValue(var), list(var = as.name(id))) , env, ir, ...)
+#compile(substitute(Rf_PrintValue(var), list(var = as.name(id))) , env, ir, ...)
    
    # Then evaluate the call
   e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
