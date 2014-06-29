@@ -710,8 +710,13 @@ function(..., env = NULL, useFloat = FALSE)
 #XXX the following are not correct and need some thinking.       
        nrow = list(Int32Type, c("matrix", "data.frame")),
        ncol = list(Int32Type, c("matrix", "data.frame")),
-       dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame"))
+       dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame")),
 
+       strdup = list(StringType, StringType),
+       R_CHAR = list(StringType, SEXPType)
+  
+
+     
       )
 
   ans[names(basic)] = basic
