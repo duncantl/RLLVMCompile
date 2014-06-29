@@ -282,7 +282,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun))
 compile.name <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
 {
-   getVariable(e, env, ir, ...)
+   getVariable(e, env, ir, searchR = TRUE, ...)
 }
 
 compile.integer <-
@@ -503,7 +503,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.ExecEngine = .ee
     nenv$.SetCallFuns = list()
 
-    if (.insertReturn)
+    if(.insertReturn)
        fun = insertReturn(fun, env = nenv)        
     fbody <- body(fun)
     nenv$.Rfun = fun     
@@ -517,7 +517,16 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          lapply(nenv$.SetCallFuns,
                 function(x)
                   compileSetCall(x$var, x$name, module))
-     }     
+
+                # 
+         lapply(nenv$.SetCallFuns,
+                function(x)         
+                  compileCreateCallRoutine(nenv, ir, x$call, sprintf("create_%s", x$var), x$var))
+
+     }
+
+
+#showModule(module)     
 
     ## This may ungracefully cause R to exit, but it's still
     ## preferably to the crash Optimize() on an unverified module
@@ -658,6 +667,12 @@ function(..., env = NULL, useFloat = FALSE)
        SET_STRING_ELT = list(SEXPType, getSEXPType("STR"), Int32Type, getSEXPType("CHAR")), # XXX may need different type for the index for long vector support.       
        SET_VECTOR_ELT = list(SEXPType, getSEXPType("VEC"), Int32Type, SEXPType), # XXX may need different type for the index for long vector support.
        VECTOR_ELT = list(SEXPType, getSEXPType("VEC"), Int32Type),
+       SETCAR = list(SEXPType, SEXPType, SEXPType),
+       SETCDR = list(SEXPType, SEXPType, SEXPType),
+       SET_TAG = list(VoidType, SEXPType, SEXPType),
+       Rf_install = list(SEXPType, StringType),
+       CDR = list(SEXPType, SEXPType),
+     
      
        Rf_nrows = list(Int32Type, SEXPType),
        Rf_ncols = list(Int32Type, SEXPType),
@@ -666,6 +681,8 @@ function(..., env = NULL, useFloat = FALSE)
        integer = list(INTSXPType, Int32Type),
        logical = list(LGLSXPType, Int32Type),
        character = list(LGLSXPType, Int32Type),
+
+       Rf_ScalarInteger = list(SEXPType, Int32Type),
 
        Rprintf = list(VoidType, StringType, "..." = TRUE),
        printf = list(Int32Type, StringType, "..." = TRUE),
