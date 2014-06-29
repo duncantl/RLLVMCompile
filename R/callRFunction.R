@@ -1,8 +1,6 @@
 callRFunction =
 function(call, env, ir, ...)
 {
-browser()
- 
    funName = as.character(call[[1]])
 
    funTypes = env$.CallableRFunctions[[funName]]
@@ -24,17 +22,6 @@ browser()
 # Use getVariable.
 # Need to compile any arguments that are expressions.
 
-#  sym = substitute(Rf_install(id), list(id = funName))
-#  e = substitute(Rf_protect( e <- allocVector(LANGSXP, nels) ),
-#                   list(nels = nargs + 1L))
-#  quote(cur <- e)
-#  quote(SET_CAR(e, sym))
-#  quote( cur <- CDR(e))
-#
-#  for(i in seq(along = call)[-1]) {
-#
-#  }
-
 #   compile(e, env, ir, ...)
   # put the current call into the module with name <funName>.call
   #
@@ -51,18 +38,12 @@ browser()
 
 #  compileSetCall(id, sprintf("setCall_%s", id), env$.module)
  # Add info to .SetCallFuns to have the top-level compiler generate these routines when it is finished. 
-env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = list(var = id, name =  sprintf("setCall_%s", id))
+env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = list(var = id, name =  sprintf("setCall_%s", id), call = call)
 
 #  if(!is.null(env$.ExecEngine) ) {
 #      env$.module[[id, .ee = env$.ExecEngine]] = call
 #  }
 
-# Also in createLoop.R. So put into a function.
-# But we don't need them and actually introduced a bug since we spelled r_ans as rans in the Rf_eval() later on
-# So better to let the type specification work for us.
-#  tmp = createFunctionVariable(SEXPType, "r_ans", env, ir)
-#  assign("r_ans", tmp, env)
-#  env$.types[["r_ans"]] = SEXPType
 
   e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
   compile(e, env, ir, ...)
@@ -84,6 +65,19 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = list(var = id, name =  spri
 }
 
 
+# Also in createLoop.R. So put into a function.
+# But we don't need them and actually introduced a bug since we spelled r_ans as rans in the Rf_eval() later on
+# So better to let the type specification work for us.
+createCompilerLocalVariable =
+function(name, type, env, ir)
+{
+  tmp = createFunctionVariable(type, name, env, ir)
+  assign(name, tmp, env)
+  env$.types[[name]] = type
+  tmp
+}
+
+
 compileSetCall =
     #
     # This creates a new function/routine in the module
@@ -97,7 +91,65 @@ function(varName, funName, module)
     var = tmp
   }
   body(f)[[3]][[2]] = as.name(varName)
-  browser()
+
 # Can we compile a new function while currently in the middle of compiling another with a different IRBuilder.
   compileFunction(f, VoidType, list(SEXPType), module, name = funName)
+}
+
+
+compileCreateCall =
+    #
+    # Do we want to make this a separate routine
+    #
+function(env, ir, call, globalVarName = NA, ...)
+{
+  funName = as.character(call[[1]])
+
+#  createCompilerLocalVariable("zz", SEXPType, env, ir)
+#  createCompilerLocalVariable("cur", SEXPType, env, ir)
+
+# if we assign to zz, there is a
+#   'module verification: Instruction does not dominate all uses!'
+   e = substitute( zz <- Rf_allocVector(LANGSXP, nels) ,  # e <- , LANGSXP     Rf_protect( ) around the entire thing.
+                      list(nels = length(call)))
+#  browser()
+  #XXX This caluses problems
+   compile(e, env, ir, ...)
+   tmp = substitute(SETCAR(zz, Rf_install(id)), list(id = funName))
+   compile(tmp, env, ir, ...)
+   compile(quote(cur <- CDR(zz)), env, ir, ...)
+
+   argNames = names(call)
+   for(i in seq(along = call)[-1]) {
+       tmp = substitute(SETCAR(cur, x), list(x = call[[i]]))
+       compile(tmp, env, ir, ...)
+       if(length(argNames) && argNames[i - 1L] != "")
+          compile(substitute(SET_TAG(cur, Rf_install(id)), id = argNames[i - 1L]), env, ir, ...)
+
+       if(i < length(call))
+          compile(quote(cur <- CDR(cur)), env, ir, ...)                                  
+   }
+
+   if(!is.na(globalVarName) && globalVarName != "")
+     compile(substitute( v <- zz, list(v = as.name(globalVarName))), env, ir, ...)
+             
+#   compile(quote(Rf_PrintValue(zz)), env, ir, ...)
+}
+
+compileCreateCallRoutine =
+    #
+    # Do we need a new compiler?
+    # Do we want to make this a separate routine
+    #
+function(env, ir, call, name, globalVarName = NA)
+{
+  f = Function(name, VoidType, list(), module = env$.module)
+  b = Block(f, "createCallEntry")
+  ir$setInsertBlock(b)
+  env$.entryBlock = b  # vital to set this so that the local variables go into this block.
+                       # otherwise go into the entry block of the original function being compiled
+                       # Need to generalize, e.g. add a method to the compiler to create a new Function
+  
+  compileCreateCall(env, ir, call, globalVarName)
+  ir$createRetVoid()
 }
