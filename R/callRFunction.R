@@ -37,7 +37,12 @@ function(call, env, ir, ...)
 
 #  compileSetCall(id, sprintf("setCall_%s", id), env$.module)
  # Add info to .SetCallFuns to have the top-level compiler generate these routines when it is finished. 
-env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = list(var = id, name =  sprintf("setCall_%s", id), call = call)
+env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id, name =  sprintf("setCall_%s", id), createCallFun = sprintf("create_%s", id), call = call)
+browser()
+   cc = Function(createCall$createCallFun, VoidType, list(), module = env$.module)
+   e = substitute( if( var != NULL ) { printf(msg) ; mk()}, list(msg = sprintf("calling %s\n", createCall$createCallFun), var = as.name(createCall$var), mk = as.name(createCall$createCallFun)))
+   env$.remainingExpressions = list(NULL) #XXXX       
+   compile(e, env, ir, ...)
 
 #  if(!is.null(env$.ExecEngine) ) {
 #      env$.module[[id, .ee = env$.ExecEngine]] = call
@@ -90,6 +95,7 @@ compileSetCall =
     # to callback to R from an LLVM-generated routine.
 function(varName, funName, module)
 {
+browser()    
   f = function(tmp) {
     R_PreserveObject(tmp)
     var = tmp
@@ -119,8 +125,21 @@ function(env, ir, call, globalVarName = NA, ...)
    compile(quote(cur <- CDR(zz)), env, ir, ...)
 
    argNames = names(call)
+
    for(i in seq(along = call)[-1]) {
-       tmp = substitute(SETCAR(cur, x), list(x = call[[i]]))
+#browser()
+       val = if(is.name(call[[i]]))
+                 substitute(Rf_install(x), list(x = as.character(call[[i]])))
+             else if(is.integer(call[[i]]))
+                 substitute(Rf_ScalarInteger(x), list(x = call[[i]]))
+             else if(is.numeric(call[[i]]))
+                 substitute(Rf_ScalarReal(x), list(x = call[[i]]))
+             else if(is.logical(call[[i]]))
+                 substitute(Rf_ScalarLogical(x), list(x = call[[i]]))
+             else if(is.character(call[[i]]))
+                 substitute(Rf_mkString(x), list(x = call[[i]]))      
+           
+       tmp = substitute(SETCAR(cur, val), list(val = val))
        compile(tmp, env, ir, ...)
        if(length(argNames) && argNames[i - 1L] != "")
           compile(substitute(SET_TAG(cur, Rf_install(id)), id = argNames[i - 1L]), env, ir, ...)
@@ -129,8 +148,13 @@ function(env, ir, call, globalVarName = NA, ...)
           compile(quote(cur <- CDR(cur)), env, ir, ...)                                  
    }
 
-   if(!is.na(globalVarName) && globalVarName != "")
-     compile(substitute( v <- zz, list(v = as.name(globalVarName))), env, ir, ...)
+   if(!is.na(globalVarName) && globalVarName != "") {
+       e = substitute( if( var != NULL ) R_ReleaseObject(var), list(var = as.name(globalVarName)))
+     set = substitute( v <- zz, list(v = as.name(globalVarName)))
+     env$.remainingExpressions = list(set) #XXX horrible. Needed to get the NextBlock
+     compile(e, env, ir, ...)
+     compile(set, env, ir, ...)
+   }
              
 #   compile(quote(Rf_PrintValue(zz)), env, ir, ...)
 }
@@ -142,9 +166,15 @@ compileCreateCallRoutine =
     #
 function(env, ir, call, name, globalVarName = NA)
 {
-  f = Function(name, VoidType, list(), module = env$.module)
+#  f = Function(name, VoidType, list(), module = env$.module)
+browser()    
+  f = env$.module[[name]]
   b = Block(f, "createCallEntry")
   ir$setInsertBlock(b)
+  env$.localVarTypes = list()
+  env$.returnType = VoidType
+  env$.fun = f
+  
   env$.entryBlock = b  # vital to set this so that the local variables go into this block.
                        # otherwise go into the entry block of the original function being compiled
                        # Need to generalize, e.g. add a method to the compiler to create a new Function

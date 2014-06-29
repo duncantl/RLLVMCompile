@@ -1,10 +1,18 @@
 library(RLLVMCompile)
 
+
+foo =
+function(x = 1L, a = TRUE)
+{
+   cat("In foo: x =", x, "a =", a, "\n")
+   as.integer(2*x)
+}
+
 cb =
 function(i)
 {
   printf("input to cb: %d\n", i)    
-  ans = foo(i) # a = 1, b = 2)
+  ans = foo(i, 2) # a = 1, b = 2)
   printf("answer from R: %d\n", ans)
 }
 
@@ -15,16 +23,15 @@ fc = compileFunction(cb, VoidType, list(Int32Type), module = m,
                      .ee = TRUE)
 
 
-#m = as(fc, "Module")
+showModule(m)
+
 ee = ExecutionEngine(m)
-.llvm(m$setCall_foo_expression, quote(foo(i)), .ee = ee)
+.llvm(m$setCall_foo_expression, quote(foo(i, "xyz")), .ee = ee)
+.llvm(fc, 10L, .ee = ee)
 
-foo =
-function(x = 1L, a = TRUE)
-{
-   cat("In foo: x =", x, "a =", a, "\n")
-   as.integer(2*x)
-}
 
+# Now create the call with our routine.
+
+.llvm(m$create_foo_expression, .ee = ee)
 .llvm(fc, 10L, .ee = ee)
 

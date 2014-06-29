@@ -15,7 +15,7 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
    # true, we jump to the body; if it is false, we jump to the next
    # condition block or the trailing else block. If this is not present,
    # we jump to the next block after the if....
-#browser()  
+
     label = paste(deparse(call[[2]]), collapse = "")
 
 

@@ -20,24 +20,37 @@ function(call, env, ir, ...)
      
      return(not) #, "xx", ir$getInsertBlock()))
    }
-  
+
     # need to handle the different ops
     # and the different types, casting
     # if necessary.
   op = as.character(call[[1]])
 
+  if(is.null(call[[3]])) { #XXX note NULL has to be on RHS for now.
+       # e.g.   ptr == NULL or ptr != NULL
+     ty = getTypes(call[[2]], env)
+          # so comparing a pointer to NULL     
+     if(isPointerType(ty)) {
+         a = compile(call[[2]], env, ir)
+         b = getNULLPointer(SEXPType)
+         op = if(op  == "!=") ICMP_NE else ICMP_EQ
+         return( ir$createICmp(op, a, b) )
+     }
+  }
+   
   types = lapply(call[-1], getTypes, env)
   targetType = getMathOpType(types)
   isIntType = identical(targetType, Int32Type)  
 
-  a = compile(call[[2]], env, ir)   # getVariable(call[[2]], env, ir)
-  b = compile(call[[3]], env, ir)   # getVariable(call[[3]], env, ir)
+   
+  a = compile(call[[2]], env, ir) 
+  b = compile(call[[3]], env, ir) 
 
   if(isIntType)
      codes = c("==" = ICMP_EQ, "!=" = ICMP_NE, ">" = ICMP_SGT, "<" = ICMP_SLT, ">=" = ICMP_SGE, "<=" = ICMP_SLE)
   else {
     codes = c("==" = FCMP_UEQ, "!=" = FCMP_UNE, ">" = FCMP_UGT, "<" = FCMP_ULT, ">=" = FCMP_UGE, "<=" = FCMP_ULE)
-
+    
     # Coerce type TODO replace with more generic type coercion?
 #    browser()
     vars = list(a, b)

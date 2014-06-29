@@ -523,7 +523,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                   compileSetCall(x$var, x$name, module))
 
                 #
-if(FALSE)         
+if(TRUE)         
          lapply(nenv$.SetCallFuns,
                 function(x)         
                   compileCreateCallRoutine(nenv, ir, x$call, sprintf("create_%s", x$var), x$var))
@@ -666,6 +666,7 @@ function(..., env = NULL, useFloat = FALSE)
        Rf_unprotect = list(VoidType, Int32Type),
        Rf_unprotect_ptr = list(VoidType, SEXPType),     
        R_PreserveObject = list(VoidType, SEXPType),
+       R_ReleaseObject = list(VoidType, SEXPType),     
        Rf_mkChar = list(getSEXPType("CHAR"), StringType),
        Rf_PrintValue = list(VoidType, SEXPType),
        STRING_ELT = list(getSEXPType("CHAR"), getSEXPType("STR"), Int32Type), # long vectors?
@@ -688,6 +689,9 @@ function(..., env = NULL, useFloat = FALSE)
        character = list(LGLSXPType, Int32Type),
 
        Rf_ScalarInteger = list(SEXPType, Int32Type),
+       Rf_ScalarReal = list(SEXPType, DoubleType),
+       Rf_ScalarLogical = list(SEXPType, Int32Type),
+       Rf_mkString = list(SEXPType, StringType),          
 
        Rprintf = list(VoidType, StringType, "..." = TRUE),
        printf = list(Int32Type, StringType, "..." = TRUE),
