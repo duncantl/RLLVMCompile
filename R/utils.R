@@ -93,7 +93,7 @@ function(expr, env = NULL, ir = NULL)
 
 
 getVariable =
-function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
+function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, searchR = FALSE, ...)
 {
   sym = as.character(sym)
   var = if(exists(sym, env)) {
@@ -107,16 +107,27 @@ function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, ...)
              tmp
         } else if(search.params && sym %in% names(env$.params)) {
           env$.params[[sym]]
-        } else {
-            # find in the module.
-          v = getGlobalVariable(env$.module, sym)
-
+        } else if(!is.null(v <- getGlobalVariable(env$.module, sym)) || searchR == FALSE) {            # find in the module.
 #load = FALSE  # don't load a global, just access it. ??          
           if(load && !is.null(ir) && ! (isPointerType(getType(v)) && isArrayType(getElementType(getType(v)))))
              ir$createLoad(v)
           else
              v
-        }
+        } else if(exists(sym)) {
+            # Look for a simple literal, constant value in R
+           tmp = get(sym)
+           
+           if(is.atomic(tmp)) {
+               v = ir$createConstant(tmp)
+#segfaults.  Do we need to load the constant? Probably not.               
+#               if(load && !is.null(ir))
+#                   ir$createLoad(v)
+#               else
+                   v
+           } else
+               stop("found ", sym, " in R, but it is not an atomic value")
+        } else
+             stop("cannot find variable named ", sym)
 }
 
 
