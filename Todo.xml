@@ -16,6 +16,17 @@ Seem to need $address rather than just getNativeSymbolInfo().
 </item>
 
 <item>
+Fix calls of the form foo(1) where 1 is supposed to be Int32Type.
+When we know the expected type and have a literal, make it so!
+</item>
+
+<item>
+When compiling R expressions in compileCreateCall,
+we need to convert literals into calls to ScalarReal, etc.,
+i.e. their R objects, not native versions.
+</item>
+
+<item>
 Generate error or warning when use a wrong variable.
 If we change r_ans to rans in callRFunction.R on the LHS of the Rf_eval,
 then we just get the wrong answer.
