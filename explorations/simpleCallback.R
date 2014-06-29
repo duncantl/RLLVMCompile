@@ -3,7 +3,7 @@ library(RLLVMCompile)
 cb =
 function()
 {
-  ans = foo(1, 2) # a = 1, b = 2)
+  ans = foo() # a = 1, b = 2)
   printf("answer from R: %d\n", ans)
 }
 
