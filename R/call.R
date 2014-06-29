@@ -2,7 +2,7 @@ callHandler =
   #
   # This handles calls to other functions.
   #
-function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
+function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)
 {
    funName = as.character(call[[1]])
 
@@ -57,8 +57,12 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun))
    
      #??? Need to get the types of parameters and coerce them to these types.
      # Can we pass this to compile and have that do the coercion as necessary
-   args = lapply(as.list(call[-1]), compile, env, ir, ...)  # ... and fun, name,
 
+   targetTypes = getParamTypes(call[[1]], env)
+   args = mapply(function(e, ty)
+                   compile(e, env, ir, ..., .targetType = ty),  # ... and fun, name,
+                 as.list(call[-1]), targetTypes)
+   
    env$addCallInfo(funName)
   
    call = ir$createCall(ofun, .args = args)
@@ -112,3 +116,17 @@ function(funName, call, env, ir, ...)
    compile(val, env, ir, ...)
 }
 
+
+
+getParamTypes =
+    #
+    # name is the name of the routine being called
+    #
+    # Have to be careful this is not called for an R function.
+    # if it is, we have the type information in .CallableRFunctions
+    
+function(name, env)
+{
+   f = env$.builtInRoutines[[ as.character(name) ]]
+   f[-1]
+}

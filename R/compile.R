@@ -216,7 +216,7 @@ function(type, id, env, ir)
 
 
 compile <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)
 {
    if(is(e, "RC++Reference")) # for already compiled objects, i.e. Value.
       return(e)
@@ -230,7 +230,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 compile.character =
   # See varargs.R which is a call to printf() with a constant format
-function(e, env, ir, ...)
+function(e, env, ir, ..., .targetType = NULL)
 {
    ctxt = getContext(env$.module)
    ty = arrayType(Int8Type, nchar(e))
@@ -248,7 +248,7 @@ function(e, env, ir, ...)
   # This compiles a group of expressions.
   # It handles moving from block to block with a block for
   # each expression.
-function(exprs, env, ir, fun = env$.fun, name = getName(fun))
+function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL)
 {
   #insertReturn(exprs)
   if(as.character(exprs[[1]]) != "{")
@@ -280,13 +280,13 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun))
 
 
 compile.name <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
    getVariable(e, env, ir, searchR = TRUE, ...)
 }
 
 compile.integer <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
    if(length(e) == 1)
       createIntegerConstant(e)
@@ -295,7 +295,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 }
 
 compile.logical <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
  # compile(as(e, "integer"), env, ir, ..., fun = fun, name = name)
   createLogicalConstant(e)
@@ -303,10 +303,14 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 
 compile.numeric <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
-  if(length(e) == 1)
-     createDoubleConstant(e)
+  if(length(e) == 1) {
+     if(length(.targetType))
+       createConstant(val = e, type = .targetType)    
+     else
+       createDoubleConstant(e)
+  }
   else
      stop("not compiling numeric vector for now")
 }
@@ -314,11 +318,11 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun))
 
 compile.Value <-
   # This is just an LLVM value
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
   e
 
 compile.default <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun))  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
     if(is(e, "Value") || is(e, "Instruction"))
       return(e)

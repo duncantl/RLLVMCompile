@@ -1,6 +1,6 @@
 
 compile.dollar = `compile.$` =
-function(call, env, ir, ...)
+function(call, env, ir, ..., .targetType = NULL)
 {  
        elName = as.character(call[[3]])
        obj = call[[2]]

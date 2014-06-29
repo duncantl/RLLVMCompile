@@ -1,6 +1,6 @@
 
 compile.for = compileForLoop =
-function(call, env, ir, ..., nextBlock = NULL)
+function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL)
 {
   var = as.character(call[[2]])
   inn = call[[3]]

@@ -15,9 +15,15 @@ AddSymbol? declare it locally?
 Seem to need $address rather than just getNativeSymbolInfo().
 </item>
 
-<item>
+<item status="verify">
 Fix calls of the form foo(1) where 1 is supposed to be Int32Type.
 When we know the expected type and have a literal, make it so!
+<br/>
+tests/checkIntLiteral.R
+<br/>
+See callHandler and <r:expr>lapply(as.list(call[-1]), compile, .......)</r:expr>
+We should put the type information here.
+Then we'd have to add, say, a .targetType parameter to each.
 </item>
 
 <item>

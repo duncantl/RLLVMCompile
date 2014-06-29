@@ -1,11 +1,11 @@
 ## Builtin Types to overload
 
 `compile.(` = parenHandler =
-function(call, env, ir, ...)
+function(call, env, ir, ..., .targetType = NULL)
      compile(getArgs(call, env, ir)[[1]], env, ir)
 
 returnHandler =
-function(call, env, ir, ...) 
+function(call, env, ir, ..., .targetType = NULL) 
 {
 #XXX  connect with insertReturn.call and avoid doing anything here.
      if(is.call(call[[2]]) && !is.null(getSApplyType(call[[2]], env))) {

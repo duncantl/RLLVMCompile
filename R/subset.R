@@ -1,6 +1,6 @@
 
 subsetDoubleHandler =
-function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
+function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE, .targetType = NULL)
 {
 # browser()
  e = substitute(VECTOR_ELT(x, i), list(x = call[[2]], i = subtractOne(call[[3]])))
@@ -21,7 +21,7 @@ subsetHandler =
 # References:
 #  - GEP: http://llvm.org/docs/LangRef.html#i_getelementptr
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
-function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
+function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE, .targetType = NULL)
 {
   if(length(call) > 3)
                     # perhaps make this a separate method and have the generic dispatcher call it.
@@ -89,7 +89,7 @@ subsetAssignHandler =
   # Never used!  Use compile.<- in compile.R
   # It may be good to split that part out to element assignment but okay for now.
   #
-function(call, env, ir, ...)
+function(call, env, ir, ..., .targetType = NULL)
 {
   ll = subsetHandler(call, env, ir, load = FALSE)
 #  ir$createStore(tmp, ans.i)
