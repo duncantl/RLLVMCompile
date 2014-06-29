@@ -79,6 +79,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    pushContinueBlock(env, incrBlock)
    on.exit(popContinueBlock(env))   
 
+# replace each set of 3 lines with a call to createCompilerLocalVariable   
    iv = createFunctionVariable(Int32Type, var, env, ir)  #  ir$createLocalVariable(Int32Type, var)
    assign(var, iv, env)
    env$.types[[var]] = Int32Type
