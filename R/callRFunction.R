@@ -43,9 +43,11 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
                                                                        deserializeCallFun = sprintf("deserialize_%s", id),   
                                                                        call = call)
 
+
    cc = Function(createCall$createCallFun, SEXPType, list(), module = env$.module)
+   cc = Function(createCall$deserializeCallFun, SEXPType, list(), module = env$.module)   
    e = substitute( if( var == NULL ) var <- mk(),
-                   list(var = as.name(createCall$var), mk = as.name(createCall$createCallFun),
+                   list(var = as.name(createCall$var), mk = as.name(createCall$deserializeCallFun),
                         msg = sprintf("calling %s\n", createCall$createCallFun)))
    env$.remainingExpressions = list(NULL) #XXXX       
    compile(e, env, ir, ...)
@@ -206,14 +208,17 @@ function(env, ir, call, name, globalVarName = NA)
 createDeserializeCall =
 function(env, ir, call, name, globalVarName = NA, ...)
 {
-#  f = env$.module[[name]]
-  f = Function(name, SEXPType, list(), module = env$.module)
+  f = env$.module[[name]]
+#  f = Function(name, SEXPType, list(), module = env$.module)
   b = Block(f, "createCallEntry")
   ir$setInsertBlock(b)
   env$.entryBlock = b 
   env$.localVarTypes = list()
   env$.returnType = SEXPType
   env$.fun = f
+
+  llvmAddSymbol(getNativeSymbolInfo("R_loadRObjectFromString", "RLLVMCompile"))
+#   llvmAddSymbol("R_loadRObjectFromString")  
 
    # serialize the call to a string
   txt = saveRObjectAsString(call)
