@@ -373,7 +373,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .vectorize = character(), .execEngine = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
          .localVarTypes = list(), .fixIfAssign = TRUE,
-         .CallableRFunctions = list(), .ee = NULL)
+         .CallableRFunctions = list(), .ee = NULL,
+         .RGlobalVariables = character())
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -462,7 +463,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     if(length(.globals$variables)) {
 
-       .globals$variables = setdiff(.globals$variables, ExcludeGlobalVariables)
+       .globals$variables = setdiff(.globals$variables, c(ExcludeGlobalVariables, .RGlobalVariables))
 
 
        i = .globals$variables %in% names(module)
