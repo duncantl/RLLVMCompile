@@ -536,6 +536,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                 function(x)  {
                    .llvm( module[[x$name]],  x$call, .ee = nenv$.ExecEngine) 
                 })
+#XXX!!!
+#         createDeserializeCall(nenv, ir, nenv$.SetCallFuns[[1]]$call, "deserialize_foo_expression")
 
      }
 
@@ -714,7 +716,9 @@ function(..., env = NULL, useFloat = FALSE)
        dim = list(quote(matrix(Int32Type, 2)), c("matrix", "data.frame")),
 
        strdup = list(StringType, StringType),
-       R_CHAR = list(StringType, SEXPType)
+       R_CHAR = list(StringType, SEXPType),
+
+       R_loadRObjectFromString = list(SEXPType, StringType)
   
 
      

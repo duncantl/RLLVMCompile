@@ -37,10 +37,14 @@ function(call, env, ir, ...)
 
 #  compileSetCall(id, sprintf("setCall_%s", id), env$.module)
  # Add info to .SetCallFuns to have the top-level compiler generate these routines when it is finished. 
-env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id, name =  sprintf("setCall_%s", id), createCallFun = sprintf("create_%s", id), call = call)
+env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
+                                                                       name =  sprintf("setCall_%s", id),
+                                                                       createCallFun = sprintf("create_%s", id),
+                                                                       deserializeCallFun = sprintf("deserialize_%s", id),   
+                                                                       call = call)
 
    cc = Function(createCall$createCallFun, VoidType, list(), module = env$.module)
-   e = substitute( if( var == NULL )  mk(),
+   e = substitute( if( var == NULL ) mk(),
                    list(var = as.name(createCall$var), mk = as.name(createCall$createCallFun),
                         msg = sprintf("calling %s\n", createCall$createCallFun)))
    env$.remainingExpressions = list(NULL) #XXXX       
@@ -59,7 +63,7 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
    
    # Then evaluate the call
   e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
-  compile(e, env, ir, ...)
+  val = compile(e, env, ir, ...)
    
 # Do we need to protect this return value?
 #  compile(quote(Rf_protect(r_ans)), env, ir, ...)
@@ -73,7 +77,11 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
       marshallAns = quote(ans <- Rf_asInteger(r_ans))
   } else  if(sameType(funTypes[[1]], DoubleType)) {
       marshallAns = quote(ans <- Rf_asReal(r_ans))
-  } 
+  } else if(sameType(funTypes[[1]], SEXPType)) {
+    return(val)   
+  } else {
+      stop("don't know how to handle this type")
+  }
 
   compile(marshallAns, env, ir)
 }
@@ -164,7 +172,9 @@ function(env, ir, call, globalVarName = NA, ...)
      compile(e, env, ir, ...)
      compile(set, env, ir, ...)
    }
-             
+
+#   compile(quote(return(zz)), env, ir, ...) # ir$createRet(ir$createLoad(getVariable()))
+  
  #  compile(quote({printf("expression: "); Rf_PrintValue(zz)}), env, ir, ...)
 }
 
@@ -194,6 +204,25 @@ function(env, ir, call, name, globalVarName = NA)
   ir$createRetVoid()
 }
 
+createDeserializeCall =
+function(env, ir, call, name, globalVarName = NA, ...)
+{
+#  f = env$.module[[name]]
+  f = Function(name, SEXPType, list(), module = env$.module)
+  b = Block(f, "createCallEntry")
+  ir$setInsertBlock(b)
+  env$.entryBlock = b 
+  env$.localVarTypes = list()
+  env$.returnType = SEXPType
+  env$.fun = f
+
+   # serialize the call to a string
+  txt = saveRObjectAsString(call)
+     # create call to the C routine to deserialize this and compile this expression
+  e = substitute(R_loadRObjectFromString(x), list(x = txt))
+  v = compile(e, env, ir, ...)
+  ir$createRet(v)
+}
 
 
 insertLocalValues =
@@ -226,7 +255,8 @@ function(call, callVar, env, ir, ...)
                   varName = as.name(".tmp")
               } else {
                  var = getVariable(as.character(varName), env, load = FALSE, searchR = FALSE)
-                 var = ir$createLoad(var)
+                 if(!is(var, "Argument"))
+                    var = ir$createLoad(var)
               }
               
               ty = Rllvm::getType(var)
@@ -259,6 +289,8 @@ function(expr, env)
  localVarNames = c(names(env$.localVarTypes),  env$.params@names, names(env$.types))
  any(info$variables %in%  localVarNames)
 }
+
+
 
 
 
