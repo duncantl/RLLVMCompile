@@ -10,7 +10,7 @@
 
 <item>
 Rather than copying the result back from Rf_eval(),
-we could protect it and then unprotect it.
+we could implicitly protect it (i.e. the compiled code would add this) and then unprotect it.
 We could identify when the variable is no longer needed
 and add code to release it then.
 </item>
@@ -156,6 +156,14 @@ call or have create_foo_expression deserialize it.
 <title>Compiler Structure</title>
 
 <items>
+
+<item status="high">
+Create a class and constructor to represent the compiler.
+(Maybe a reference class).
+Then allow this to be reused to compile different functions.
+</item>
+
+
 <item>
 Function for resetting the compiler to start new Function, new block,
 clear local variables.
@@ -243,7 +251,7 @@ See logicOpHandler.R
 </item>
 
 
-<item status="high"> 
+<item status="done"> 
 Element subsetting with a data frame.
 See dataFrameSubset.R
 </item>
@@ -672,7 +680,7 @@ fc = compileFunction(f, Int32Type)
 </r:code>
 </item>
 
-<item id="multiCond" status="high">
+<item id="multiCond" status="done">
 Multiple conditions in a test, i.e. if and while condition
 <r:code><![CDATA[
 f = function(x, y)
@@ -710,11 +718,6 @@ Also, the condition block has an extra instruction that seems irrelevant.
 </pre>
 </item>
 
-<item status="high">
-Create a class and constructor to represent the compiler.
-(Maybe a reference class).
-Then allow this to be reused to compile different functions.
-</item>
 
 <item>
 Type inference system needed.
