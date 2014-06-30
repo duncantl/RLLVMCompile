@@ -157,6 +157,10 @@ call or have create_foo_expression deserialize it.
 
 <items>
 
+<item>
+Don't include code that is a callback to R in the analysis of global variables and functions.
+</item>
+
 <item status="high">
 Create a class and constructor to represent the compiler.
 (Maybe a reference class).

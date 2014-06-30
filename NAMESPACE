@@ -1,6 +1,8 @@
 # For now export everything.
 #exportPattern(".*")
 
+useDynLib(RLLVMCompile)
+
 import(Rllvm)
 import(codetools)
 
@@ -50,3 +52,6 @@ export(traverseExpressions, rewriteRNGCalls)
 
 
 export(STRSXP, LGLSXP, REALSXP, INTSXP, CPLXSXP, ANYSXP, CHARSXP, LANGSXP, SYMSXP, VECSXP, S4SXP, RAWSXP, EXPTRSXP, EXPRSXP, ENVSXP)
+
+
+export(loadRObjectFromString)
