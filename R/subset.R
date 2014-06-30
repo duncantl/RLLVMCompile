@@ -2,9 +2,10 @@
 subsetDoubleHandler =
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE, .targetType = NULL)
 {
-# browser()
- e = substitute(VECTOR_ELT(x, i), list(x = call[[2]], i = subtractOne(call[[3]])))
- compile(e, env, ir, ...)
+  if(is.numeric(call[[3]]))
+      call[[3]] = as.integer(call[[3]])
+  e = substitute(VECTOR_ELT(x, i), list(x = call[[2]], i = subtractOne(call[[3]])))
+  compile(e, env, ir, ...)
 #  objType = getElementAssignmentContainerType(call, env)
 #  index = compile(call[[3]], env, ir, ...)
   
@@ -21,13 +22,12 @@ subsetHandler =
 # References:
 #  - GEP: http://llvm.org/docs/LangRef.html#i_getelementptr
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
-function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE, .targetType = NULL)
+function(call, env, ir, ..., objType = getElementAssignmentContainerType(call, env), load = TRUE, SEXPToPrimitive = TRUE, .targetType = NULL)
 {
   if(length(call) > 3)
                     # perhaps make this a separate method and have the generic dispatcher call it.
       return(multiSubset(call, env, ir, ..., load = load, SEXPToPrimitive = SEXPToPrimitive))
 
-  objType = getElementAssignmentContainerType(call, env)
   if(is(objType, "SEXPType")) {  # is this already in compile.=? If so, consolidate.
     if(SEXPToPrimitive) {
       r = getSEXPTypeElementAccessor(objType)

@@ -17,8 +17,17 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 
 
    if(is(dimType, "DataFrameType")) {
-      ee = substitute(x[[i]][j], list(x = call[[2]], i = call[[3]], j = call[[4]]))
-      return(compile(ee, env, ir, ...))
+#      ee = substitute(x[[i]][j], list(x = call[[2]], i = call[[3]], j = call[[4]]))
+browser()
+          #XXX should really call the [[ method in env handlers.
+       tmp = substitute( z[[i]], list(z = call[[2]], i = call[[4]]))
+       var =  subsetDoubleHandler(tmp, env, ir, ...)
+         # then get the i-th element. We have the specific type of this element in the data frame.
+         # So we can use this to perform the subsetting.
+         #
+       ty = dimType@elTypes[[ call[[4]] ]]
+       vv = compile(substitute(var[j], list(var = var, j = call[[3]])), env, ir, ..., objType = ty)
+       return(vv)
    } else if(is(dimType,  "MatrixType")) {
        i = createMultiDimGEPIndex(call, env, ir, ...)
        idx = ir$createSExt(i, 64L)
