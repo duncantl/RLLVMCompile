@@ -132,7 +132,6 @@ function(env, ir, call, globalVarName = NA, ...)
    argNames = names(call)
 
    for(i in seq(along = call)[-1]) {
-#browser()
        val = if(is.name(call[[i]]))
                  substitute(Rf_install(x), list(x = as.character(call[[i]])))
              else if(is.integer(call[[i]]))
@@ -143,13 +142,16 @@ function(env, ir, call, globalVarName = NA, ...)
                  substitute(Rf_ScalarLogical(x), list(x = call[[i]]))
              else if(is.character(call[[i]]))
                  substitute(Rf_mkString(x), list(x = call[[i]]))
-             else
+             else {
+                  warning("cannot recreate non-local value in R expression")
                   quote(Rf_install("<expr>"))
+             }
            
        tmp = substitute(SETCAR(cur, val), list(val = val))
        compile(tmp, env, ir, ...)
-       if(length(argNames) && argNames[i - 1L] != "")
-          compile(substitute(SET_TAG(cur, Rf_install(id)), id = argNames[i - 1L]), env, ir, ...)
+       if(length(argNames) && argNames[i] != "") {
+          compile(substitute(SET_TAG(cur, Rf_install(id)), list(id = argNames[i])), env, ir, ...)
+       }
 
        if(i < length(call))
           compile(quote(cur <- CDR(cur)), env, ir, ...)                                  
