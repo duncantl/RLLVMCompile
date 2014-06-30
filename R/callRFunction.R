@@ -219,13 +219,14 @@ function(call, callVar, env, ir, ...)
           if(w[i]) {
               varName = call[[i]]
 
-              usesLocal = usesLocalVariables(call[[i]], env)
+          usesLocal = usesLocalVariables(call[[i]], env)
           if(usesLocal) {
               if(is.call(varName)) {
                   var = compile(substitute(.tmp <- e, list(e = call[[i]])), env, ir, ...)
                   varName = as.name(".tmp")
               } else {
                  var = getVariable(as.character(varName), env, load = FALSE, searchR = FALSE)
+                 var = ir$createLoad(var)
               }
               
               ty = Rllvm::getType(var)
@@ -255,7 +256,7 @@ function(expr, env)
  f = function() e
  body(f) = expr
  info = findGlobals(f, FALSE)
- localVarNames = c(names(env$.localVarTypes),  env$.params@names)
+ localVarNames = c(names(env$.localVarTypes),  env$.params@names, names(env$.types))
  any(info$variables %in%  localVarNames)
 }
 
