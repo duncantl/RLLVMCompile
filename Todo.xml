@@ -3,6 +3,189 @@
 
 <topics xmlns:r="http://www.r-project.org" xmlns:c="http://www.c.org">
 
+
+<topic>
+<title>Callbacks to R</title>
+<items>
+
+<item>
+Rather than copying the result back from Rf_eval(),
+we could protect it and then unprotect it.
+We could identify when the variable is no longer needed
+and add code to release it then.
+</item>
+
+<item>
+Figure out why conCall doesn't give much speed.
+</item>
+
+<item status="done">
+Fix while loop in conCall.R and then it might work.
+</item>
+
+<item>
+When we use R API routines, add their declarations to the module, e.g. R_CHAR, strdup.
+</item>
+
+<item>
+If we enable the execution engine in compileFunction implicitly, i.e. during the compilation,
+can we extract/query it from the Function/module.
+</item>
+
+<item status="done">
+Variables that we want to find in R are getting promoted to  global variables.
+See callbacks2.R and pi. Really want to identify that this is a call to an R 
+function and so variables that are not already declared/defined in the
+local function being compiled should be ignored
+<br/>
+Is this really the case? or is it just that we have pi as a constant.
+Yes, this is just pi. But problems with globals.
+</item>
+<item>
+[callbacks2.R]
+Named arguments in the call corresponding to local variables, i.e
+ foo(1, bob, x = a)
+and we substitute the value of a, but skip  bob.
+Unfortunately, we use codetools::findGlobals() to find
+the globals before we start compiling the code.
+It finds these in the R callbacks as these are regular R expressions.
+So we have to be more specific than findGlobals and basically
+find global variables within each call and then ignore those
+in R callback functions.
+We can also have the caller specify which are R variables and
+exclude those. 
+This is not a bad thing to do as it ensures that the caller knows
+these must be present in the R session. But it would be nicer
+to 
+<br/>
+
+</item>
+
+<item>
+Handle expressions in the call to the R function, e.g. foo(a + 10)
+for local variable a.
+<br/>
+Done for arguments we are filling in, but what about those
+we do not provide.
+This goes back to needing to be able to get the original call
+at compile time and setting that using setCall_foo_expression.
+But need it at run-time.
+We can collect these as we compile and then when we are finished
+compiling all the code, includeing setCall_*_expression, we can
+invoke those if we have an ExecutionEngine.
+</item>
+
+<item status="done">
+Pass SEXP back to R. See callbacks.R
+</item>
+
+<item status="done">
+callbacks.R not working. Is now.
+</item>
+
+<item status="done">
+explorations/simpleCallback.R and explorations/conCall.R (FIX this - see above)
+</item>
+
+<item status="done">
+Get the value of a global variable, specifically the SEXP for the call expression in a callback.
+<r:code>
+m[["foo_expression", value = TRUE, ee = ee]]
+</r:code>
+</item>
+
+
+<item status="done">
+Problem with creating the call. Reneable and debug. simpleCallback2.R 
+<br/>
+Needed to convert the elements of the call to their R types by compiling calls to
+Rf_ScalarReal, Rf_install(), etc.
+</item>
+
+<item status="complete">
+Before evaluating the call at run time, insert the local variables in the routine 
+into to the corresponding positions in the call.
+</item>
+
+<item status="done">
+Call create_call to create the expression.
+<br/>
+Need to define it the function first before we can reference it.
+Not really, but have to be careful with our compiler when we
+reference a function.
+</item>
+
+<item status="done">
+Protect the call? No need as we have protected it with R_PreserveObject().
+If we do, then we have to ensure it is unprotected later. 
+If called from R, then R will take care of this.
+However, if we are doing complicated things in the native code, we may need to catch any error and unprotect.
+</item>
+
+<item>
+Release the memory for the arguments we added to the particular call.
+<br/>
+We can add code to set these to R_NilValue.
+We can either loop over the call again. Alternatively, we can store the pointers
+to set when we walk the first time.
+</item>
+
+<item>
+[CHECK]
+When compiling R expressions in compileCreateCall,
+we need to convert literals into calls to ScalarReal, etc.,
+i.e. their R objects, not native versions.
+Do this when inserting the values into the call, both at run-time and when creating the call.
+</item>
+
+<item>
+Find way to capture the call at compile time and use it at run-time.
+<br/>
+Necessary for complex values that are not local variables.
+(Of course, caller could use a closure and call the target function with local variables.)
+<br/>
+Could embed it in the R wrapper function that then calls set_call.
+Alternatively, serialize it into the module and then have an initialization
+call or have create_foo_expression deserialize it.
+</item>
+
+</items>
+</topic>
+
+<topic>
+<title>Compiler Structure</title>
+
+<items>
+<item>
+Function for resetting the compiler to start new Function, new block,
+clear local variables.
+</item>
+
+<item status="high">
+Rather than having the createLoopCode() check to see if 
+compile.if (or any other compile method) has made the incrBlock
+the current insertion block. If it has, then createLoopCode  needs to avoid 
+adding the branch instruction. But really, the other methods should try to 
+aoid changing the insertion block except into blocks that they created.
+</item>
+
+<item>
+Really want to be able to distinguish between REALSXPType and INTSXPType, etc.
+i.e. not all just SEXPType and same pointer.
+</item>
+
+
+<item status="low">
+Think about introducing a run-time package, e.g. RLLVMCompileRT
+with C routines to support the generated code, i.e. that the generated code can call.
+Since the idea is to use the code immediately in the session
+in which we compile it, this code can be in RLLVMCompile itself.
+</item>
+
+</items>
+</topic>
+
+
 <topic>
 <title>General</title>
 
@@ -15,7 +198,9 @@ AddSymbol? declare it locally?
 Seem to need $address rather than just getNativeSymbolInfo().
 </item>
 
-<item status="verify">
+<item status="finish">
+(Need to pass .targetType down the call stack.)
+<br/>
 Fix calls of the form foo(1) where 1 is supposed to be Int32Type.
 When we know the expected type and have a literal, make it so!
 <br/>
@@ -26,11 +211,7 @@ We should put the type information here.
 Then we'd have to add, say, a .targetType parameter to each.
 </item>
 
-<item>
-When compiling R expressions in compileCreateCall,
-we need to convert literals into calls to ScalarReal, etc.,
-i.e. their R objects, not native versions.
-</item>
+
 
 <item>
 Generate error or warning when use a wrong variable.
@@ -39,8 +220,10 @@ then we just get the wrong answer.
 It is legitimate as we created the local variable (why did we need it?)
 </item>
 
-<item>
+<item status="done">
 Extend globalCallSEXP.R to process the return value.
+<br/>
+Now we print it as an R object, and convert it to an int and then print it via LLVM.
 </item>
 
 <item status="done">
@@ -52,15 +235,19 @@ Is this because it is a pointer? because it has no initializer?
 The latter, so use ConstantPointerNull.
 </item>
 
-<item>
-Callbacks to R
-explorations/simpleCallback.R and explorations/conCall.R
+<item status="check">
+Compile <r:expr>if(x != NULL)</r:expr>
+Type information for NULL.
+<br/>
+See logicOpHandler.R
 </item>
+
 
 <item status="high"> 
 Element subsetting with a data frame.
 See dataFrameSubset.R
 </item>
+
 
 <item>
 Recognize to compile <r:expr>sapply(v, `[[`, 1)</r:expr>,
@@ -70,13 +257,7 @@ i.e. to rewrite this  either as a loop over v and insert
 The former is nicer as it is essentially inlining the body of the function.
 </item>
 
-<item status="high">
-Rather than having the createLoopCode() check to see if 
-compile.if (or any other compile method) has made the incrBlock
-the current insertion block. If it has, then createLoopCode  needs to avoid 
-adding the branch instruction. But really, the other methods should try to 
-aoid changing the insertion block except into blocks that they created.
-</item>
+
 
 <item status="done">
 Doug Bate's Rgibbs example is giving NaNs
@@ -97,9 +278,12 @@ Allow the caller to add hints to the compiler to say check these variables, but 
 Also, develop static analysis to identify which ones go over bounds, if possible.
 </item>
 
-<item status="high">
+<item status="done">
 Test subsetting with a list(). Simple accessing an element. Then assign to an element.
 Need to  know the type of the element unless we use run-time information.
+<br/>
+See list2.R
+<br/>
 Try
 <r:code>
 x = replicate(N, list(a = 2, b = 3))
@@ -108,15 +292,12 @@ sapply(x, function(x) x[[1]])
 Don't use names ("a"), but position.
 </item>
 
-<item satus="done">
+<item status="done">
 Need a SEXP type for lists.
 <br/>
 Use VECSXPType. Same as getSEXPType("VEC").
 </item>
 
-<item>
-Really want to be able to distinguish between REALSXPType and INTSXPType.
-</item>
 
 <item status="verify">
 [Works now] Error in insertReturn when expecting a return value but none
@@ -153,7 +334,6 @@ Is this a case where a compiler pass would be useful.
 
 
 <item>
-<br/>
 When doing arithmetic such as 2 - 1L, recognize that the 2 is an integer value
 (not type). Add parameter/flag to compile for arithmetic to say make the result an integer.
 When computing the index for subsetting, we'd activate this.
@@ -193,7 +373,7 @@ Also, we may want to "declare" variable before the if. But don't know its type t
 But we can go back and set it
 </item>
 
-<item>
+<item status="high">
 getBlocks() seg faults.
 2DRandomWalk.Rdb in the if handler.
 </item>
@@ -245,6 +425,8 @@ Fixed: structByVal.R  globalArrayAccessors.R
 <item>
 Add a mechanism to differentiate between integer() 
 meaning INTSXPType or Int32Type in R code.
+<br/>
+See explorations/list2.R for one example.
 </item>
 
 <item>
@@ -939,6 +1121,15 @@ function(x) {
 <topic>
 <title>Type Inference</title>
 <items>
+
+<item>
+For callbacks to R, we have to specify the signature of the R function.
+We can determine this at compile time and add it dynamically.
+We just need to know the name of the function so that we don't assume it is compiled.
+Also, need to check the signature is the same across different calls in our code
+(at compile time, not run-time).
+</item>
+
 <item>
 Identify const variables.
 </item>

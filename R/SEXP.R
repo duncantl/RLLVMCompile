@@ -1,8 +1,14 @@
 assignToSEXPElement =
 function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(call, env), ...)
 {
-
+    
    if(is(type, "VECSXPType")) {
+       e = quote(SET_VECTOR_ELT(x, i, val))
+       e[[2]] = call[[2]]
+       e[[3]] = subtractOne(call[[3]])
+       e[[4]] = compiledValue
+       compile(e, env, ir, ...)
+       return(NULL)
      stop("not completed yet")
    }
 
@@ -133,6 +139,10 @@ function(fun)
 getSEXPTypeNum =
 function(type)
 {
+  if(class(type) == "Type")  # generic
+      #return(c(ANY = ANYSXP))
+      return(c(VEC = VECSXP))
+  
   if(sameType(type, getSEXPType("STR")) || sameType(type, StringType))
      c(STR = STRSXP)
   else if(sameType(type, getSEXPType("REAL")) || sameType(type, DoubleType))

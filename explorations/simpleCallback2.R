@@ -23,8 +23,6 @@ fc = compileFunction(cb, VoidType, list(Int32Type), module = m,
                      .ee = TRUE)
 
 
-showModule(m)
-
 ee = ExecutionEngine(m)
 .llvm(m$setCall_foo_expression, quote(foo(i, "xyz")), .ee = ee)
 .llvm(fc, 10L, .ee = ee)

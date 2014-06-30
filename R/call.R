@@ -128,5 +128,9 @@ getParamTypes =
 function(name, env)
 {
    f = env$.builtInRoutines[[ as.character(name) ]]
-   f[-1]
+   if(!is.null(f))
+      return(f[-1])
+
+   f = env$.module[[ as.character(name) ]]
+   lapply(getParameters(f), Rllvm::getType)
 }

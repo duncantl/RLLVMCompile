@@ -64,7 +64,7 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
    loop =
      quote(for(i in 1:n) {
              el = els[i]
-             x
+             x  # replaced with f(el)
              r_ans[i] = tmp  # leave to the compiler make sense of this.
            })
    loop[[4]][[3]] = funCall
@@ -80,14 +80,14 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
 
    if(!hasElsAccessor) {
        accessorFun = if(is(vecType, "STRSXPType")) "STRING_ELT" else "VECTOR_ELT"
-       loop[[4]][[2]][[3]] =  substitute( f(x, i), list( f = as.name(accessorFun), x = X ) )
+       loop[[4]][[2]][[3]] =  substitute( f(x, i-1L), list( f = as.name(accessorFun), x = X ) )
    }
 
    if(is(returnType, "VECSXPType"))
        loop[[4]][[3]] = substitute(SET_VECTOR_ELT(r_ans, i, val), list(val = loop[[4]][[3]][[3]]))
    else if(is(returnType, "STRSXPType"))
        loop[[4]][[3]] = substitute(SET_STRING_ELT(r_ans, i, val), list(val = loop[[4]][[3]][[3]]))
-browser()   
+
    ans = c(len,
            els,
            alloc,
