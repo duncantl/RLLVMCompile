@@ -43,7 +43,7 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
                                                                        deserializeCallFun = sprintf("deserialize_%s", id),   
                                                                        call = call)
 
-   cc = Function(createCall$createCallFun, VoidType, list(), module = env$.module)
+   cc = Function(createCall$createCallFun, SEXPType, list(), module = env$.module)
    e = substitute( if( var == NULL ) mk(),
                    list(var = as.name(createCall$var), mk = as.name(createCall$createCallFun),
                         msg = sprintf("calling %s\n", createCall$createCallFun)))
@@ -173,7 +173,7 @@ function(env, ir, call, globalVarName = NA, ...)
      compile(set, env, ir, ...)
    }
 
-#   compile(quote(return(zz)), env, ir, ...) # ir$createRet(ir$createLoad(getVariable()))
+   compile(quote(return(zz)), env, ir, ...) # ir$createRet(ir$createLoad(getVariable()))
   
  #  compile(quote({printf("expression: "); Rf_PrintValue(zz)}), env, ir, ...)
 }
@@ -193,7 +193,7 @@ function(env, ir, call, name, globalVarName = NA)
   b = Block(f, "createCallEntry")
   ir$setInsertBlock(b)
   env$.localVarTypes = list()
-  env$.returnType = VoidType
+  env$.returnType = SEXPType
   env$.fun = f
   
   env$.entryBlock = b  # vital to set this so that the local variables go into this block.
@@ -201,7 +201,7 @@ function(env, ir, call, name, globalVarName = NA)
                        # Need to generalize, e.g. add a method to the compiler to create a new Function
   
   compileCreateCall(env, ir, call, globalVarName)
-  ir$createRetVoid()
+#  ir$createRetVoid()
 }
 
 createDeserializeCall =
