@@ -44,7 +44,7 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
                                                                        call = call)
 
    cc = Function(createCall$createCallFun, SEXPType, list(), module = env$.module)
-   e = substitute( if( var == NULL ) mk(),
+   e = substitute( if( var == NULL ) var <- mk(),
                    list(var = as.name(createCall$var), mk = as.name(createCall$createCallFun),
                         msg = sprintf("calling %s\n", createCall$createCallFun)))
    env$.remainingExpressions = list(NULL) #XXXX       
@@ -201,7 +201,6 @@ function(env, ir, call, name, globalVarName = NA)
                        # Need to generalize, e.g. add a method to the compiler to create a new Function
   
   compileCreateCall(env, ir, call, globalVarName)
-#  ir$createRetVoid()
 }
 
 createDeserializeCall =
