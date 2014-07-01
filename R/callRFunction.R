@@ -218,7 +218,6 @@ function(env, ir, call, name, globalVarName = NA, ...)
   env$.fun = f
 
   llvmAddSymbol(getNativeSymbolInfo("R_loadRObjectFromString", "RLLVMCompile"))
-#   llvmAddSymbol("R_loadRObjectFromString")  
 
    # serialize the call to a string
   txt = saveRObjectAsString(call)
