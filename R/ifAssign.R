@@ -21,6 +21,12 @@ function(expr, var = character(), ...)
      expr
 }
 
+fixIfAssign.numeric = fixIfAssign.character = fixIfAssign.logical =
+function(expr, var = character(), ...)
+{
+     expr
+}
+
 fixIfAssign.while =
 function(expr, var = character(), ...)
 {

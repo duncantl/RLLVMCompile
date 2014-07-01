@@ -21,7 +21,8 @@ getGlobals =
     #  ir appears as a global because its is referenced in a function definition
     #  not call.
     #
-function(f, expressionsFor = character(), localVars = character())
+function(f, expressionsFor = character(), localVars = character(),
+          skip = c(".R", ".typeInfo", ".signature", ".pragma"))
 {
   vars = character()
   funs = character()
@@ -42,7 +43,7 @@ function(f, expressionsFor = character(), localVars = character())
           return(FALSE)
 
       if(is.call(e)) {
-           if(is.call(e[[1]])) {
+           if(is.call(e[[1]])) { # e.g. x$bob()
                return(lapply(e, fun,  w))
            } 
           
@@ -54,6 +55,9 @@ function(f, expressionsFor = character(), localVars = character())
              if(is.name(e[[2]]))
                 localVars <<- c(localVars, as.character(e[[2]]))
           } else {
+             if(funName %in% skip)
+                 return(TRUE)
+              
              if(length(curFuns))
                  sapply(curFuns, function(id)
                                     varsByFun[[id]] <<- c(varsByFun[[id]], funName))

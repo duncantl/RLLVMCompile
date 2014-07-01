@@ -44,6 +44,9 @@ S3method("fixIfAssign", "function")
 S3method("fixIfAssign", "if")
 S3method("fixIfAssign", "name")
 S3method("fixIfAssign", "while")
+S3method("fixIfAssign", "numeric")
+S3method("fixIfAssign", "logical")
+S3method("fixIfAssign", "character")
 
 
 export(MatrixType, DataFrameType)
@@ -58,3 +61,6 @@ export(loadRObjectFromString)
 
 
 export(BasicCompiler)
+
+
+export(getGlobals)
