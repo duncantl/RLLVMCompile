@@ -231,8 +231,14 @@ in which we compile it, this code can be in RLLVMCompile itself.
 
 <topic>
 <title>General</title>
-
 <items>
+
+<item>
+Make getGlobals() try to understand lazy evaluation, i.e. not evaluating the
+default values for formal parameters until they are fist used.
+We could do this by rewriting to add the <r:expr>if(missing(x)) x = expr</r:expr>.
+</item>
+
 <item>
 Add an option to perform/eliminate bounds checking on arrays, nrow, ncol, etc.
 </item>

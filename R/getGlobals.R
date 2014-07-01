@@ -46,14 +46,14 @@ function(f, expressionsFor = character(), localVars = character(),
           return(FALSE)
 
       if(is.call(e)) {
-           if(is.call(e[[1]])) { # e.g. x$bob()
+           if(is.call(e[[1]]))  # e.g. x$bob()
                return(lapply(e, fun,  w))
-           } 
+
           
            funName = as.character(e[[1]])
           if(funName == "function") {
              subFunInfo[[length(subFunInfo)+1L]] <<- getGlobals(e, expressionsFor, skip = skip, .ignoreDefaultArgs = .ignoreDefaultArgs)
-          return(TRUE)
+             return(TRUE)
           } else if(funName %in% c('<-', '=')) {
              if(is.name(e[[2]]))
                 localVars <<- c(localVars, as.character(e[[2]]))
@@ -65,7 +65,9 @@ function(f, expressionsFor = character(), localVars = character(),
                  sapply(curFuns, function(id)
                                     varsByFun[[id]] <<- c(varsByFun[[id]], funName))
               curFuns <<- c(curFuns, funName)
-              funs <<- c(funs, funName)
+              if(!(funName %in% localVars))
+                 funs <<- c(funs, funName)
+             
               popFuns = TRUE
 
              if(funName %in% expressionsFor)
