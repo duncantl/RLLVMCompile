@@ -21,6 +21,9 @@ getGlobals =
     #  ir appears as a global because its is referenced in a function definition
     #  not call.
     #
+    #
+    # skip  is for the names of functions for which we are to ignore calls to these
+    #
 function(f, expressionsFor = character(), localVars = character(),
           skip = c(".R", ".typeInfo", ".signature", ".pragma"))
 {
