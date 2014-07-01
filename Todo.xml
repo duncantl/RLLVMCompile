@@ -9,6 +9,10 @@
 <items>
 
 <item>
+Add a .R() to indicate a callback. Add extra information.
+</item>
+
+<item>
 Rather than copying the result back from Rf_eval(),
 we could implicitly protect it (i.e. the compiled code would add this) and then unprotect it.
 We could identify when the variable is no longer needed
@@ -44,24 +48,23 @@ local function being compiled should be ignored
 Is this really the case? or is it just that we have pi as a constant.
 Yes, this is just pi. But problems with globals.
 </item>
+
 <item>
-[callbacks2.R]
-Named arguments in the call corresponding to local variables, i.e
- foo(1, bob, x = a)
-and we substitute the value of a, but skip  bob.
-Unfortunately, we use codetools::findGlobals() to find
-the globals before we start compiling the code.
-It finds these in the R callbacks as these are regular R expressions.
-So we have to be more specific than findGlobals and basically
-find global variables within each call and then ignore those
-in R callback functions.
-We can also have the caller specify which are R variables and
-exclude those. 
-This is not a bad thing to do as it ensures that the caller knows
-these must be present in the R session. But it would be nicer
-to determine these.
-So we can adapt codetools or write our own walker.
-See explorations/getGlobals.R.
+[callbacks2.R] Named arguments in the call corresponding to local
+variables, i.e foo(1, bob, x = a) and we substitute the value of a,
+but skip bob.  Unfortunately, we use codetools::findGlobals() to find
+the globals before we start compiling the code.  It finds these in the
+R callbacks as these are regular R expressions.  So we have to be more
+specific than findGlobals and basically find global variables within
+each call and then ignore those in R callback functions.  We can also
+have the caller specify which are R variables and exclude those.  This
+is not a bad thing to do as it ensures that the caller knows these
+must be present in the R session. But it would be nicer to determine
+these.  So we can adapt codetools or write our own walker.  See
+R/getGlobals.R.
+<item>
+Don't include code that is a callback to R in the analysis of global variables and functions.
+</item>
 <br/>
 
 </item>
@@ -177,9 +180,6 @@ call or have create_foo_expression deserialize it.
 
 <items>
 
-<item>
-Don't include code that is a callback to R in the analysis of global variables and functions.
-</item>
 
 <item status="high">
 Create a class and constructor to represent the compiler.
@@ -188,9 +188,11 @@ Then allow this to be reused to compile different functions.
 </item>
 
 
-<item>
+<item status="done">
 Function for resetting the compiler to start new Function, new block,
 clear local variables.
+<br/>
+compilerStartFunction
 </item>
 
 <item status="high">
@@ -199,6 +201,8 @@ compile.if (or any other compile method) has made the incrBlock
 the current insertion block. If it has, then createLoopCode  needs to avoid 
 adding the branch instruction. But really, the other methods should try to 
 aoid changing the insertion block except into blocks that they created.
+<br/>
+Same for while that has a break.
 </item>
 
 <item>
@@ -222,6 +226,11 @@ in which we compile it, this code can be in RLLVMCompile itself.
 <title>General</title>
 
 <items>
+
+<item>
+Add .debug(), .assert() to indicate conditional code.
+</item>
+
 <item status="done">
 How to make the global native variable in R R_GlobaEnv
 available to the module.

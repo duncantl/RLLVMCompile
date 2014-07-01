@@ -105,8 +105,14 @@ function(f, expressionsFor = character(), localVars = character())
     # This doesn't catch the case that a function is defined and called before the variable it references in the parent function
     # is defined.
 
-  gvs = sapply(subFunInfo, `[[`, "variables")
-  vars = c(vars, setdiff(unlist(gvs), localVars))
-  list(localVars = localVars, variables = vars, functions = funs, varsByFun = lapply(varsByFun, table), expressions = expressions, subFunctions = subFunInfo)
+  gvs = unlist(sapply(subFunInfo, `[[`, "variables"))
+  i = match(gvs, localVars)
+  vars = c(vars, gvs[is.na(i)])
+  list(localVariables = localVars,
+       variables = vars,
+       functions = funs,
+       variablesByFun = lapply(varsByFun, table),
+       expressions = expressions,
+       subFunctions = subFunInfo)
 }
 

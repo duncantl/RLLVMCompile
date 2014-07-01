@@ -190,32 +190,15 @@ function(env, ir, call, name, globalVarName = NA)
     # The function should have already been declared in callRFunction.
     # But here it is as it used to be:
     #        f = Function(name, VoidType, list(), module = env$.module)
+  compilerStartFunction(env, ir, name, SEXPType)
 
-  f = env$.module[[name]]
-  b = Block(f, "createCallEntry")
-  ir$setInsertBlock(b)
-  env$.localVarTypes = list()
-  env$.returnType = SEXPType
-  env$.fun = f
-  
-  env$.entryBlock = b  # vital to set this so that the local variables go into this block.
-                       # otherwise go into the entry block of the original function being compiled
-                       # Need to generalize, e.g. add a method to the compiler to create a new Function
-  
   compileCreateCall(env, ir, call, globalVarName)
 }
 
 createDeserializeCall =
 function(env, ir, call, name, globalVarName = NA, ...)
 {
-  f = env$.module[[name]]
-#  f = Function(name, SEXPType, list(), module = env$.module)
-  b = Block(f, "createCallEntry")
-  ir$setInsertBlock(b)
-  env$.entryBlock = b 
-  env$.localVarTypes = list()
-  env$.returnType = SEXPType
-  env$.fun = f
+  compilerStartFunction(env, ir, name, SEXPType)    
 
   llvmAddSymbol(getNativeSymbolInfo("R_loadRObjectFromString", "RLLVMCompile"))
 

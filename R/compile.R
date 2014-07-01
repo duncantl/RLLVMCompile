@@ -566,6 +566,28 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 }
 
 
+compilerStartFunction =
+function(env, ir, name, retType, paramTypes = list())
+{
+  if(name %in% names(env$.module))
+      f = env$.module[[name]]
+  else
+      f = Function(name, retType, paramTypes, module = env$.module)
+  
+  b = Block(f, "createCallEntry")
+  ir$setInsertBlock(b)
+  env$.localVarTypes = list()
+  env$.returnType = if(missing(retType)) getReturnType(f)  else retType  # want the user to specify this to be able to distinguish different classes of SEXP types.
+  env$.fun = f
+  
+  env$.entryBlock = b  # vital to set this so that the local variables go into this block.
+                       # otherwise go into the entry block of the original function being compiled
+                       # Need to generalize, e.g. add a method to the compiler to create a new Function
+
+  TRUE
+
+}
+
 
 Rf_routines = c("length")
 RewrittenRoutineNames = c("numeric", "integer", "logical", "character", "list", "double")

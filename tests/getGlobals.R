@@ -11,3 +11,8 @@ function(x)
    a = 10
    z = bar()
 }
+
+
+gv = findGlobals(f)
+unique(gv$variables)
+
