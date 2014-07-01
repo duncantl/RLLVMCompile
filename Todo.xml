@@ -30,6 +30,9 @@ When we use R API routines, add their declarations to the module, e.g. R_CHAR, s
 <item>
 If we enable the execution engine in compileFunction implicitly, i.e. during the compilation,
 can we extract/query it from the Function/module.
+i.e. can we do <r:expr>as(Module, "ExecutionEngine")</r:expr>
+<br/>
+Doesn't seem to be accessible.
 </item>
 
 <item status="done">
@@ -56,12 +59,14 @@ We can also have the caller specify which are R variables and
 exclude those. 
 This is not a bad thing to do as it ensures that the caller knows
 these must be present in the R session. But it would be nicer
-to 
+to determine these.
+So we can adapt codetools or write our own walker.
+See explorations/getGlobals.R.
 <br/>
 
 </item>
 
-<item>
+<item status="done">
 Handle expressions in the call to the R function, e.g. foo(a + 10)
 for local variable a.
 <br/>
@@ -138,8 +143,23 @@ i.e. their R objects, not native versions.
 Do this when inserting the values into the call, both at run-time and when creating the call.
 </item>
 
-<item>
+<item status="done">
 Find way to capture the call at compile time and use it at run-time.
+<br/>
+Multiple ways.
+<ol>
+<li>We serialize the call using RDS, store it as a local variable in a routine we compile
+    and can deserialize by calling that routine.</li>
+<li>One can explicitly set the global variable for the expression from within R
+either by calling the set_foo_expression routine in the module or by setting the global variable in the module.
+To set this, we need the ExecutionEngine. If this is available in the call to <r:func>compileFunction</r:func>,
+we set the expression before returning. This is probably the fastest way to do things as we don't have to deserialize.
+But that is negligible.
+</li>
+<li>There is routine that creates the call. This only works in simple cases, i.e.
+where there are no arguments in the R call that a) we don't supply, and b) that are complex calls.
+In these cases, use either of the other two approaches</li>
+</ol>
 <br/>
 Necessary for complex values that are not local variables.
 (Of course, caller could use a closure and call the target function with local variables.)

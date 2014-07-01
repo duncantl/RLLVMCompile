@@ -453,6 +453,12 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
        .functionInfo[[name]] = list(returnType = returnType, params = types)
 
 
+    block <- Block(llvm.fun, "entry")
+    params <- getParameters(llvm.fun)  # TODO need to load these into nenv
+    ir <- IRBuilder(block)
+
+    nenv = makeCompileEnv()     
+
 #XXX temporary to see if we should declare and load these individually when we encounter them
 # Really need the user to specify the DLL not just the name in case of ambiguities, so often easier to do this separately.
     if(length(.routineInfo))
@@ -472,15 +478,10 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
           .globals$variables = .globals$variables[!i]
        }
 
-#XXX     env is not yet defined. What do we want here?
+#XXX     nenv & ir are not yet defined. What do we want here?
        compileGlobalVariables(.globals$variables, module, nenv, ir)
     }
     
-    block <- Block(llvm.fun, "entry")
-    params <- getParameters(llvm.fun)  # TODO need to load these into nenv
-    ir <- IRBuilder(block)
-
-    nenv = makeCompileEnv()
 
     nenv$.fun = llvm.fun
     nenv$.params = params
@@ -536,8 +537,10 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                 function(x)  {
                    .llvm( module[[x$name]],  x$call, .ee = nenv$.ExecEngine) 
                 })
-#XXX!!!
-#         createDeserializeCall(nenv, ir, nenv$.SetCallFuns[[1]]$call, "deserialize_foo_expression")
+
+          lapply(nenv$.SetCallFuns,
+                 function(x)
+                   createDeserializeCall(nenv, ir, x$call, x$deserializeCallFun))
 
      }
 
