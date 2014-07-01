@@ -25,7 +25,7 @@ getGlobals =
     # skip  is for the names of functions for which we are to ignore calls to these
     #
 function(f, expressionsFor = character(), localVars = character(),
-          skip = c(".R", ".typeInfo", ".signature", ".pragma"))
+          skip = c(".R", ".typeInfo", ".signature", ".pragma"), .ignoreDefaultArgs = FALSE)
 {
   vars = character()
   funs = character()
@@ -52,7 +52,7 @@ function(f, expressionsFor = character(), localVars = character(),
           
            funName = as.character(e[[1]])
           if(funName == "function") {
-             subFunInfo[[length(subFunInfo)+1L]] <<- getGlobals(e, expressionsFor)
+             subFunInfo[[length(subFunInfo)+1L]] <<- getGlobals(e, expressionsFor, skip = skip, .ignoreDefaultArgs = .ignoreDefaultArgs)
           return(TRUE)
           } else if(funName %in% c('<-', '=')) {
              if(is.name(e[[2]]))
@@ -101,7 +101,8 @@ function(f, expressionsFor = character(), localVars = character(),
 
   if(typeof(f) == "closure") {
       localVars = names(formals(f))
-      lapply(formals(f), fun, fun)
+      if(!.ignoreDefaultArgs)
+         lapply(formals(f), fun, fun)
       f = body(f)
   } 
   
