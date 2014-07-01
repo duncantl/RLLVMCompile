@@ -8,6 +8,6 @@ License: BSD_3_clause + file LICENSE
 Comment: Need to depend on Rllvm as variables such as Int32Type are defined at load time, not in the code
          for the package directly.
 Depends: Rllvm
-Imports: codetools
+Imports: methods
 xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R 
 

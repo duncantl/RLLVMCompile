@@ -9,21 +9,30 @@
 <items>
 
 <item>
+When we can determine that we cannot create the R call object
+using create_foo_expression, don't compile that routine.
+Also, allow caller to turn this off with an option.
+</item>
+
+<item>
 What if we have 
 <r:code>
 function(x)
    .R(foo(a + x), ...)
 </r:code>
-Do we substitute the value of x into the expression before calling back to R.
+Do we substitute the value of x into the expression before calling back to R?
+<br/>
+Global variables are simply bad. So do we want to support them at all?
+It is complicated to walk this expression.
 </item>
 
-<item>
+<item status="test">
 Handle .typeInfo() in getGlobals and ignore.
 This also means using getGlobals rather than findGlobals().
 And this involves getting the names of the R callable functions, updating them, and so on.
 </item>
 
-<item>
+<item status="test">
 Add a .R() to indicate a callback. Add extra information.
 See explorations/dotRCallback.R
 </item>
@@ -43,7 +52,7 @@ Figure out why conCall doesn't give much speed.
 Fix while loop in conCall.R and then it might work.
 </item>
 
-<item>
+<item status="verify">
 When we use R API routines, add their declarations to the module, e.g. R_CHAR, strdup.
 </item>
 
@@ -65,7 +74,7 @@ Is this really the case? or is it just that we have pi as a constant.
 Yes, this is just pi. But problems with globals.
 </item>
 
-<item>
+<item status="verify">
 [callbacks2.R] Named arguments in the call corresponding to local
 variables, i.e foo(1, bob, x = a) and we substitute the value of a,
 but skip bob.  Unfortunately, we use codetools::findGlobals() to find

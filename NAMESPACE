@@ -4,7 +4,8 @@
 useDynLib(RLLVMCompile)
 
 import(Rllvm)
-import(codetools)
+import(methods)
+#import(codetools)
 
 export(compileFunction) #, compile)
 export(getCompilerHandlers)
