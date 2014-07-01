@@ -1,6 +1,27 @@
 <changelog>
 <version>
 <change>
+Added .varDecl() for declaring variable types. This can be of the form
+<r:expr>.varDecl(x = type, y = type)</r:expr>. This is different from the
+<r:func>.typeInfo</r:func>/<r:func>.typeInfo</r:func>
+</change>
+<change>
+Added <r:func>.typeInfo</r:func> and <r:func>.signature</r:func> for specifying type information for a function. Currently, it has to be the first
+expression in the body of the function.
+</change>
+<change>
+Extensive additions for calling back to R from within the compiled code.
+</change>
+<change>
+Basic subsetting for matrices, data frames.
+</change>
+<change>
+DataFrameType,  MatrixType and ArrayType type classes for dimensioned types.
+</change>
+<change>
+Fixes for if expressions within loops (for and while) and how to find the next block.
+</change>
+<change>
 Many tests/examples in tests/
 </change>
 </version>

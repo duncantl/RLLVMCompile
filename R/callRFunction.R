@@ -5,6 +5,13 @@ function(call, env, ir, ...)
 
    funTypes = env$.CallableRFunctions[[funName]]
 
+   if(funName == ".R") {
+       if(length(call[[1]]) > 1)
+          funTypes = call[[2]]
+       call = call[[1]]
+    } 
+
+
    # We have the call to the R function. But we need to match the arguments.
    # We have to convert regular objects to R objects. However, when we have a SEXPType
    # that hasn't been updated within the routine, we can pass this directly.

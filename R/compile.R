@@ -403,8 +403,16 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
      
     args <- formals(fun) # for checking against types; TODO
 
-    if(length(args)  > length(types))
+    if(length(types) == 0 && length(args) > 0) {
+        browser()
+        types = getTypeInfo(fun)
+        returnType = types[[1]]
+        types =  types[[2]]
+    }
+     
+    if(length(args)  > length(types)) {
        stop("need to specify the types for all of the arguments for the ", name, " function")
+    }
 
     if(length(names(types)) == 0)
       names(types) = names(args)
@@ -618,7 +626,6 @@ function()
         TRUE
    }
 
-   
    nenv
 }
 
@@ -764,7 +771,9 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         "repeat", "(", "!", "^", "$", "$<-",
                         "sapply", "lapply",
                         "printf",
-                        "break"
+                        "break",
+                        ".R", ".typeInfo", ".signature", ".varDecl", ".pragma"
+    
                        )  # for now
 
 
@@ -852,3 +861,38 @@ function(varNames, mod, env, ir,
 #
    #XX create variables for the mutable ones.
 }
+
+
+getTypeInfo =
+function(fun)
+{
+  b = body(fun)
+  if(is(b, "{"))
+      e = b[[2]]
+  else
+      e = b
+
+  if(is.call(e) && as.character(e[[1]]) == ".typeInfo")
+      eval(e) # , globalenv())
+  else
+      stop("no .typeInfo() call")
+}
+
+.typeInfo = .signature =
+    # We might process this as a unlisted collection and regroup them into list(returnType = ,  params = )
+function(..., .types = list(...))
+{
+  i = sapply(.types, function(x) is(x, "externalptr") || is(x, "Type"))
+
+  if(all(i))
+      .types = list(.types[[1]], .types[-1])
+  else
+      .types
+}
+
+.varDecl =
+function(..., .types = list(...))
+{
+  .types
+}
+

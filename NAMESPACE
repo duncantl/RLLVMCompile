@@ -55,3 +55,6 @@ export(STRSXP, LGLSXP, REALSXP, INTSXP, CPLXSXP, ANYSXP, CHARSXP, LANGSXP, SYMSX
 
 
 export(loadRObjectFromString)
+
+
+export(BasicCompiler)

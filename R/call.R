@@ -17,10 +17,13 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
      call[[1]] = as.name(funName <- "Rf_allocVector")     
    } else if(funName == "$") {
       return(env$.compilerHandlers[["$"]](call, env, ir, ...))
-   }
-
-
-    if(as.character(call[[1]]) %in% names(env$.CallableRFunctions)) {
+   } else if(funName %in% c(".typeInfo", ".signature")) {
+      return(TRUE)  # we already need to have the type information to create the Function(), so this is a No-Op
+   } else if(funName == ".varDecl") {
+       vars = eval(call)
+       env$.localVarTypes[names(vars)] = vars
+       return(TRUE)
+   } else if(funName == ".R" || funName %in% names(env$.CallableRFunctions)) {
        return(callRFunction(call, env, ir, ...))
     }
 

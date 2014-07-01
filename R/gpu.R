@@ -63,7 +63,7 @@ PTXRegisterRoutineNames =
 
 GPUIntrinsicNames = c("blockIdx", "blockDim", "threadIdx", "gridDim")
    # Need to make this an argument to compileFunction() so that we can adapt it.
-ExcludeGlobalVariables = GPUIntrinsicNames
+ExcludeGlobalVariables = c(GPUIntrinsicNames, "SEXPType", "Int32Type", "DoubleType", "LGLSXPType", "INTSXPType", "REALSXPType", "STRSXPType", "VECSXPType")
 
 
 getGPUBuiltInRoutines = getBuiltInRoutines
