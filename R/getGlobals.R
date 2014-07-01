@@ -24,8 +24,8 @@ getGlobals =
     #
     # skip  is for the names of functions for which we are to ignore calls to these
     #
-function(f, expressionsFor = character(), localVars = character(),
-          skip = c(".R", ".typeInfo", ".signature", ".pragma"), .ignoreDefaultArgs = FALSE)
+function(f, expressionsFor = character(), .ignoreDefaultArgs = FALSE, localVars = character(),
+          skip = c(".R", ".typeInfo", ".signature", ".pragma"))
 {
   vars = character()
   funs = character()
@@ -36,6 +36,8 @@ function(f, expressionsFor = character(), localVars = character(),
 
   subFunInfo = list()
 
+  skippedExpressions = list()
+  
   addFunName = function(id) {
                    funs <<- c(funs, as.character(id))
                }
@@ -58,8 +60,12 @@ function(f, expressionsFor = character(), localVars = character(),
              if(is.name(e[[2]]))
                 localVars <<- c(localVars, as.character(e[[2]]))
           } else {
-             if(funName %in% skip)
+             if(funName %in% skip) {
+                 i = length(skippedExpressions) + 1L
+                 skippedExpressions[[ i ]] <<- e
+                 names(skippedExpressions)[i] <<- funName
                  return(TRUE)
+             }
               
              if(length(curFuns))
                  sapply(curFuns, function(id)
@@ -123,6 +129,7 @@ function(f, expressionsFor = character(), localVars = character(),
        functions = funs,
        variablesByFun = lapply(varsByFun, table),
        expressions = expressions,
-       subFunctions = subFunInfo)
+       subFunctions = subFunInfo,
+       skippedExpressions = skippedExpressions)
 }
 

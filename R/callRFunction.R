@@ -6,9 +6,9 @@ function(call, env, ir, ...)
    funTypes = env$.CallableRFunctions[[funName]]
 
    if(funName == ".R") {
-       if(length(call[[1]]) > 1)
-          funTypes = call[[2]]
-       call = call[[1]]
+       if(length(call) > 1)
+          funTypes = eval(call[[3]])
+       call = call[[2]]
     } 
 
 

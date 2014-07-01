@@ -9,6 +9,15 @@
 <items>
 
 <item>
+What if we have 
+<r:code>
+function(x)
+   .R(foo(a + x), ...)
+</r:code>
+Do we substitute the value of x into the expression before calling back to R.
+</item>
+
+<item>
 Handle .typeInfo() in getGlobals and ignore.
 This also means using getGlobals rather than findGlobals().
 And this involves getting the names of the R callable functions, updating them, and so on.

@@ -1,5 +1,6 @@
 library(RLLVMCompile)
 
+a = 1L
 foo =
 function(i, j)
 {

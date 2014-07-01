@@ -1,6 +1,10 @@
 <changelog>
 <version>
 <change>
+<r:expr>.R(expr, list(retType, list(type, type)))</r:expr> now works.
+See explorations/dotRCallback.R
+</change>
+<change>
 Added .varDecl() for declaring variable types. This can be of the form
 <r:expr>.varDecl(x = type, y = type)</r:expr>. This is different from the
 <r:func>.typeInfo</r:func>/<r:func>.typeInfo</r:func>

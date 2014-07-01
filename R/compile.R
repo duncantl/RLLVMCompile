@@ -366,14 +366,15 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .functionInfo = list(...),
          .routineInfo = list(),
          .compilerHandlers = getCompilerHandlers(),
-         .globals = findGlobals(fun, merge = FALSE, .ignoreDefaultArgs), #  would like to avoid processing default arguments.
+         .globals =  getGlobals(fun, names(.CallableRFunctions), .ignoreDefaultArgs), #  would like to avoid processing default arguments.
+                                 # findGlobals(fun, merge = FALSE, .ignoreDefaultArgs), 
          .insertReturn = !identical(returnType, VoidType),
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
          .localVarTypes = list(), .fixIfAssign = TRUE,
-         .CallableRFunctions = list(), .ee = NULL,
+         .CallableRFunctions = list(), 
          .RGlobalVariables = character())
 {
    if(missing(name))
@@ -382,8 +383,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
   if(!missing(types) && !is.list(types))
     types = structure(list(types), names = names(formals(fun))[1])
 
-  if(is.logical(.ee) && .ee)
-      .ee = ExecutionEngine(module)
+  if(is.logical(.execEngine) && .execEngine)
+      .execEngine = ExecutionEngine(module)
       
    
    if(.fixIfAssign)
@@ -444,6 +445,18 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, module)
 
+      # if we picked up any .R() expressions in the function, add the resulting types
+      # to the .CallableRFunctions.
+    if(length(.globals$skippedExpressions) &&
+                (i <- names(.globals$skippedExpressions) == ".R")) {
+        
+        z = structure(lapply(.globals$skippedExpressions[i],
+                               function(x)
+                                  eval(x[[3]])),
+                       names = sapply(.globals$skippedExpressions[i], function(x) as.character(x[[2]][[1]]))) # have to deal with obj$f() in x[[2]][1]]
+        .CallableRFunctions = c(.CallableRFunctions, z)
+    }
+        
     
     if(any(.globals$functions %in% names(.builtInRoutines))) {
        i = match(.globals$functions, names(.builtInRoutines), 0)
@@ -514,7 +527,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     nenv$.CallableRFunctions = .CallableRFunctions
 
-    nenv$.ExecEngine = .ee
+    nenv$.ExecEngine = .execEngine
     nenv$.SetCallFuns = list()
 
     if(.insertReturn)
@@ -816,8 +829,8 @@ function(fun, compiledFun, .vectorize = character(),  .execEngine = NULL, .lengt
   e$.fun = compiledFun
   e$.irCode = showModule(compiledFun, TRUE)
   
-  if(is.null(.execEngine))
-    .execEngine = ExecutionEngine(as(compiledFun, "Module"))
+  if(is.null(.execEngine))  
+    .execEngine = ExecutionEngine(as(compiledFun, "Module"))  # evaluate this now or quote it.
   
   args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
   k = call('.llvm')
