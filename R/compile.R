@@ -366,7 +366,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .functionInfo = list(...),
          .routineInfo = list(),
          .compilerHandlers = getCompilerHandlers(),
-         .globals =  getGlobals(fun, names(.CallableRFunctions), .ignoreDefaultArgs), #  would like to avoid processing default arguments.
+         .globals =  getGlobals(fun, names(.CallableRFunctions), .ignoreDefaultArgs, .assert = .assert, .debug = .debug), #  would like to avoid processing default arguments.
                                  # findGlobals(fun, merge = FALSE, .ignoreDefaultArgs), 
          .insertReturn = !identical(returnType, VoidType),
          .builtInRoutines = getBuiltInRoutines(),
@@ -375,7 +375,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
          .localVarTypes = list(), .fixIfAssign = TRUE,
          .CallableRFunctions = list(), 
-         .RGlobalVariables = character())
+         .RGlobalVariables = character(),
+         .debug = TRUE, .assert = TRUE)
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -522,6 +523,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.localVarTypes = .localVarTypes
 
     nenv$.useFloat = .useFloat
+    nenv$.debug = .debug
+    nenv$.assert = .assert
 
     nenv$.dimensionedTypes = dimTypes
 
@@ -763,7 +766,9 @@ function(..., env = NULL, useFloat = FALSE)
        strdup = list(StringType, StringType),
        R_CHAR = list(StringType, SEXPType),
 
-       R_loadRObjectFromString = list(SEXPType, StringType)
+       R_loadRObjectFromString = list(SEXPType, StringType),
+
+       Rf_error = list(VoidType, StringType, "..." = TRUE)
   
 
      
@@ -785,7 +790,8 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         "sapply", "lapply",
                         "printf",
                         "break",
-                        ".R", ".typeInfo", ".signature", ".varDecl", ".pragma"
+                        ".R", ".typeInfo", ".signature", ".varDecl", ".pragma",
+                        ".assert", ".debug"
     
                        )  # for now
 

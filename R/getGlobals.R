@@ -25,7 +25,9 @@ getGlobals =
     # skip  is for the names of functions for which we are to ignore calls to these
     #
 function(f, expressionsFor = character(), .ignoreDefaultArgs = FALSE, localVars = character(),
-          skip = c(".R", ".typeInfo", ".signature", ".pragma"))
+          skip = c(".R", ".typeInfo", ".signature", ".pragma",
+                     if(.debug) ".debug", if(.assert) ".assert"),
+                    .debug = TRUE, .assert = TRUE)
 {
   vars = character()
   funs = character()
