@@ -25,6 +25,16 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
        return(TRUE)
    } else if(funName == ".R" || funName %in% names(env$.CallableRFunctions)) {
        return(callRFunction(call, env, ir, ...))
+    } else if(funName == ".debug") {
+         if(!env$.debug)
+           return(FALSE)
+         call = call[[2]]
+         funName = as.character(call[[1]])
+    } else if(funName == ".assert") {
+         if(!env$.assert)
+           return(FALSE)
+         call = substitute(if(! cond) Rf_error(msg), list(cond = call[[2]], msg = sprintf("%s assertion not satisfied", paste(deparse(call[[2]]), collapse = " "))))
+         return(compile(call, env, ir, ...))
     }
 
    
@@ -61,7 +71,22 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
      #??? Need to get the types of parameters and coerce them to these types.
      # Can we pass this to compile and have that do the coercion as necessary
 
-   targetTypes = getParamTypes(call[[1]], env)
+   targetTypes = getParamTypes(call[[1]], env, TRUE)
+
+     # if we have a mismatch between the length of targetTypes and call (w/o the function name)
+     # we either have ... or an error.
+   if(length(targetTypes) < (length(call) - 1L)) {
+
+       if(isVarArg(ofun)) {
+             # targetTyps has a TRUE in it
+          d = (length(call) -1L) -  length(targetTypes)
+          targetTypes[ seq(1, d) + length(targetTypes) ] = replicate(d, NULL, simplify = FALSE)
+       } else {
+          msg = paste("incorrect number of parameter types for call to ", as.character(call[[1]]), ". Expected ", length(targetTypes), " had ", length(call)-1L, sep = "")
+          err = structure(c(simpleCondition(msg), compileCall = call, paramTypes = targetTypes, func = funName), class = c("WrongNumArgs", "UserError", "CompilerError", "error", "condition"))
+          stop(err)
+       }
+   }
    args = mapply(function(e, ty)
                    compile(e, env, ir, ..., .targetType = ty),  # ... and fun, name,
                  as.list(call[-1]), targetTypes)
@@ -128,12 +153,17 @@ getParamTypes =
     # Have to be careful this is not called for an R function.
     # if it is, we have the type information in .CallableRFunctions
     
-function(name, env)
+function(name, env, discardVarArgs = FALSE)
 {
    f = env$.builtInRoutines[[ as.character(name) ]]
-   if(!is.null(f))
-      return(f[-1])
-
-   f = env$.module[[ as.character(name) ]]
-   lapply(getParameters(f), Rllvm::getType)
+   if(is.null(f)) {
+      f = env$.module[[ as.character(name) ]]
+      ans = lapply(getParameters(f), Rllvm::getType)
+   } else
+      ans = f[-1]
+   
+   if(discardVarArgs && !is.na((i <- match("...", names(ans)))))
+       ans[ - i]
+   else
+       ans
 }
