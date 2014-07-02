@@ -9,8 +9,7 @@ function(call, env, ir, ...)
        if(length(call) > 1)
           funTypes = eval(call[[3]])
        call = call[[2]]
-    } 
-
+    }
 
    # We have the call to the R function. But we need to match the arguments.
    # We have to convert regular objects to R objects. However, when we have a SEXPType
