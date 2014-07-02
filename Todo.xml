@@ -264,6 +264,28 @@ Add an option to perform/eliminate bounds checking on arrays, nrow, ncol, etc.
 <item>
 Add .debug(), .assert() to indicate conditional code.
 </item>
+<item>
+support testthat and stopifnot and so on for assertions.
+</item>
+<item>
+supress the warning message in callHandler when we invoke mapply()
+but the number of targetTypes is less than the number of elements in the call.
+This happens, for example, in a varargs routine, e.g. 
+<r:expr>printf("x = %d, y = %d\n", x, y)</r:expr>
+where we have x and y w/o type information.
+</item>
+
+<item>
+Add structured errors to the compiler to identify user errors, compiler errors.
+<br/>
+See call.R@86 and WrongNumArgs error.
+</item>
+
+<item>
+Raise richer exceptions in the run-time code. Provide a mechanism to specify the classes to raise.
+Use stop() or Stop() if not compatible
+</item>
+
 
 <item status="done">
 How to make the global native variable in R R_GlobaEnv
