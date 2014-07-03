@@ -30,11 +30,33 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
            return(FALSE)
          call = call[[2]]
          funName = as.character(call[[1]])
-    } else if(funName == ".assert") {
-         if(!env$.assert)
-           return(FALSE)
-         call = substitute(if(! cond) Rf_error(msg), list(cond = call[[2]], msg = sprintf("%s assertion not satisfied", paste(deparse(call[[2]]), collapse = " "))))
+    } else if(length(env$.assertFunctions) && funName %in%  env$.assertFunctions) {
+          # Add support for structured errors in assertions.
+         if("class" %in% names(call)) {
+             classes = call[["class"]]
+             if(!is.character(classes))
+                classes = as.character(classes[-1])  # not evaluating these
+             call = substitute(if(! cond) R_va_raiseStructuredError(msg, nclass),
+                                 list(cond = call[[2]], nclass = length(classes),
+                                      msg = sprintf("%s assertion not satisfied", paste(deparse(call[[2]]), collapse = " "))))
+            call[[3]][3 + seq(along = classes)] = classes
+            llvmAddSymbol(getNativeSymbolInfo("R_va_raiseStructuredError", "RLLVMCompile"))
+         } else
+            call = substitute(if(! cond) Rf_error(msg), list(cond = call[[2]], msg = sprintf("%s assertion not satisfied", paste(deparse(call[[2]]), collapse = " "))))
          return(compile(call, env, ir, ...))
+    } else if (funName == "stop") {
+        classes = character()
+        if("class" %in% names(call)) {
+             classes = call[["class"]]
+             if(!is.character(classes))        
+                   classes = as.character(classes[-1])  # not evaluating these
+        }
+        msg = call[[2]]
+        err = substitute(R_va_raiseStructuredError(msg, nclass), list(msg = msg, nclass = length(classes)))
+        err[3 + seq(along = classes)] = classes
+        llvmAddSymbol(getNativeSymbolInfo("R_va_raiseStructuredError", "RLLVMCompile"))        
+
+        return(compile(err, env, ir, ...))        
     }
 
    
