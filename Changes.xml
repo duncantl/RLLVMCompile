@@ -1,8 +1,38 @@
 <changelog>
 <version>
 <change>
+<r:pkg>CodeAnalysis</r:pkg> package on github.com:duncantl/CodeAnalysis.
+</change>
+<change>
+<r:func>getGlobals</r:func> also recognizes degenerate <r:expr>if(TRUE/FALSE)</r:expr>
+conditions and does not process unreachable code.
+</change>
+<change>
+Compiling <r:expr>if(cond)</r:expr>, we identify degenerate cases where the condition
+is known at compile time, i.e. TRUE or FALSE literals.
+</change>
+<change>
+<r:func>stop</r:func> and <r:func>.assert</r:func> (or any other name for an assertion call)
+can support a <r:expr>class = value</r:expr> argument and the value can be a string
+or a vector of strings specifying the class names for the condition that will be raised.
+This will hopefully support raising errors which we can differentiate between 
+based on their classes using <r:func>tryCatch</r:func>.
+The <r:func>stop</r:func> and <r:func>.assert</r:func>function in the package supports the <r:arg>class</r:arg> argument also
+to allow the code to work in <r/>.
+</change>
+<change>
+Support for <r:func>.debug</r:func> and <r:func>.assert</r:func> and
+other names for assert functions (e.g. <r:func>asser_that</r:func>, <r:func>assertthat</r:func>)
+</change>
+<change>
+Basic support for <r:func>stop</r:func> in compiled code. Currently, the message is a fixed 
+string. (This is easy to relax, just not done yet.)
+</change>
+<change>
 <r:expr>.R(expr, list(retType, list(type, type)))</r:expr> now works.
-See explorations/dotRCallback.R
+See explorations/dotRCallback.R.
+.R() avoids having to specify the types in the call to <r:func>compileFunction</r:func>
+via the <r:arg>.CallableRFunctions</r:arg>.
 </change>
 <change>
 Added .varDecl() for declaring variable types. This can be of the form

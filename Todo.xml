@@ -5,6 +5,79 @@
 
 
 <topic>
+<title>Compilation Strategies</title>
+<items>
+
+<item>
+If a function doesn't modify an input, pass by reference.
+</item>
+
+<item>
+Deal with closures within a function. Create global variables in the module ?
+</item>
+
+<item>
+Compile closures with shared state. See R/compileClosures.R
+Use RCIndex collectors as examples, or SAX handlers.
+First compile  the functions, ignoring the global variables and get
+them to work.
+Use clone() to copy the module for a new instance. In other words,
+the call to the generator function is just a call to clone of the
+routines.
+</item>
+
+</items>
+</topic>
+
+<topic>
+<title>Code Analysis</title>
+<items>
+<item status="note">
+Started <r:pkg>CodeAnalysis</r:pkg> package. On github too.
+</item>
+
+<item status="note">
+<r:code>
+library(CodeDepends)
+library(RLLVMCompile)
+sc = new("Script", as.list(body(compileFunction)))
+inputs = getInputs(sc)
+</r:code>
+There are 8 expressions in the function and inputs has 8 elements.
+Problems with this. Need to explore and fix CodeDepends for functions
+and in-memory expressions/calls rather than from scripts.
+Need to turn the expressions into a Script object with new("Script", body(fun))
+</item>
+
+<item>
+See constInputs in CodeAnalysis.
+<br/>
+Identify which inputs/parameters a function doesn't modify.
+Can CodeDepends do this for us?
+Yes. See explorations/deadVariables.R
+<r:code>
+sc = readScript("explorations/script.R")
+inp = getInputs(sc)
+any(sapply(inp, function(node) "x" %in% node@updates)) # true
+any(sapply(inp, function(node) "z" %in% node@updates)) # false
+</r:code>
+</item>
+
+<item>
+Recognize/identify idioms of the form
+<r:code>
+ x = c()
+ for(i in z) 
+    x = c(x, f(i))
+</r:code>
+The key is the declaration of an empty vector and then
+concatenating it with a single value.
+</item>
+
+</items>
+</topic>
+
+<topic>
 <title>Callbacks to R</title>
 <items>
 
@@ -23,7 +96,8 @@ function(x)
 Do we substitute the value of x into the expression before calling back to R?
 <br/>
 Global variables are simply bad. So do we want to support them at all?
-It is complicated to walk this expression.
+It is complicated to walk this expression generally at run-time, i.e. in our compiled code.
+(This example is reasonably simple, of course, but generally.)
 </item>
 
 <item status="test">
@@ -206,6 +280,13 @@ call or have create_foo_expression deserialize it.
 <items>
 
 
+<item>
+Consolidate the code in compile.= and call.R for numeric(), etc.
+and the isPrimitiveConstructor() and compilePrimitiveConstructor()
+and how we rewrite to do the Rf_allocVector in call.R
+</item>
+
+
 <item status="high">
 Create a class and constructor to represent the compiler.
 (Maybe a reference class).
@@ -233,6 +314,10 @@ Same for while that has a break.
 <item>
 Really want to be able to distinguish between REALSXPType and INTSXPType, etc.
 i.e. not all just SEXPType and same pointer.
+<br/>
+Sort out a mechanism for dealing with more specific SEXP types
+and not matching the types when calling functions with more
+specific types.
 </item>
 
 
@@ -261,13 +346,15 @@ We could do this by rewriting to add the <r:expr>if(missing(x)) x = expr</r:expr
 Add an option to perform/eliminate bounds checking on arrays, nrow, ncol, etc.
 </item>
 
-<item>
+<item status="done">
 Add .debug(), .assert() to indicate conditional code.
 </item>
+
 <item>
 support testthat and stopifnot and so on for assertions.
 </item>
-<item>
+
+<item status="done">
 supress the warning message in callHandler when we invoke mapply()
 but the number of targetTypes is less than the number of elements in the call.
 This happens, for example, in a varargs routine, e.g. 
@@ -281,9 +368,20 @@ Add structured errors to the compiler to identify user errors, compiler errors.
 See call.R@86 and WrongNumArgs error.
 </item>
 
-<item>
+<item status="done">
+For .assert() and friends, allow a class = c("a", "b")
+and then call R_raiseStructuredError().
+Need to figure out how to create an array of strings as a global variable.
+See err.cpp and the C++ code LLVM generates to do this.
+For now, use va_arg.
+<br/>
+See tests/structuredAssert.R.
+</item>
+
+<item status="done">
 Raise richer exceptions in the run-time code. Provide a mechanism to specify the classes to raise.
-Use stop() or Stop() if not compatible
+Use stop() or Stop() if not compatible.
+See tests/structuredStop.R
 </item>
 
 
@@ -308,10 +406,10 @@ We should put the type information here.
 Then we'd have to add, say, a .targetType parameter to each.
 </item>
 
-
-
-<item>
+<item status="low">
 Generate error or warning when use a wrong variable.
+This is not possible, in general.
+<br/>
 If we change r_ans to rans in callRFunction.R on the LHS of the Rf_eval,
 then we just get the wrong answer.
 It is legitimate as we created the local variable (why did we need it?)
@@ -443,6 +541,10 @@ Compute the REAL(x) pointer just once for a matrix.
 See matrixElAssign.Rdb.
 Similarly, compute Rf_nrow(), etc. just once.
 But detect if the value could change.
+<br/>
+When we have a REALSXPType and access its elements,
+create a local variable and initialize it with a call to REAL().
+Then use that in place of the REALSXPType variable.
 </item>
 
 <item status="high">
@@ -571,32 +673,6 @@ Could be smarter about this. Currently doing it for ever variable.
 But only needs to be done for a  loop.
 </item>
 
-<item>
-When we have a REALSXPType and access its elements,
-create a local variable and initialize it with a call to REAL().
-Then use that in place of the REALSXPType variable.
-</item>
-
-<item>
-Compile closures with shared state. See R/compileClosures.R
-Use RCIndex collectors as examples, or SAX handlers.
-First compile  the functions, ignoring the global variables and get
-them to work.
-Use clone() to copy the module for a new instance. In other words,
-the call to the generator function is just a call to clone of the
-routines.
-</item>
-
-<item>
-Recognize/identify idioms of the form
-<r:code>
- x = c()
- for(i in z) 
-    x = c(x, f(i))
-</r:code>
-The key is the declaration of an empty vector and then
-concatenating it with a single value.
-</item>
 
 <item>
 Problem with  looping from 1:n and subsetting using i - 1L.
@@ -617,15 +693,6 @@ when assigning to the LHS.
 Get the numeric() example in tests/numeric.R  working.
 </item>
 
-<item>
-Consolidate the code in compile.= and call.R for numeric(), etc.
-and the isPrimitiveConstructor() and compilePrimitiveConstructor()
-and how we rewrite to do the Rf_allocVector in call.R
-</item>
-
-<item>
-Deal with closures within a function. Create global variables in the module ?
-</item>
 
 <item>
 Recognize x[i] for a SEXPType and change this to be work on x.els and 
@@ -644,10 +711,14 @@ Interaction issue here as subsetting subtracts off the 1 which may be necessary 
 since not always in a loop.
 </item>
 
-<item>
+<item status="check">
 recognize function names in calls to sapply.
 It would be okay if we rewrote the sapply() calls before determining
 the global variables.
+<br/>
+Does getGlobals() get this right?
+This note was from before getGlobals() was in use, but instead codetools::findGlobals().
+But I think that got it right as being a global function.
 </item>
 
 <item>
@@ -684,11 +755,8 @@ e.g. STRING_ELT(a, 0) and STRING_ELT(a, 0L). The latter works, but the former do
 [*] Implement assignment to accessor for a STRSXP. assignToSEXPElement
 See tests/SEXPStringSubset.R
 </item>
-<item>
-Sort out a mechanism for dealing with more specific SEXP types
-and not matching the types when calling functions with more
-specific types.
-</item>
+
+
 
 <item status="done">
 Can't add x[1] + 20L when passing in an INTSXPType.
