@@ -381,6 +381,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
    if(missing(name))
      name = deparse(substitute(fun))
 
+   if(is.logical(.assert))
+       .assert = if(.assert) ".assert" else character()
+
   if(!missing(types) && !is.list(types))
     types = structure(list(types), names = names(formals(fun))[1])
 
@@ -406,7 +409,6 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     args <- formals(fun) # for checking against types; TODO
 
     if(length(types) == 0 && length(args) > 0) {
-        browser()
         types = getTypeInfo(fun)
         returnType = types[[1]]
         types =  types[[2]]
@@ -524,7 +526,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     nenv$.useFloat = .useFloat
     nenv$.debug = .debug
-    nenv$.assert = .assert
+    nenv$.assertFunctions = .assert
 
     nenv$.dimensionedTypes = dimTypes
 
@@ -768,11 +770,10 @@ function(..., env = NULL, useFloat = FALSE)
 
        R_loadRObjectFromString = list(SEXPType, StringType),
 
-       Rf_error = list(VoidType, StringType, "..." = TRUE)
-  
-
-     
-      )
+       Rf_error = list(VoidType, StringType, "..." = TRUE),
+       R_raiseStructuredError = list(VoidType, StringType, pointerType(StringType), Int32Type),
+       R_va_raiseStructuredError = list(VoidType, StringType, Int32Type, "..." = TRUE)     
+     )
 
   ans[names(basic)] = basic
 
@@ -791,7 +792,8 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         "printf",
                         "break",
                         ".R", ".typeInfo", ".signature", ".varDecl", ".pragma",
-                        ".assert", ".debug"
+                        ".assert", ".debug",
+                        "stop"
     
                        )  # for now
 
