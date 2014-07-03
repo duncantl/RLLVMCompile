@@ -44,7 +44,7 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
       # if we have a dimensioned object, then, for now, we find how to access
       # the elements (e.g. REAL, INTEGER) in a different way.
    dimensioned = FALSE
-   if(length(call) > 2 && varName %in% ls(env$.dimensionedTypes)) {
+   if(length(call) > 2 && varName %in% names(env$.dimensionedTypes)) {
       dimType = env$.dimensionedTypes[[varName]]
       r = getSEXPTypeElementAccessor(dimType@elType, env)
       dimensioned = TRUE
@@ -66,7 +66,7 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
     call[-(1:2)] = lapply(call[-(1:2)], function(x) if(is.numeric(x) && x == as.integer(x)) as.integer(x) else x)
    
 
-   if(length(call) > 2) {
+   if(length(call) > 3) {
       i = createMultiDimGEPIndex(call, env, ir, ...)
    } else {
       i = compile(subtractOne(call[[3]]), env, ir)

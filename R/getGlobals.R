@@ -65,6 +65,11 @@ function(f, expressionsFor = character(), .ignoreDefaultArgs = FALSE, localVars 
               e = e[[3]]
               
       }  # fall through
+
+      if(class(e) == "for") 
+          localVars <<- c(localVars, as.character(e[[2]]))
+
+          
       
       if(is.call(e)) {
            if(is.call(e[[1]]))  # e.g. x$bob()

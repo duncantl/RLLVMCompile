@@ -1,21 +1,19 @@
 library(RLLVMCompile)
-INTSXPType = getSEXPType("INT")
-REALSXPType = getSEXPType("REAL")
-
 
 # Simple test that returns nothing
 f = function(x) { x[2L] = 10L }
 fc = compileFunction(f, VoidType, list(INTSXPType))
-.llvm(fc, 1:3)
+.llvm(fc, 1:3, .all = TRUE)
+
 
 f =
 function(x)
 {
-   x[1] = 20L # XX shouldn't need the L. Check if casting is automatic
+   x[1] = 20 # don't need the L. Check if casting is automatic
    x
 }
 fc = compileFunction(f, INTSXPType, list(INTSXPType))
-.llvm(fc, 1:3)
+.llvm(fc, 1:3, .all = TRUE)
 
 ###### REAL()
 
