@@ -4,7 +4,20 @@ compile.if = ifHandler =
   #
 function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
 {
+      # check for simple degenerate cases of if(FALSE) or if(TRUE) and don't compile the relevant pieces.
+    e = call
+    if(e[[2]] == TRUE) {
+        val = compile(e[[3]], env, ir, ...) 
+        return( val  )
+    } else if(e[[2]] == FALSE) {
+        if(length(e) == 3)
+            return(NULL)
+        else
+        return( compile(e[[4]], env, ir, ...) )
+    }
 
+
+    
    # This is not elegant, but brute force.
    # We basically create blocks for each of the if conditions
    # and blocks for each of the bodies, including a trailing else-clause

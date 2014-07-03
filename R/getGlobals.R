@@ -25,10 +25,16 @@ getGlobals =
     # skip  is for the names of functions for which we are to ignore calls to these
     #
 function(f, expressionsFor = character(), .ignoreDefaultArgs = FALSE, localVars = character(),
-          skip = c(".R", ".typeInfo", ".signature", ".pragma",
-                     if(.debug) ".debug", if(.assert) ".assert"),
-                    .debug = TRUE, .assert = TRUE)
+          skip = c(".R", ".typeInfo", ".signature", ".pragma"), .debug = TRUE, .assert = TRUE)
 {
+
+  if(is.logical(.debug))
+      .debug = if(.debug) ".debug" else character()
+  if(is.logical(.assert))
+      .assert = if(.assert) ".assert" else character()  
+
+  skip = c(skip, .debug, .assert)
+    
   vars = character()
   funs = character()
   varsByFun = list()
@@ -49,6 +55,17 @@ function(f, expressionsFor = character(), .ignoreDefaultArgs = FALSE, localVars 
       if(is.name(e) && as.character(e) == "")  # typically a formal argument that has no default value.
           return(FALSE)
 
+      if(is(e, "if")) {
+          if(e[[2]] == FALSE) {
+              if(length(e) == 3)
+                 return(FALSE)
+              else
+                 e = e[[4]]
+          } else if(e[[2]] == TRUE)
+              e = e[[3]]
+              
+      }  # fall through
+      
       if(is.call(e)) {
            if(is.call(e[[1]]))  # e.g. x$bob()
                return(lapply(e, fun,  w))
