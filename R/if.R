@@ -95,6 +95,20 @@ nextBlock = getNextBlock(env)
       if(is(cur, "if")) {
            ir$setInsertPoint(alt)
 
+           if(ctr >= length(condBlocks)) {
+               if(length(env$.remainingExpressions))
+                   stop("something has gone wrong here. Please report this as a bug in RLLVMCompile")
+#   if(length(env$.nextBlock) == 0), we can create a new block and add it to env$.nextBlock, and also
+# condBlocks and then go ahead and hope for good things to happen, but probably an error in the user's code.
+#               if(sameType(env$.returnType, VoidType)) {
+#                   condBlocks[[ctr + 1]] = env$.nextBlock = Block(env$.fun)
+#                  .cur = getInsertBlock(ir)
+#                  setInsertBlock(ir, env$.nextBlock)
+#                  createRetVoid(ir)
+#                  setInsertBlock(ir, .cur)
+#               } else
+                  stop("no condition block to jump to. Is there an expression following this if expression?", class = c("UserCodeError", "CompileError"))
+           }
            createConditionCode(cur[[2]], env, ir, body, condBlocks[[ctr + 1]])
            ir$setInsertPoint(body)
            compile(cur[[3]], env, ir)           
