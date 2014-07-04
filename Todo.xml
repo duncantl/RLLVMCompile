@@ -9,6 +9,21 @@
 <items>
 
 <item>
+If code refers to a non-local variable, either capture that variable now
+and convert it to a value in the module or insert a call to a routine
+to get the variable. We can then generate a routine in the module that
+retrieves the current value of the R object from the R interpreter.
+<br/>
+Add a parameter to compileFunction that controls whether we do this
+aggressive capture or lazy lookup at call time.
+</item>
+
+
+<item>
+Memory management
+</item>
+
+<item>
 If a function doesn't modify an input, pass by reference.
 </item>
 
@@ -24,6 +39,10 @@ them to work.
 Use clone() to copy the module for a new instance. In other words,
 the call to the generator function is just a call to clone of the
 routines.
+</item>
+
+<item>
+Explore non-standard evaluation.
 </item>
 
 </items>
@@ -82,6 +101,14 @@ concatenating it with a single value.
 <title>Callbacks to R</title>
 <items>
 
+<!--
+<item>
+Call R functions from C code.
+<br/>
+Can construct the expression in the compiled code, if we have access to the routines in R.
+Alternatively, compile the R function and just call that.
+</item>
+-->
 <item>
 When we can determine that we cannot create the R call object
 using create_foo_expression, don't compile that routine.
@@ -337,6 +364,34 @@ in which we compile it, this code can be in RLLVMCompile itself.
 <title>General</title>
 <items>
 
+<item status="done">
+Simple if statement is broken!!!
+<br/>
+See tests/realSimpleIf.R
+Problem is that there is no return value in the function and so no
+expression following the if statement. Now we get an error.
+</item>
+<item>
+See if we can recover in tests/realSimpleIf.R when return type is VoidType.
+See if.R@100
+<item>
+Handle cases where R doesn't return anything explicitly, i.e. just NULL implicitly, but we need
+a particular type, e.g. an integer in 
+<r:code><![CDATA[
+foo = function(x) if(x < 10) 100L
+]]></r:code>
+At least identify these for the person calling compile and ask for a default
+value. <r:na/> can work for certain types.
+<br/>
+See insertReturn in utils.R.
+This will work for simple cases. But not for  cases with if, while,
+for. Here we will have to jump out of those local blocks and then return
+from the routine.  So we will need to change the code that would return to assign to a
+fixed variable (e.g. .return) and then jump to the end block
+</item>
+
+</item>
+
 <item>
 Make getGlobals() try to understand lazy evaluation, i.e. not evaluating the
 default values for formal parameters until they are fist used.
@@ -525,10 +580,12 @@ in contrast to lapply() to compile them both and then examine.
 </item>
 
 
-<item>
+<item status="done">
 Eliminate dead code. Does LLVM do this for us?
-See explorations/mathElim.R.
-We eliminate the addition. But we leave the n = 0, i.e. the store instruction.
+See explorations/deadCodeElim.R.
+<br/>
+Yes, LLVM can clean up for us with a pass.
+<br/>
 Is this a case where a compiler pass would be useful.
 </item>
 
@@ -748,10 +805,12 @@ they are created programmatically with quote(), etc.
 I have put in a mechanism to do this dispatch explicitly in compile.call.
 </item>
 
-<item>
+<item status="done">
 When calling a function, perform a cast for the arguments if they are not of the correct
 type.
 e.g. STRING_ELT(a, 0) and STRING_ELT(a, 0L). The latter works, but the former doesn't.
+<br/>
+Works. See tests/argCast.R.
 </item>
 
 <item>
@@ -759,7 +818,7 @@ e.g. STRING_ELT(a, 0) and STRING_ELT(a, 0L). The latter works, but the former do
 See tests/SEXPStringSubset.R
 </item>
 
-<item>
+<item status="done">
 getGlobals() needs to handle variable in for.
 </item>
 
@@ -816,13 +875,15 @@ Subsetting with x[2] (any literal) fails. Need to make the literal into an integ
 See R/subset.R
 </item>
 
-<item>
+<item status="do
 Allow fun[["n"]] retrieve the parameter named n in fun.
 Do we store the names?
 </item>
 
-<item>
+<item status="check">
 Recognize a = if() x else y and map to a select/ternary operation.
+<br/>
+This is done in fixIfAssign.
 </item>
 
 <item>
@@ -867,13 +928,15 @@ For || the second approach won't work as we don't want to evaluate the RHS.
 Checking with  how llvm does it on a .c file, it is the multi branch/block setup.
 </item>
 
-<item>
+<item status="done">
 When comparing to a literal and the literal has an integer value,
 don't use a double/floating point comparison when the other value is an integer, e.g.
 <r:code>
 if(i &lt; 2) ...
 </r:code>
 then the compiler currently treats 2 as a numeric, not an integer and promotes i.
+<br/>
+See tests/intComparison.R
 </item>
 
 <item>
@@ -886,26 +949,17 @@ Also, the condition block has an extra instruction that seems irrelevant.
 </item>
 
 
-<item>
-Type inference system needed.
-See RTypeInference on github.
-</item>
 
-<item>
+<item status="done">
 Explore why the fuseLoop example with fc for f2 segfaults when we have a vector of length 1e6 rather than 1e5
-</item>
-
-<item>
-Call R functions from C code.
+See tests/loop.R, I believe.
 <br/>
-Can construct the expression in the compiled code, if we have access to the
-routines in R.
-Alternatively, compile the R function and just call that.
+My guess is that this was before we handled the local variable  in the loop
+by defining it once outside of the loop.
 </item>
 
-<item>
-Explore non-standard evaluation.
-</item>
+
+
 
 <item>
 Allow caller of compile to customize the code
@@ -958,28 +1012,8 @@ Works but <r:expr>.llvm(hun, 0)</r:expr> gives -1.
 What should it give us.  See tests/not.R
 </item>
 
-<item>
-Identify const variables.
-This is for our purpose rather than LLVM. We want to be able to identify
-these to determine whether we can pass them by reference since they don't change.
-</item>
 
-<item status="done">
-Identify constants  such as pi in dnorm calculation.
-If the current value is in a sealed package and is a numeric value,
-then could treat this as constant, heuristically.
-Replace in the code.
-</item>
 
-<item>
-If code refers to a non-local variable, either capture that variable now
-and convert it to a value in the module or insert a call to a routine
-to get the variable. We can then generate a routine in the module that
-retrieves the current value of the R object from the R interpreter.
-<br/>
-Add a parameter to compileFunction that controls whether we do this
-aggressive capture or lazy lookup at call time.
-</item>
 
 <item>
 Compute types for the intrinsics and put in a table
@@ -1009,8 +1043,10 @@ Which not() function. See below for a function(x) !x.
 Logical data type - Int1Type.
 </item>
 
-<item>
+<item status="done">
 Does run() in Rllvm return the mutable parameters?
+<br/>
+Use .all = TRUE
 </item>
 
 <item status="note">
@@ -1025,7 +1061,7 @@ One can control which functions are compiled
 by specifying <r:arg>.globals</r:arg>.
 </item>
 
-<item>
+<item status="high">
 Handle default values for parameters in R functions.
 <br/>
 We can compile the code just before the first 
@@ -1057,10 +1093,12 @@ version of .compilerHandlers to customize how the
 code generation operates.
 </item>
 
-<item>
+<item status="done">
 Implement the for loop of the form for(i in x) 
 by introducing a loop counter, say, .i
 and add a new instruction to load x[i].
+<br/>
+See tests/forVector.R
 </item>
 
 <item>
@@ -1104,7 +1142,16 @@ i.e. the functions we call that we don't compile.
 asFunction in compileFunction causes the return of a function.
 We can add the names of the external routines to the environment
 and arrange to load those when the function is invoked, even
-just the first time..
+just the first time.
+<br/>
+We really want the name of the DLL for each symbol
+so we can use getNativeSymbolInfo() to get  it correctly.
+We probably even need the path to the DLL so we can load it.
+See setMetdata and getMetadata
+<r:code>
+a = setMetadata(m, "REAL.dll", "xyz")
+a = setMetadata(m, "REAL.packageName", "xyz")
+</r:code>
 </item>
 
 
@@ -1124,9 +1171,6 @@ See how we can do this with a special object with  class
 that we return from compileFunction.
 </item>
 
-<item>
-Memory management
-</item>
 
 <item status="done">
 Split the incrementing in a loop into its own condition so that
@@ -1166,21 +1210,6 @@ Put these on a stack.
 Implement repeat
 </item>
 
-<item>
-Handle cases where R doesn't return anything explicitly, i.e. just NULL implicitly, but we need
-a particular type, e.g. an integer in 
-<r:code><![CDATA[
-foo = function(x) if(x < 10) 100L
-]]></r:code>
-At least identify these for the person calling compile and ask for a default
-value. <r:na/> can work for certain types.
-<br/>
-See insertReturn in utils.R.
-This will work for simple cases. But not for  cases with if, while,
-for. Here we will have to jump out of those local blocks and then return
-from the routine.  So we will need to change the code that would return to assign to a
-fixed variable (e.g. .return) and then jump to the end block
-</item>
 
 <item status="check">
 Create temporary variable for if statements 
@@ -1264,8 +1293,16 @@ Add connections to the different blocks, i.e.
 Handle vectorized operations of ==, +, !, etc.
 </item>
 
-<item> 
+<item status="done"> 
 Handle unary "-".
+<br/>
+See tests/unary.R.
+</item>
+
+<item status="done">
+Deal with unary constant, e.g. -1 or +2.
+These should just be constants.
+See tests/unary.R
 </item>
 
 <item status="done">
@@ -1275,8 +1312,7 @@ assignHandler gets to second condition.
 
 
 <item>
-Check for return - lacking return cases Rllvm to hardcrash, i.e.
-
+Check for return - lacking return causes Rllvm to hardcrash, i.e.
 <r:code>
 function(x) {
   if (!x)
@@ -1293,6 +1329,11 @@ function(x) {
 <items>
 
 <item>
+Type inference system needed.
+See RTypeInference on github.
+</item>
+
+<item>
 For callbacks to R, we have to specify the signature of the R function.
 We can determine this at compile time and add it dynamically.
 We just need to know the name of the function so that we don't assume it is compiled.
@@ -1302,6 +1343,18 @@ Also, need to check the signature is the same across different calls in our code
 
 <item>
 Identify const variables.
+<item>
+Identify const variables.
+This is for our purpose rather than LLVM. We want to be able to identify
+these to determine whether we can pass them by reference since they don't change.
+</item>
+
+<item status="done">
+Identify constants  such as pi in dnorm calculation.
+If the current value is in a sealed package and is a numeric value,
+then could treat this as constant, heuristically.
+Replace in the code.
+</item>
 </item>
 
 <item>
