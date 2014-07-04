@@ -376,7 +376,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .localVarTypes = list(), .fixIfAssign = TRUE,
          .CallableRFunctions = list(), 
          .RGlobalVariables = character(),
-         .debug = TRUE, .assert = TRUE)
+         .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE)
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -527,6 +527,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.useFloat = .useFloat
     nenv$.debug = .debug
     nenv$.assertFunctions = .assert
+    nenv$.addSymbolMetaData = .addSymbolMetaData
 
     nenv$.dimensionedTypes = dimTypes
 
