@@ -129,9 +129,11 @@ if(any(w <- sapply(e, is, "Constant"))) {
      if(all(w)) { # constant fold
          warning("should constant fold here")
      } else {
-       k = e[[ which(w) ]]
+       idx = which(w)
+       k = e[[ idx ]]
        v = getValue(k)
-       if( (v == 0 && names(op) %in% c("+", "-")) ||
+       if( (v == 0 && names(op) == "+") ||
+           (v == 0 && idx == 2L && names(op) == -1) ||
            (v == 1 && names(op) == "*") ||
             (v == 1 && names(op) == "/" && which(w) == 2))
                       return(e[!w][[1]])
