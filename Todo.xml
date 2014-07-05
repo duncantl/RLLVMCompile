@@ -356,6 +356,12 @@ Since the idea is to use the code immediately in the session
 in which we compile it, this code can be in RLLVMCompile itself.
 </item>
 
+<item>
+Add structured errors to the compiler to identify user errors, compiler errors.
+<br/>
+See call.R@86 and WrongNumArgs error.
+</item>
+
 </items>
 </topic>
 
@@ -390,6 +396,16 @@ from the routine.  So we will need to change the code that would return to assig
 fixed variable (e.g. .return) and then jump to the end block
 </item>
 
+<item>
+Check for return - lacking return causes Rllvm to hardcrash, i.e.
+<r:code>
+function(x) {
+  if (!x)
+    return(3L)
+}
+</r:code>
+</item>
+
 </item>
 
 <item status="done">
@@ -416,11 +432,6 @@ This happens, for example, in a varargs routine, e.g.
 where we have x and y w/o type information.
 </item>
 
-<item>
-Add structured errors to the compiler to identify user errors, compiler errors.
-<br/>
-See call.R@86 and WrongNumArgs error.
-</item>
 
 <item status="done">
 For .assert() and friends, allow a class = c("a", "b")
@@ -484,9 +495,10 @@ Is this because it is a pointer? because it has no initializer?
 The latter, so use ConstantPointerNull.
 </item>
 
-<item status="check">
+<item status="done">
 Compile <r:expr>if(x != NULL)</r:expr>
 Type information for NULL.
+tests/nullComparison.R
 <br/>
 See logicOpHandler.R
 </item>
@@ -574,8 +586,8 @@ When adding, if one of the operands is 0, don't do the addition.
 </item>
 
 <item>
-When do constant folding elimination for arithmetic, i.e. remove a mult/dv or an add/sub since it is the same value,
-we  need to eliminate/remove the previously compiledinstructions.
+When doing constant folding elimination for arithmetic, i.e. remove a mult/dv or an add/sub since it is the same value,
+we  need to eliminate/remove the previously compiled instructions.
 <br/>
 We may want to compile the operands sequentially and check after the first one to see if it or the second one is necessary,
 in contrast to lapply() to compile them both and then examine.
@@ -592,11 +604,20 @@ Is this a case where a compiler pass would be useful.
 </item>
 
 
-<item>
+<item status="done">
+Access a matrix cell.
+See tests/checkToIntSubset.R
+And check explorations/matrixElAssign.Rdb
+</item>
+
+
+<item status="done">
 When doing arithmetic such as 2 - 1L, recognize that the 2 is an integer value
 (not type). Add parameter/flag to compile for arithmetic to say make the result an integer.
 When computing the index for subsetting, we'd activate this.
 So in <r:expr>x[2, i]</r:expr> we want 2 - 1L to be an integer.
+<br/>
+See tests/checkToIntSubset.R
 </item>
 
 
@@ -1184,9 +1205,11 @@ Done, but giving wrong result for continue.
 See loop.next
 </item>
 
-<item>
+<item status="done">
 Unary logical operator !. A good way to do this would be use LLVM's
 XOR op with 1.
+<br/>
+tests/unaryLogical.R
 </item>
 
 <item status="done">
@@ -1315,15 +1338,7 @@ assignHandler gets to second condition.
 </item>
 
 
-<item>
-Check for return - lacking return causes Rllvm to hardcrash, i.e.
-<r:code>
-function(x) {
-  if (!x)
-    return(3L)
-}
-</r:code>
-</item>
+
 
 
 </items>

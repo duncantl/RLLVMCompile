@@ -29,9 +29,15 @@ browser()
        vv = compile(substitute(var[j], list(var = var, j = call[[3]])), env, ir, ..., objType = ty)
        return(vv)
    } else if(is(dimType,  "MatrixType")) {
+browser()
+# See code in SEXP.R for assignment to a SEXP. Same code so abstract.
+if(FALSE) {
        i = createMultiDimGEPIndex(call, env, ir, ...)
        idx = ir$createSExt(i, 64L)
+       ptr = compile(call[[2]], env, ir, ...)
        return(ir$createGEP(ptr, idx))
+ } else
+     return(createSEXPGEP(call, env, ir, ...))
    } # else ArrayType.
 
 

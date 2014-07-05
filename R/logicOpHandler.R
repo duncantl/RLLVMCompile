@@ -32,7 +32,7 @@ function(call, env, ir, ...)
           # so comparing a pointer to NULL     
      if(isPointerType(ty)) {
          a = compile(call[[2]], env, ir)
-         b = getNULLPointer(SEXPType)
+         b = getNULLPointer(ty) # was SEXPType, but this should be ty.
          op = if(op  == "!=") ICMP_NE else ICMP_EQ
          return( ir$createICmp(op, a, b) )
      }

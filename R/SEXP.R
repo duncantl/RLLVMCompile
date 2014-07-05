@@ -36,9 +36,19 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
                      list(x = call[[2]], i = subtractOne(call[[3]]),  val = compiledValue))
      compile(e, env, ir)
      return(NULL)
-   }
+   }    # STRING
 
-     #XXX Check if is name and not call/expressions such as foo()
+
+   createSEXPGEP(call, env, ir, ...)
+}   
+
+createSEXPGEP =
+function(call, env, ir, ...)
+{    
+     # check if is name and not call/expressions such as foo()
+   if(!is.name(call[[2]]))
+       stop("code doesn't handle this yet")
+   
    varName = as.character(call[[2]])
 
       # if we have a dimensioned object, then, for now, we find how to access
@@ -66,11 +76,11 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
     call[-(1:2)] = lapply(call[-(1:2)], function(x) if(is.numeric(x) && x == as.integer(x)) as.integer(x) else x)
    
 
-   if(length(call) > 3) {
+   if(length(call) > 3) 
       i = createMultiDimGEPIndex(call, env, ir, ...)
-   } else {
+    else 
       i = compile(subtractOne(call[[3]]), env, ir)
-   }
+   
 
    idx = ir$createSExt(i, 64L)
    
@@ -192,6 +202,8 @@ function(call, env, ir, ...)
       # We also eliminate unnecessary computations if we know at compile time that they are not necesary, e.g.
       # if 1st column, don't need number of rows, if first row, don't need to add row offset.
 
+     call[3:4] = sapply(call[3:4], function(x) if(is.numeric(x)) as.integer(x) else x)
+    
       ee = substitute( (j - 1L) * Rf_nrows(x) + (i - 1L), list(i = call[[3]], j = call[[4]], x = call[[2]] ))
          # see if we know this is the first column and if so, we don't need the number of rows.
       if(is.numeric(call[[4]]) && call[[4]] == 1L)
