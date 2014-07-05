@@ -3,17 +3,13 @@ library(RLLVMCompile)
 f =
 function(x)
 {
-  ctr = 0
-  for(i in x)
-      ctr = ctr + i
-  
-  ctr
+   x + 2
 }
 
-fc = compileFunction(f, DoubleType, list(REALSXPType))
+fc = compileFunction(f, DoubleType, DoubleType)
 
-.llvm(fc, as.numeric(1:10))
 m = as(fc, "Module")
+.llvm(m$f, 3)
 #createGlobalVariable("num", m, Int32Type, 10L)
 
 ir = showModule(m, TRUE)
@@ -23,4 +19,6 @@ rm(m)
 
 #Rllvm::shutdown()
 #InitializeNativeTarget()
+##############
+
 

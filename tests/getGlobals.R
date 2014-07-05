@@ -21,3 +21,21 @@ function(x = foo(globalVar), y = length(x))
 gv = getGlobals(f)
 unique(gv$variables)
 
+
+
+g =
+function(a = x, b = y)
+{
+   x = 1
+   y = 2
+   a + b * (x + y)
+}
+
+getGlobals(g)$variables
+
+library(CodeAnalysis)
+tmp = substituteDefaultValues(g)
+formals(tmp)[] = replicate(length(formals(tmp)), formals(getGlobals)[[1]], simplify = FALSE)
+
+getGlobals(tmp)$variables
+

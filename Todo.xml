@@ -392,10 +392,12 @@ fixed variable (e.g. .return) and then jump to the end block
 
 </item>
 
-<item>
+<item status="done">
 Make getGlobals() try to understand lazy evaluation, i.e. not evaluating the
 default values for formal parameters until they are fist used.
 We could do this by rewriting to add the <r:expr>if(missing(x)) x = expr</r:expr>.
+<br/>
+See substituteDefaultValues() and tests/getGlobals.R
 </item>
 
 <item status="done">
@@ -692,7 +694,7 @@ See explorations/list2.R for one example.
 Test the other code now that we switched load = TRUE for subsetHandler
 </item>
 
-<item>
+<item status="done">
 Compile rw2d
 <br/>
 See tests/2DRandomWalk.Rdb
@@ -875,7 +877,7 @@ Subsetting with x[2] (any literal) fails. Need to make the literal into an integ
 See R/subset.R
 </item>
 
-<item status="do
+<item status="done">
 Allow fun[["n"]] retrieve the parameter named n in fun.
 Do we store the names?
 </item>
@@ -1063,6 +1065,8 @@ by specifying <r:arg>.globals</r:arg>.
 
 <item status="high">
 Handle default values for parameters in R functions.
+<br/>
+See substituteDefaultValues() in  CodeAnalysis package.
 <br/>
 We can compile the code just before the first 
 expression at which that parameter is referenced.
