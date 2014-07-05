@@ -5,6 +5,7 @@ useDynLib(RLLVMCompile)
 
 import(Rllvm)
 import(methods)
+import(CodeAnalysis)
 #import(codetools)
 
 export(compileFunction) #, compile)
@@ -64,4 +65,4 @@ export(loadRObjectFromString)
 export(BasicCompiler)
 
 
-export(getGlobals)
+
