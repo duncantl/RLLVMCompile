@@ -36,6 +36,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
              classes = call[["class"]]
              if(!is.character(classes))
                 classes = as.character(classes[-1])  # not evaluating these
+             classes = c(classes, "error") 
              call = substitute(if(! cond) R_va_raiseStructuredError(msg, nclass),
                                  list(cond = call[[2]], nclass = length(classes),
                                       msg = sprintf("%s assertion not satisfied", paste(deparse(call[[2]]), collapse = " "))))
@@ -50,6 +51,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
              classes = call[["class"]]
              if(!is.character(classes))        
                    classes = as.character(classes[-1])  # not evaluating these
+             classes = c(classes, "error")
         }
         msg = call[[2]]
         err = substitute(R_va_raiseStructuredError(msg, nclass), list(msg = msg, nclass = length(classes)))

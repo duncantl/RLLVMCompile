@@ -43,14 +43,14 @@ R_va_raiseStructuredError(const char *msg, int numClasses, ...)
     SET_VECTOR_ELT(err, 0, Rf_mkString(msg));
     SET_NAMES(err, Rf_mkString("message"));
 
-    PROTECT(rclass = NEW_CHARACTER(numClasses + 2));
+    PROTECT(rclass = NEW_CHARACTER(numClasses + 1));
     va_start(argp, numClasses);
     for(i = 0; i < numClasses; i++) {
 	str = va_arg(argp, const char *);
 	SET_STRING_ELT(rclass, i, mkChar(str));
     }
     va_end(argp);
-    SET_STRING_ELT(rclass, i++, mkChar("error"));
+//    SET_STRING_ELT(rclass, i++, mkChar("error"));
     SET_STRING_ELT(rclass, i++, mkChar("condition"));
 
     SET_CLASS(err, rclass);
