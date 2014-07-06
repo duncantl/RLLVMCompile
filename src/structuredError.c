@@ -37,7 +37,6 @@ R_va_raiseStructuredError(const char *msg, int numClasses, ...)
     const char *str;
 
     PROTECT(expr = Rf_allocVector(LANGSXP, 2));
-    SETCAR(expr, Rf_install("stop"));
 
     PROTECT(err = NEW_LIST(1));
     SET_VECTOR_ELT(err, 0, Rf_mkString(msg));
@@ -55,6 +54,8 @@ R_va_raiseStructuredError(const char *msg, int numClasses, ...)
 
     SET_CLASS(err, rclass);
     SETCAR(CDR(expr), err);
+    int isError = numClasses == 0 || (strcmp(str, "error") == 0);
+    SETCAR(expr, Rf_install(isError ? "stop" : "warning"));
 
     Rf_eval(expr, R_GlobalEnv);
     UNPROTECT(3);

@@ -45,14 +45,15 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
          } else
             call = substitute(if(! cond) Rf_error(msg), list(cond = call[[2]], msg = sprintf("%s assertion not satisfied", paste(deparse(call[[2]]), collapse = " "))))
          return(compile(call, env, ir, ...))
-    } else if (funName == "stop") {
+    } else if (funName %in% c("stop", "warning")) {
         classes = character()
         if("class" %in% names(call)) {
              classes = call[["class"]]
              if(!is.character(classes))        
                    classes = as.character(classes[-1])  # not evaluating these
-             classes = c(classes, "error")
-        }
+        } 
+        classes = c(classes, if(funName == "stop") "error" else "warning")
+browser()        
         msg = call[[2]]
         err = substitute(R_va_raiseStructuredError(msg, nclass), list(msg = msg, nclass = length(classes)))
         err[3 + seq(along = classes)] = classes
