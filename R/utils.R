@@ -138,7 +138,7 @@ createCast =
 # works with Int32Type, DoubleType, and DoublePtrType.  createLoad is
 # used to dereference pointers (of single values - this is temporary
 # and unsafe in some cases).  FIXME - XXX
-function(ir, toType, fromType, val)
+function(env, ir, toType, fromType, val, ...)
 {
   # The logic seems to be off here. We have to find
   # use both the from and to types rather than
@@ -146,6 +146,14 @@ function(ir, toType, fromType, val)
 
   if (sameType(toType, fromType))
     stop("No need to cast: toType and fromType are same.")
+
+
+  if(sameType(fromType, STRSXPType) && sameType(toType, StringType)) {
+       # Really need to check is CHARSXP. We could be dealing with any SXPType
+      e = substitute(R_CHAR(x), list(x = val))
+      return(compile(e, env, ir, ...))
+  }
+  
 
    # convert from Double to Float.
   if(sameType(toType, FloatType) && sameType(fromType, DoubleType))
