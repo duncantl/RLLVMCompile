@@ -1,3 +1,4 @@
+# See unaryLogical.R also.
 library(RLLVMCompile)
 h = function(l) !l
 hun = compileFunction(h, Int1Type, Int1Type)
