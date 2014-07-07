@@ -4,8 +4,6 @@ multiSubset =
     #
 function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 {
-# browser()
-
    varName = as.character(call[[2]])
    dimType = NULL
    if(varName %in% names(env$.dimensionedTypes)) {
@@ -18,7 +16,6 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 
    if(is(dimType, "DataFrameType")) {
 #      ee = substitute(x[[i]][j], list(x = call[[2]], i = call[[3]], j = call[[4]]))
-browser()
           #XXX should really call the [[ method in env handlers.
        tmp = substitute( z[[i]], list(z = call[[2]], i = call[[4]]))
        var =  subsetDoubleHandler(tmp, env, ir, ...)
@@ -29,7 +26,16 @@ browser()
        vv = compile(substitute(var[j], list(var = var, j = call[[3]])), env, ir, ..., objType = ty)
        return(vv)
    } else if(is(dimType,  "MatrixType")) {
-browser()
+
+       if(sameType(dimType@elType, StringType)) {
+
+             # compute the offset expression and the
+             # STRING_ELT(x, i)
+           idx = compileMatrixOffset(call, env, ir, ..., asSEXT = FALSE)
+           e = substitute(STRING_ELT(v, i), list( i = idx, v = call[[2]]))
+           return(compile(e, env, ir, ...))
+       }
+
 # See code in SEXP.R for assignment to a SEXP. Same code so abstract.
 if(FALSE) {
        i = createMultiDimGEPIndex(call, env, ir, ...)
@@ -37,7 +43,8 @@ if(FALSE) {
        ptr = compile(call[[2]], env, ir, ...)
        return(ir$createGEP(ptr, idx))
  } else
-     return(createSEXPGEP(call, env, ir, ...))
+     return(createLoad(ir, createSEXPGEP(call, env, ir, ...))) #!!! Was just createSEXPGEP(). See what this breaks! load added for matrixSubsetCmp.R
+                # Check matrixSubset.R
    } # else ArrayType.
 
 
