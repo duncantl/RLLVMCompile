@@ -1,0 +1,185 @@
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude"
+	 xmlns:c="http://www.C.org"
+	 xmlns:omg="http://www.omegahat.org">
+
+<articleinfo>
+
+<title></title>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+<section>
+<title></title>
+
+<para>
+Here we compile the BML - Biham-Midleton-Levine - traffic model.
+This is a very simple dynamic system.
+We start with a grid populated (randomly) with cars occupying
+cells in that grid. 
+
+</para>
+<para>
+We'll define constants to indicate the state of a cell.
+<r:code>
+EMPTY = 0L
+RED = 1L
+BLUE = 2L
+</r:code>
+
+</para>
+
+<para>
+We'll assume that the grid has already been created.
+That is the relatively inexpensive computation.
+Moving the cars is the expensive, time-critical version.
+This is because we call it twice for each unit of time
+and we have lots of these.
+</para>
+<para>
+We'll assume that we have both the grid and two parallel vectors
+<r:var>rows</r:var> and <r:var>cols</r:var> which contain the
+locations of the cars to be moved.  Thus we will have two sets of
+<r:var>rows</r:var> and <r:var>cols</r:var>, one for the RED and one
+for the BLUE cars.
+The idea is reasonably straightforward.
+We loop over the <r:var>n</r:var> cars
+and get its location
+<r:code eval="false">
+i = rows[k]
+j = cols[k]
+</r:code>
+We then compute the next position.
+This differs depending on which type of car we are moving.
+<r:code eval="false"><![CDATA[[
+if(dir == RED) {
+  nextRow = i
+  nextCol = if(i <= ncol(grid) ) i + 1L else 1L
+} else {
+  nextCol = j
+  nextRow = if(j <= nrow(grid) ) j + 1L else 1L
+}  
+]]></r:code>
+<note>
+We could determine direction from the content of the grid cell for the first car we move.
+For now we pass it explicitly.
+</note>
+</para>
+
+<para>
+Next, we determine if the target cell is empty. If it is, we update
+the <r:var>grid</r:var> and  both <r:var>rows</r:var> and <r:var>cols</r:var>
+with the new states, i.e. move the car to the new cell and mark the current cell as empty.
+<r:code eval="false">
+if(grid[nextRow, nextCol] == EMPTY) {
+   grid[nextRow, nextCol] = dir
+   grid[i, j] = EMPTY
+}
+</r:code>
+</para>
+
+
+
+<para>
+Let's put all of this together into a function.
+<r:function id="moveCars"><![CDATA[
+moveCars = 
+function(grid, rows, cols, dir = RED)
+{
+  nc = Rf_ncols(grid)
+  nr = Rf_nrows(grid)
+
+  for(k in 1:length(rows)) {
+      i = rows[k]
+      j = cols[k]
+
+      if(dir == RED) {
+         nextRow = i
+	 nextCol = if(i <= nc ) i + 1L else 1L
+       } else {
+         nextCol = j
+	 nextRow = if(j <= nr ) j + 1L else 1L
+       }  
+
+       if(grid[nextRow, nextCol] == EMPTY) {
+          grid[nextRow, nextCol] = dir
+	  grid[i, j] = EMPTY
+       }
+    1L
+  }
+}
+]]></r:function>
+<fix>Use nrow and ncol and have the compiler convert these to Rf_nrows(), etc. But ignore them as global functions</fix>
+In this version, we are assuming that <r:arg>grid</r:arg>, <r:arg>rows</r:arg> and <r:arg>cols</r:arg>
+are mutable arrays, i.e. pointers to the data.
+</para>
+<para>
+We can compile this with
+<r:code id="compile" eval="false">
+library(RLLVMCompile)
+m = Module()
+moveCars_f = compileFunction(moveCars, VoidType, 
+                             list(MatrixType(Int32Type), INTSXPType, INTSXPType, Int32Type),
+                              .constants = list(EMPTY = EMPTY, RED = RED, BLUE = BLUE), module = m)
+</r:code>
+<r:code>
+
+</r:code>
+
+
+
+
+</para>
+
+
+<para>
+The following is a semi-vectorized version.
+It uses loops to move the cars, but it uses vectors to find the cars.
+
+<r:code eval="false">
+moveCars =
+function(grid, color = RED)
+{
+  i = row(grid)[grid != ""]
+  j = col(grid)[grid != ""]
+  pos = cbind(i, j)
+  colors = grid[pos]
+  cars = data.frame(i = i, j = j, colors = colors)
+
+  w = which(cars$colors == color)
+  for(idx in w) {
+
+    curPos = c(i = cars$i[ idx ], j = cars$j[idx])
+    nextPos = if(color == "red")
+                c(curPos[1],
+                  if(curPos[2] == ncol(grid))
+                    1L
+                  else
+                    curPos[2] + 1L)
+             else
+                c(if(curPos[1] == nrow(grid))
+                    1L
+                  else
+                    curPos[1] + 1L,
+                  curPos[2])
+
+        # check if nextPos is empty
+    if(grid[ nextPos[1], nextPos[2] ] == "")  {
+       grid[nextPos[1], nextPos[2]] = color
+       grid[curPos[1], curPos[2]] = ""
+    }
+   }
+
+  grid
+}
+</r:code>
+</para>
+</section>
+
+
+</article>
