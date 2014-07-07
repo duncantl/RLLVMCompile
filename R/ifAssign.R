@@ -53,15 +53,15 @@ function(expr, var = character(), recurse = FALSE, ...)
 
 
 `fixIfAssign.{` =
-function(expr, var = character(), recurse = FALSE, ...)
+function(expr, var = character(), recurse = TRUE, ...)
 {
 
    if(recurse) {
-      expr[-1] = lapply(expr[-1], fixIfAssign)
+      expr[-1] = lapply(expr[-1], fixIfAssign, recurse = recurse)
      return(expr)
    } else if(length(var)) {
       n = length(expr)
-      expr[[n]] = fixIfAssign(expr[[n]], var)
+      expr[[n]] = fixIfAssign(expr[[n]], var, recurse = recurse)
    }
 
    expr
