@@ -73,16 +73,7 @@ function(call, env, ir, ...)
      # Now compute the index of the element - not elements.
      # THIS IS NOT VECTORIZED but SCALAR
 
-    call[-(1:2)] = lapply(call[-(1:2)], function(x) if(is.numeric(x) && x == as.integer(x)) as.integer(x) else x)
-   
-
-   if(length(call) > 3) 
-      i = createMultiDimGEPIndex(call, env, ir, ...)
-    else 
-      i = compile(subtractOne(call[[3]]), env, ir)
-   
-
-   idx = ir$createSExt(i, 64L)
+   idx = compileMatrixOffset(call, env, ir, ...)
    
    gep = ir$createGEP(ptr, idx)
    return(gep)
@@ -99,14 +90,33 @@ function(call, env, ir, ...)
    call
 }
 
+compileMatrixOffset =
+function(call, env, ir, ..., asSEXT = TRUE)
+{
+    call[-(1:2)] = lapply(call[-(1:2)], function(x) if(is.numeric(x) && x == as.integer(x)) as.integer(x) else x)
+   
+
+   if(length(call) > 3) 
+      i = createMultiDimGEPIndex(call, env, ir, ...)
+    else 
+      i = compile(subtractOne(call[[3]]), env, ir)
+
+   if(!asSEXT)  # don't convert to a SEXT (64 bit integer). We want the offset for STRING_ELT in multiSubset.R
+       return(i)
+  
+   idx = ir$createSExt(i, 64L)
+}
+
+
 
 getSEXPTypeElementAccessor =
 function(type, env)
 {
-   if(is(type, "INTSXPType") || is(type, "LGLSXP")) 
+   if(is(type, "INTSXPType") || is(type, "LGLSXP") || sameType(type, Int32Type) )
       "INTEGER"
    else if(is(type, "REALSXPType") || sameType(type, DoubleType) ) # This DoubleType is for when we are dealing with a matrix and have the element type.
       'REAL'
+#   else  if(is(type, "STRSXPType") || sameType(type, StringType))
    else
       stop("not done yet")
 }
