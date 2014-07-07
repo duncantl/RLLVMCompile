@@ -169,7 +169,7 @@ function(call, env, ir, ...)
 #cat("fix this cast\n")
 #if(var == "subthread") browser()
 #         val = Rllvm::createCast(ir, "SIToFP", val, getElementType(getType(ref)))
-	  val = createCast(ir, getElementType(getType(ref)), getType(val), val)
+	  val = createCast(env, ir, getElementType(getType(ref)), getType(val), val)
       }
         
       store = ir$createStore(val, ref)
@@ -794,7 +794,7 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         "break",
                         ".R", ".typeInfo", ".signature", ".varDecl", ".pragma",
                         ".assert", ".debug",
-                        "stop"
+                        "stop", "warning"
     
                        )  # for now
 

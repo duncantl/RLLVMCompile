@@ -107,7 +107,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
                        } else if(is.name(x)) {
                           if (!is.null(toCast) && x == toCast) {
                             # Casting to double needed
-                            return(createCast(ir, DoubleType, Int32Type,
+                            return(createCast(env, ir, DoubleType, Int32Type,
                                              getVariable(x, env, ir)))
                          } else 
                            getVariable(x, env, ir)

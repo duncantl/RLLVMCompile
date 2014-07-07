@@ -56,7 +56,7 @@ function(call, env, ir, ...)
     vars = list(a, b)
     convert.i = which(sapply(types, function(x) !sameType(x, targetType)))   # sameType replaces identical
     if(length(convert.i))
-       vars[[convert.i]] = createCast(ir, targetType, types[[convert.i]], vars[[convert.i]])
+       vars[[convert.i]] = createCast(env, ir, targetType, types[[convert.i]], vars[[convert.i]])
     a = vars[[1]]
     b = vars[[2]]
   }

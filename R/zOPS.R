@@ -64,7 +64,7 @@ function(call, env, ir, ..., .targetType = NULL)
       if (!sameType(argType, env$.returnType)) {
         message("Coercing type of return!")
            # We need to coerce types
-        val = createCast(ir, env$.returnType, argType, val)                
+        val = createCast(env, ir, env$.returnType, argType, val)                
       }
       ir$createReturn(val)
     }
