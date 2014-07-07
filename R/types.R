@@ -8,7 +8,9 @@ function(obj, env, elementType = FALSE, .useFloat = env$.useFloat)
    } else if(is.name(obj)) {
 
      id = as.character(obj)
-     ans = if(id %in% names(env$.types))
+     ans = if(id %in% names(env$.dimensionedTypes))
+               env$.dimensionedTypes[[id]]
+           else if(id %in% names(env$.types))
               env$.types[[ id ]]
            else if(id %in% names(env$.module)) {
               getTypes(getGlobalVariable(env$.module, id), env)
@@ -128,7 +130,10 @@ function(type)
                    STRSXPType = StringType,
                    VECSXP = getSEXPType(),
                    stop("don't know element type of this SEXP")))
- 
+
+  if(is(type, "MatrixType"))
+       return(type@elType)
+  
   if(isPointerType(type))
     return(getElementType(type))
   
