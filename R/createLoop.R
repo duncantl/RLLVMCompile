@@ -126,6 +126,18 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
 
    ok = ir$createICmp(ICMP_SLE, a, b)
    ir$createCondBr(ok, bodyBlock, nextBlock)
+
+#MOVED TO HERE
+   #If we fill in this incrementing the counter block before compiling the body of the code
+   # we don't get into the same trouble with if() expressions in the body not knowing where
+   # to jump to and jumping here and adding a branch in this incrementing block when they shouldn't.
+   ir$setInsertPoint(incrBlock)
+
+     i = ir$createLoad(iv)
+     inc = ir$binOp(Add, i, 1L)
+     ir$createStore(inc, iv)
+     ir$createBr(cond)
+#END MOVED   
    
    ir$setInsertPoint(bodyBlock)
 
@@ -139,12 +151,6 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
        ir$createBr(incrBlock)
      }
 
-   ir$setInsertPoint(incrBlock)
-
-     i = ir$createLoad(iv)
-     inc = ir$binOp(Add, i, 1L)
-     ir$createStore(inc, iv)
-     ir$createBr(cond)
 
    ir$setInsertPoint(nextBlock)
 }
