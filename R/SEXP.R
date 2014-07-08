@@ -39,11 +39,11 @@ function(call, compiledValue, env, ir, type = getElementAssignmentContainerType(
    }    # STRING
 
 
-   createSEXPGEP(call, env, ir, ...)
+   createSEXPGEP(call, env, ir, ..., type = type)
 }   
 
 createSEXPGEP =
-function(call, env, ir, ...)
+function(call, env, ir, ..., type = NULL)
 {    
      # check if is name and not call/expressions such as foo()
    if(!is.name(call[[2]]))
@@ -58,8 +58,9 @@ function(call, env, ir, ...)
       dimType = env$.dimensionedTypes[[varName]]
       r = getSEXPTypeElementAccessor(dimType@elType, env)
       dimensioned = TRUE
-   } else 
+   } else if(!is.null(type)) {  #XXX FIX  - need to have a plan if type = NULL.
      r = getSEXPTypeElementAccessor(type, env)
+   }
      
    fn = env$declFunction(r)
 
