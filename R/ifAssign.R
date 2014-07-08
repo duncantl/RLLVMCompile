@@ -24,7 +24,10 @@ function(expr, var = character(), ...)
 fixIfAssign.numeric = fixIfAssign.character = fixIfAssign.logical =
 function(expr, var = character(), ...)
 {
-     expr
+    if(length(var))
+       substitute(v <- val, list(v = var, val = expr))
+    else
+      expr
 }
 
 fixIfAssign.while =
@@ -45,9 +48,9 @@ function(expr, var = character(), ...)
 `fixIfAssign.if` =
 function(expr, var = character(), recurse = FALSE, ...)
 {
-    expr[[3]] = fixIfAssign(expr[[3]], var, ...)
+    expr[[3]] = fixIfAssign(expr[[3]], var, ..., recurse = recurse)
     if(length(expr) >= 4)
-       expr[[4]] = fixIfAssign(expr[[4]], var, ...)
+       expr[[4]] = fixIfAssign(expr[[4]], var, ..., recurse = recurse)
     expr
 }
 
@@ -86,9 +89,9 @@ function(expr, var = character(), recurse = FALSE, ...)
 function(expr, var = character(), addPragma = FALSE, ...)
 {
    if(is(expr[[3]], "if")) {
-      expr[[3]][[3]] = fixIfAssign(expr[[3]][[3]], expr[[2]], recurse = FALSE, ...)
+      expr[[3]][[3]] = fixIfAssign(expr[[3]][[3]], expr[[2]], recurse = TRUE, ...)
       if(length(expr[[3]]) >= 4)
-         expr[[3]][[4]] = fixIfAssign(expr[[3]][[4]], expr[[2]], recurse = FALSE, ...)
+         expr[[3]][[4]] = fixIfAssign(expr[[3]][[4]], expr[[2]], recurse = TRUE, ...)
 
       if(addPragma)
           substitute(pragma(IfAssign, v, e), list(v = expr[[2]], e = expr[[3]]))
