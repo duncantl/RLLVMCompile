@@ -148,8 +148,10 @@ cat("[createLoopCode] creating nextBlock\n") ; browser()
    ir$setInsertPoint(bodyBlock)
 
            #XXX have to put the code for the actual  body, not just the incrementing of i
-#cat("[createLoopCode] compiling body\n") ; browser()
-     compile(body, env, ir, ..., nextBlock = incrBlock) # nextBlock)
+
+     compile(body, env, ir, ..., nextBlock = incrBlock, breakBlock = nextBlock, nextIterBlock = incrBlock)
+
+   
      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
 #         cat("In createLoop: browser()\n")
 # It is possible that the compile() has put us into the incrBlock in which case we don't want to add a Branch.
@@ -236,6 +238,7 @@ function(expr)
 pushNextBlock =
 function(env, block)
 {
+    
   env$.nextBlock = c(block, env$.nextBlock)
 }
 
