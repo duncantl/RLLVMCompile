@@ -131,9 +131,9 @@ nextBlock = getNextBlock(env)
 #print(getName(getInsertBlock(ir)))
 #print(getName(nextBlock))
 #browser()
-            
+          if(! identical(nextBlock, getInsertBlock(ir)) )
              ir$createBr(nextBlock)  # jump to the end of the entire if statement
-         } else if(!is.null(condBlocks[["final"]]) && length(getTerminator(condBlocks[["final"]])) == 0) {
+      } else if(!is.null(condBlocks[["final"]]) && length(getTerminator(condBlocks[["final"]])) == 0) {
 #XXX TIDY THIS MESS UP after all the explorations relating to the compile.if and 2DRandomWalk.Rdb.
        #  ir$createBr(condBlocks[["final"]])
       } else if(length(env$.nextBlock)) {  # THIS IS PROBABLY THE WRONG THING TO DO AND SHOULD GO. IT WAS JUST A NEVER WORKING EXPERIMENT.
