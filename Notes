@@ -1,4 +1,0 @@
-
-If compiling individual expressions sequentually (e.g. in callRFunction to create new functions),
-for any if, for, while statements that need to know the next block, we need to set env$.remainingExpressions
-to the next expression coming after.

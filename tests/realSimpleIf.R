@@ -10,13 +10,14 @@ function(x)
 #   ans
 }
 
-tryCatch(fc <- compileFunction(f, Int32Type, list(Int32Type)),
+m = Module()
+tryCatch(fc <- compileFunction(f, Int32Type, list(Int32Type), m),
           CompileError = function(e) {
               cat(class(e)[1], ":", e$message, "\n")
           })
 
-
-tryCatch(fc <- compileFunction(f, VoidType, list(Int32Type)),
+m = Module()
+tryCatch(fc <- compileFunction(f, VoidType, list(Int32Type), m),
           CompileError = function(e) {
               cat(class(e)[1], ":", e$message, "\n")
           })

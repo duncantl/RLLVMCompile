@@ -28,6 +28,10 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
     } else if(funName == ".debug") {
          if(!env$.debug)
            return(FALSE)
+
+         if(length(call) > 2 && (length(names(call)) == 0 || any(names(call) == "")))
+             warning("extra unnamed arguments to .debug(). Is this an error in closing parentheses?")
+         
          call = call[[2]]
          funName = as.character(call[[1]])
     } else if(length(env$.assertFunctions) && funName %in%  env$.assertFunctions) {

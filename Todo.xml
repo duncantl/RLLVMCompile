@@ -1317,6 +1317,19 @@ fixIfAssign broken again. BML.Rdb
 <br/>
 For literals, we didn't do the assignment.
 </item>
+<item>
+Use SelectInst as a ternary operator.
+</item>
+<item>
+Compile ifelse() to use a SelectInst when the types are such that this makes sense,
+i.e. scalars.
+This also relates to fixIfAssign(). If that generates a pragma, we can do the conversion
+in the compiler depending on the types.
+</item>
+
+<item>
+Insert calls into the generated code to check for user interrupts.
+</item>
 
 <item>
 Identify non-const inputs and duplicate them. Allow overriding.

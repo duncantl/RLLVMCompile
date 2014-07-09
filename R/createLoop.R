@@ -148,7 +148,7 @@ cat("[createLoopCode] creating nextBlock\n") ; browser()
    ir$setInsertPoint(bodyBlock)
 
            #XXX have to put the code for the actual  body, not just the incrementing of i
-cat("[createLoopCode] compiling body\n") ; browser()
+#cat("[createLoopCode] compiling body\n") ; browser()
      compile(body, env, ir, ..., nextBlock = incrBlock) # nextBlock)
      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
 #         cat("In createLoop: browser()\n")
