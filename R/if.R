@@ -81,6 +81,7 @@ nextBlock = getNextBlock(env)
    }
 }
 
+     #? Do we want this if there is no trailing else. We have 2 condBlocks and alt within the loop below will become the first one.
     condBlocks[["final"]] = if(hasTrailingElse) bodyBlocks[[length(bodyBlocks)]] else nextBlock
 
       # Jump to the first condition block. We could probably execute the condition test code in the current block. But ....
@@ -89,6 +90,7 @@ nextBlock = getNextBlock(env)
     #??? Does this code end up jumping to the trailing else ?
     cur = call
     ctr = 1
+
     while(TRUE) {
       body = bodyBlocks[[ctr]]
            # alt is a bad name. Should be conditionBlock or curConditionBlock
@@ -130,9 +132,7 @@ nextBlock = getNextBlock(env)
       
       if(length(getTerminator(ir$getInsertBlock())) == 0) {
         if(!is.null(nextBlock)) {
-#print(getName(getInsertBlock(ir)))
-#print(getName(nextBlock))
-#browser()
+
           if(! identical(nextBlock, getInsertBlock(ir)) )
              ir$createBr(nextBlock)  # jump to the end of the entire if statement
       } else if(!is.null(condBlocks[["final"]]) && length(getTerminator(condBlocks[["final"]])) == 0) {
