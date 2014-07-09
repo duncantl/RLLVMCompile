@@ -1,7 +1,7 @@
 breakHandler =
 function(call, env, ir, ..., .targetType = NULL, breakBlock = NULL)
 {
-browser()    
+
   if(!is.null(breakBlock))
      return( ir$createBr(breakBlock) )
 
@@ -15,7 +15,7 @@ browser()
 nextHandler =
 function(call, env, ir, ..., .targetType = NULL, nextBlock = NULL, nextIterBlock = NULL)
 {
-browser()    
+
   if(!is.null(nextIterBlock))
      return( ir$createBr(nextIterBlock) )
   
