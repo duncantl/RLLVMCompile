@@ -146,7 +146,7 @@ cat("[createLoopCode] creating nextBlock\n") ; browser()
 
            #XXX have to put the code for the actual  body, not just the incrementing of i
 cat("[createLoopCode] compiling body\n") ; browser()
-     compile(body, env, ir, ..., nextBlock = nextBlock)
+     compile(body, env, ir, ..., nextBlock = incrBlock) # nextBlock)
      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
 #         cat("In createLoop: browser()\n")
 # It is possible that the compile() has put us into the incrBlock in which case we don't want to add a Branch.
