@@ -261,7 +261,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
 
      
     idx = seq_along(exprs)
-browser()     
+
     for (i in idx) {
         cur = ir$getInsertBlock()
         if(length(getTerminator(cur))) {
@@ -271,15 +271,20 @@ browser()
 
         pop = FALSE
         if(is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for") || is(exprs[[i]], "while")) ) {
-            if(i < length(idx)) { # length(afterBlock) == 0 &&
-                pop = TRUE
+
+            if(i < length(idx))  # length(afterBlock) == 0 &&
                 afterBlock = if(length(afterBlock)) afterBlock else Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
-                pushNextBlock(env, afterBlock)
-            } else if(i == length(idx)) {
-                pop = TRUE                
+            else { 
                 afterBlock = nextBlock
-                pushNextBlock(env, afterBlock)
+#               if(is(exprs[[i]], "if")) {
+#                  tmp = list(...)$nextIterBlock
+#                  if(!is.null(tmp))
+#                      afterBlock = tmp
+#               }
             }
+
+            pop = TRUE                
+            pushNextBlock(env, afterBlock)
         }
         
         compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock, ...)
