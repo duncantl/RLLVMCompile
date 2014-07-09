@@ -269,15 +269,19 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
          env$.remainingExpressions = exprs[ - (1:i) ]
 
         pop = FALSE
-        if(length(afterBlock) == 0 && i < length(idx) && is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for"))) {
+        if(is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for")) ) {
+            if(i < length(idx)) { # length(afterBlock) == 0 &&
                 pop = TRUE
-                afterBlock = Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
+                afterBlock = if(length(afterBlock)) afterBlock else Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
                 pushNextBlock(env, afterBlock)
-        } else if(FALSE && i == length(idx)) {
-           afterBlock = nextBlock     
+            } else if(i == length(idx)) {
+                pop = TRUE                
+                afterBlock = nextBlock
+                pushNextBlock(env, afterBlock)
+            }
         }
         
-         compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock)
+        compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock)
 
         if(pop) {
              # Do we setInsertBlock() for this next block?

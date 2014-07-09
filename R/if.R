@@ -93,6 +93,7 @@ nextBlock = getNextBlock(env)
     while(TRUE) {
       body = bodyBlocks[[ctr]]
            # alt is a bad name. Should be conditionBlock or curConditionBlock
+           # condBlocks[[ctr]] and nextBlock may be identical in some cases (see simplerNestedIfLoop.R)
       alt = if(ctr <= length(condBlocks))
                condBlocks[[ctr]]
             else
@@ -118,7 +119,9 @@ nextBlock = getNextBlock(env)
 #              } else
                   stop("no condition block to jump to. Is there an expression following this if expression?", class = c("UserCodeError", "CompileError"))
            }
-           createConditionCode(cur[[2]], env, ir, body, condBlocks[[ctr + 1]])
+
+
+           createConditionCode(cur[[2]], env, ir, body, condBlocks[[ctr + 1]], ...)
            ir$setInsertPoint(body)
            compile(cur[[3]], env, ir, ..., nextBlock = nextBlock)           
        } else {

@@ -43,22 +43,20 @@ function(call)
 }
 
 createConditionCode =
-function(call, env, ir, bodyBlock, nextBlock)
+function(call, env, ir, bodyBlock, nextBlock, ...)
 {
     compositeCond = isCompositeCond(call)
                            
     if(!compositeCond)  {
   
           # Same as in while() so consolidate
-       a = compile(call, env, ir)
+       a = compile(call, env, ir, ...)
           # We don't need to compare the value of a to 1 but can
           # expect that a is a logical value. 
        # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))
 
        ir$createCondBr(a, bodyBlock, nextBlock)
     } else {
-
-         #
 
       if(isCompositeCond(call[[2]])) {
 
