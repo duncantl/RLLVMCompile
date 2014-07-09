@@ -25,14 +25,17 @@ function(call, env, ir, ..., fun = env$.fun, nextBlock = NULL)
    ir$createBr(cond)
     
     ir$setInsertPoint(cond)
-browser()    
-    createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock, breakBlock = nextBlock, nextIterBlock = cond, ...)
+
+    createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock,
+                           breakBlock = nextBlock, nextIterBlock = cond, ...)
 
      ir$setInsertPoint(bodyBlock)
-       compile(call[[3]], env, ir, ..., breakBlock = nextBlock, nextIterBlock = cond, nextBlock = nextBlock)
+
+     compile(call[[3]], env, ir, ..., breakBlock = nextBlock, nextIterBlock = cond, nextBlock = nextBlock)
+    
 #      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) 
-       if(length(getTerminator(ir$getInsertBlock())) == 0) 
-           ir$createBr(cond)
+#       if(length(getTerminator(ir$getInsertBlock())) == 0)  
+#           ir$createBr(cond)
 
    ir$setInsertPoint(nextBlock)    
 }
