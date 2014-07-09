@@ -12,7 +12,7 @@ function(call, env, ir, ..., fun = env$.fun)
          # instructions are added to continue on from this while() command
     cond = Block(fun, sprintf("cond.%s", label))
     bodyBlock = Block(fun, sprintf("body.%s", label))
-    nextBlock = Block(fun, sprintf("next.%s", label))
+    nextBlock = Block(fun, sprintf("after.%s", label))
 
    pushNextBlock(env, nextBlock)
    on.exit(popNextBlock(env))

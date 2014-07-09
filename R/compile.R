@@ -248,22 +248,42 @@ function(e, env, ir, ..., .targetType = NULL)
   # This compiles a group of expressions.
   # It handles moving from block to block with a block for
   # each expression.
-function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL)
+function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL, ..., afterBlock = NULL, nextBlock = NULL)
 {
   #insertReturn(exprs)
   if(as.character(exprs[[1]]) != "{")
       compile(exprs, env, ir, fun = fun, name = name)
   else {
+     oldVals = env$.remainingExpressions
+     on.exit(env$.remainingExpressions <- oldVals)
+      
     exprs = exprs[-1]
+
+     
     idx = seq_along(exprs)
     for (i in idx) {
         cur = ir$getInsertBlock()
         if(length(getTerminator(cur))) {
-
             break
          }
          env$.remainingExpressions = exprs[ - (1:i) ]
-         compile(exprs[[i]], env, ir, fun = fun, name = name)
+
+        pop = FALSE
+        if(length(afterBlock) == 0 && i < length(idx) && is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for"))) {
+                pop = TRUE
+                afterBlock = Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
+                pushNextBlock(env, afterBlock)
+        } else if(FALSE && i == length(idx)) {
+           afterBlock = nextBlock     
+        }
+        
+         compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock)
+
+        if(pop) {
+             # Do we setInsertBlock() for this next block?
+            b = popNextBlock(env)
+            setInsertBlock(ir, b)
+        }
 #        # One approach to handling the lack of an explicit return is to
 #        # create the return instruction ourselves, or to add a return
 #        # around the call before we compile. The advantage of the latter
@@ -543,8 +563,10 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
-    if(identical(returnType, VoidType))
-      ir$createReturn()
+    if(identical(returnType, VoidType)) {
+browser()        
+       ir$createReturn()
+     }
 
      if(length(nenv$.SetCallFuns)) {
            # This is for the callbacks to R. We have to get the expressions for the callback to the module.

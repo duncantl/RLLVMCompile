@@ -59,7 +59,7 @@ createLoopCode =
   #
   #
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
-          label = ".", zeroBased = FALSE)
+          label = ".", zeroBased = FALSE, ...)
 {
    env$.loopDepth = env$.loopDepth + 1L
    on.exit( env$.loopDepth <- env$.loopDepth - 1L)
@@ -72,7 +72,10 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    cond = Block(fun, sprintf("cond.%s", label))
    incrBlock = Block(fun, sprintf("incr.%s", label))   
    bodyBlock = Block(fun, sprintf("body.%s", label))
-   nextBlock = Block(fun, sprintf("next.%s", label))
+   if(is.null(nextBlock)) {
+cat("[createLoopCode] creating nextBlock\n") ; browser()
+       nextBlock = Block(fun, sprintf("after.%s", label))
+   }
 
    pushNextBlock(env, nextBlock)
    on.exit(popNextBlock(env))
@@ -142,13 +145,13 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    ir$setInsertPoint(bodyBlock)
 
            #XXX have to put the code for the actual  body, not just the incrementing of i
-
-     compile(body, env, ir)
+cat("[createLoopCode] compiling body\n") ; browser()
+     compile(body, env, ir, ..., nextBlock = nextBlock)
      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
 #         cat("In createLoop: browser()\n")
 # It is possible that the compile() has put us into the incrBlock in which case we don't want to add a Branch.
 #         browser()
-       ir$createBr(incrBlock)
+        ir$createBr(incrBlock)
      }
 
 
@@ -236,7 +239,9 @@ function(env, block)
 popNextBlock =
 function(env)
 {
+  ans = env$.nextBlock[[1]]
   env$.nextBlock = env$.nextBlock[-1]
+  ans
 }
 
 pushContinueBlock =
@@ -248,5 +253,7 @@ function(env, block)
 popContinueBlock =
 function(env)
 {
+  ans = env$.continueBlock[[1]]
   env$.continueBlock = env$.continueBlock[-1]
+  ans
 }
