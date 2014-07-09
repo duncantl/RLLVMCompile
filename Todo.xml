@@ -511,6 +511,23 @@ See dataFrameSubset.R
 
 
 <item>
+Matrix subsetting for VECSXType. Less common.
+</item>
+
+<item status="done">
+matrix subsetting for STRSXPType, 
+Need to add the same sort of code in SEXP.R to multiSubset.R
+<br/>
+tests/matrixSubset.R
+</item>
+
+<item status="done">
+Recognize x[i] for a SEXPType and change this to be work on x.els and 
+compute the pointer first as a local variable.
+</item>
+
+
+<item>
 Recognize to compile <r:expr>sapply(v, `[[`, 1)</r:expr>,
 i.e. to rewrite this  either as a loop over v and insert  
 <r:expr>el[[i]]</r:expr> or to rewrite this as
@@ -576,7 +593,7 @@ fc = compileFunction(f, Int32Type, list(SEXPType, Int32Type))
 </r:code>
 </item>
 
-<item>
+<item status="verify">
 Constant folding.
 Arises in matrix subsetting in SEXP.R around line 60 when we create 2L - 1L.
 We know this is 1L.
@@ -777,10 +794,7 @@ Get the numeric() example in tests/numeric.R  working.
 </item>
 
 
-<item>
-Recognize x[i] for a SEXPType and change this to be work on x.els and 
-compute the pointer first as a local variable.
-</item>
+
 
 <item status="done">
 map functions to other names in a call, e.g. length to Rf_length and then compile.
@@ -1050,13 +1064,17 @@ Do we use a separate pass?
 Or do we make the changes as we try to compile a call, e.g. replace pi with the constant,
 replace  expr^2 with pow(expr, 2). (Ideally, we'd create a temporary variable for expr and
 then multiply.)
+<br/>
+Both - see CodeAnalysis and its code reweriting functions.
+Also rewriteSApply
 </item>
 
 <item>
 Handle x[1:10], i.e. x[vector] and x[vector] = value(s).
 </item>
 
-<item>
+<item status="low">
+[This is probably no longer relevant]
 Compile the not() function to test the ! operator.
 <br/>
 Which not() function. See below for a function(x) !x.
@@ -1288,9 +1306,40 @@ to even worry.  So we don't need to create the blocks for each
 expression and pass the nextBlock argument.
 </item>
 
+<item status="high">
+Fix the if() mechanism. See explorations/BML.Rdb.
+The if inside the if (for assigning nextRow) in moveCars
+is jumping to the wrong place.
+</item>
+
+<item status="done">
+fixIfAssign broken again. BML.Rdb
+<br/>
+For literals, we didn't do the assignment.
+</item>
+
 <item>
+Identify non-const inputs and duplicate them. Allow overriding.
+We can generate code to make the copies.
+</item>
+<item>
+Compile the expression <r:expr>list(a, b, c)</r:expr>.
+</item>
+
+<item>
+Allow .debug to be an integer value indicating a level.
+So <r:expr>.debug(foo(x), level = 2)</r:expr>
+would then evaluate the expression <r:expr>foo(x)</r:expr> if a global .debug 
+variable was &gt;= 2.
+</item>
+
+<item status="low">
 Need a function to give the name of an available temporary variable
 for our function we are compiling.
+<br/>
+Don't really need this.
+If we do, we are maintaining the names of the local variables in the 'env'
+object. So we can easily use this to comput a new name.
 </item>
 
 <item status="done">
