@@ -1,0 +1,70 @@
+
+In createLoopCode:  
+  pass incrBlock as nextBlock when compiling the body
+    works for simplerNestedIfInLoop1.R but not simplerNestedIfInLoop.R
+
+Do we need to rewrite all of this to make explicit continue the loop and next block after the loop 
+
+
+Currently, 
+   source("../explorations/simplerNestedIfInLoop.R")
+ goes into an infinite loop.
+ But 
+   source("../explorations/simplerNestedIfInLoop1.R")
+ doesn't.
+
+
+   In the Block after.if (dir == RED), we branch back to this same block  if the condition nextCol == 1L is false.
+   This is a createCondBr() call. Find out where we make this and see who is specifying the alternative block.
+   Why does this work for the simplerNestedIfInLoop1.R version? Because that code has an else after the if(nextCol == 1L) so it is setting it itself.
+
+    createLoopCode:  We have the more complex condition in compileExpressions about when to create a nextBlock and when to reuse afterBlock, etc.
+
+
+
++ If compiling individual expressions sequentually (e.g. in callRFunction to create new functions),
+for any if, for, while statements that need to know the next block, we need to set env$.remainingExpressions
+to the next expression coming after.
+
+
+?? Do we need the nextBlock and continueBlock stack.
+
+Test with
+
+  +  Fix while() loop to do the same as for. (Perhaps consolidate.)
+
+  + [Working] statement after nextCol = if(cond) a else b within if(dir == RED) { }    - see simplerNestedIfInLoop*.R
+              See simplerNestedIfLoop2.R
+
+  + [Working] nested for loops with an if inside the inner loop
+       See tests/nestedLoopsIf.R
+       More immediately tests/nestedLoops.R is broken.
+
+  +  Handle break and next/continue in loops with if statements.
+
+
+
+
+         We have to take care when process the inner loop. We are passed a nextBlock for the outer loop.
+         In the following example, that
+         for(i in 1:10) {  # outer
+            a = 1
+            for(j in 2:5) {
+               if(i == j)
+                  printf("Hi\n")
+            }
+            a = 2
+         }
+
+
+
+TEST:
+  tests/simpleIf.R
+  tests/basicIf.R
+  tests/nestedLoops.R
+  tests/nestedLoops1.R
+  tests/nestedLoops2.R
+  tests/nestedLoopsIf.R
+  explorations/simplerNestedIfInLoop.R
+  explorations/simplerNestedIfInLoop1.R
+  explorations/simplerNestedIfInLoop2.R
