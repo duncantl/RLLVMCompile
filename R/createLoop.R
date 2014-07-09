@@ -89,6 +89,8 @@ cat("[createLoopCode] creating nextBlock\n") ; browser()
    len = createFunctionVariable(Int32Type, ".llen", env, ir) # ir$createLocalVariable(Int32Type, ".llen")
    assign(".llen", len, env)
    env$.types[[".llen"]] = Int32Type
+###
+
    mapply(function(lim,  to) {
      if(is.symbol(lim)) {
        sym = as.character(lim)
@@ -129,6 +131,7 @@ cat("[createLoopCode] creating nextBlock\n") ; browser()
 
    ok = ir$createICmp(ICMP_SLE, a, b)
    ir$createCondBr(ok, bodyBlock, nextBlock)
+
 
 #MOVED TO HERE
    #If we fill in this incrementing the counter block before compiling the body of the code

@@ -285,7 +285,9 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
 
         if(pop) {
              # Do we setInsertBlock() for this next block?
+browser()            
             b = popNextBlock(env)
+b = afterBlock
             setInsertBlock(ir, b)
         }
 #        # One approach to handling the lack of an explicit return is to

@@ -68,11 +68,10 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
       # will end up in. This is where start the code for the next statement
       # after the if statement.
 #??? How do we know the label
-if(!is.null(nextBlock)) { cat("passed a nextBlock\n"); browser()}
+#if(!is.null(nextBlock)) { cat("passed a nextBlock\n"); browser()}
 
 if(is.null(nextBlock)) {
-    cat("[compile.if] creating our own nextBlock\n")
-   browser()
+#  cat("[compile.if] creating our own nextBlock\n");   browser()
    if(length(env$.remainingExpressions))
        nextBlock = Block(fun, sprintf("after_if.%s", label))
    else {
