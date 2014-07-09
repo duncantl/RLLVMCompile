@@ -370,6 +370,21 @@ See call.R@86 and WrongNumArgs error.
 <title>General</title>
 <items>
 
+<item>
+Fix while loops the way we did for the  for() loops,
+i.e. nextBlock, nextIterBlock and so on.
+</item>
+
+<item>
+for() loop with a  break doesn't break.
+Related to the nextBlock changes we made.
+Jump to the incr. block since that is nextBlock.
+Need a breakBlock.
+<br/>
+See tests/forBreak.R
+</item>
+
+
 <item status="done">
 Simple if statement is broken!!!
 <br/>
@@ -1317,9 +1332,11 @@ fixIfAssign broken again. BML.Rdb
 <br/>
 For literals, we didn't do the assignment.
 </item>
+
 <item>
 Use SelectInst as a ternary operator.
 </item>
+
 <item>
 Compile ifelse() to use a SelectInst when the types are such that this makes sense,
 i.e. scalars.

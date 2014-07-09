@@ -1,3 +1,8 @@
+For whileBreak.R
+  If we have an expression after the if(cond) break in the whileBreak.R code, everything works fine.
+  But if this is the end of the body of the while(whileCond) {}, then we get an infinite loop
+  in the condition.
+
 
 In createLoopCode:  
   pass incrBlock as nextBlock when compiling the body

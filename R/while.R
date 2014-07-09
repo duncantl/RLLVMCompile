@@ -2,7 +2,7 @@ compile.while = whileHandler =
   #
   # This generates the code corresponding to an while() {} loop in R.
   #
-function(call, env, ir, ..., fun = env$.fun)
+function(call, env, ir, ..., fun = env$.fun, nextBlock = NULL)
 {
     label = deparse(call)
 
@@ -12,10 +12,11 @@ function(call, env, ir, ..., fun = env$.fun)
          # instructions are added to continue on from this while() command
     cond = Block(fun, sprintf("cond.%s", label))
     bodyBlock = Block(fun, sprintf("body.%s", label))
-    nextBlock = Block(fun, sprintf("after.%s", label))
+    
+#    nextBlock = Block(fun, sprintf("after.%s", label))
 
-   pushNextBlock(env, nextBlock)
-   on.exit(popNextBlock(env))
+#   pushNextBlock(env, nextBlock)
+#   on.exit(popNextBlock(env))
    pushContinueBlock(env, cond)
    on.exit(popContinueBlock(env), add = TRUE)       
 
@@ -24,10 +25,11 @@ function(call, env, ir, ..., fun = env$.fun)
    ir$createBr(cond)
     
     ir$setInsertPoint(cond)
-    createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock)
+browser()    
+    createConditionCode(call[[2]], env, ir, bodyBlock, nextBlock, breakBlock = nextBlock, nextIterBlock = cond, ...)
 
      ir$setInsertPoint(bodyBlock)
-       compile(call[[3]], env, ir)
+       compile(call[[3]], env, ir, ..., breakBlock = nextBlock, nextIterBlock = cond, nextBlock = nextBlock)
 #      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) 
        if(length(getTerminator(ir$getInsertBlock())) == 0) 
            ir$createBr(cond)
@@ -50,7 +52,7 @@ function(call, env, ir, bodyBlock, nextBlock, ...)
     if(!compositeCond)  {
   
           # Same as in while() so consolidate
-       a = compile(call, env, ir, ...)
+       a = compile(call, env, ir, nextBlock = nextBlock, ...)
           # We don't need to compare the value of a to 1 but can
           # expect that a is a logical value. 
        # ok = ir$createICmp(ICMP_SLT, a, ir$createIntegerConstant(1L))

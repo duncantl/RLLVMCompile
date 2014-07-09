@@ -16,15 +16,18 @@ f =
 function()
 {
   ctr = 0L
-  while(TRUE) {
+  while(ctr < 10L) {
       ctr = ctr + 1L
-      if(ctr == 5L)
+      printf("ctr = %d\n", ctr)            
+      if(ctr == 5L) 
           break
   }
-
+  
   ctr
 }
 
+debug(RLLVMCompile:::createConditionCode)
 
 fc = compileFunction(f, Int32Type)
+showModule(fc)
 .llvm(fc)

@@ -45,6 +45,11 @@ function(expr, var = character(), ...)
    expr
 }
 
+`fixIfAssign.next` = `fixIfAssign.continue` =
+function(expr, var = character(), recurse = FALSE, ...)
+    expr
+
+
 `fixIfAssign.if` =
 function(expr, var = character(), recurse = FALSE, ...)
 {
