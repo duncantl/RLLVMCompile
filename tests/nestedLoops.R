@@ -14,6 +14,7 @@ fc = compileFunction(f, Int32Type, Int32Type)
 
 stopifnot(.llvm(fc, 10) == 55L)
 
+if(FALSE) {
 library(compiler)
 fcc = cmpfun(f)
 
@@ -50,4 +51,5 @@ g = function(n1, n2) {
          ctr = ctr + 1L
       }
    ctr
+}
 }

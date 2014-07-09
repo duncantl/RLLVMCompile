@@ -26,8 +26,8 @@ function()
   ctr
 }
 
-debug(RLLVMCompile:::createConditionCode)
+#debug(RLLVMCompile:::createConditionCode)
 
-fc = compileFunction(f, Int32Type)
+fc = compileFunction(f, Int32Type, optimize = FALSE)
 showModule(fc)
 .llvm(fc)
