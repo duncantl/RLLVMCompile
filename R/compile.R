@@ -261,6 +261,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
 
      
     idx = seq_along(exprs)
+browser()     
     for (i in idx) {
         cur = ir$getInsertBlock()
         if(length(getTerminator(cur))) {
@@ -269,7 +270,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
          env$.remainingExpressions = exprs[ - (1:i) ]
 
         pop = FALSE
-        if(is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for")) ) {
+        if(is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for") || is(exprs[[i]], "while")) ) {
             if(i < length(idx)) { # length(afterBlock) == 0 &&
                 pop = TRUE
                 afterBlock = if(length(afterBlock)) afterBlock else Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
@@ -281,7 +282,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
             }
         }
         
-        compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock)
+        compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock, ...)
 
         if(pop) {
              # Do we setInsertBlock() for this next block?
@@ -819,7 +820,7 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         "repeat", "(", "!", "^", "$", "$<-",
                         "sapply", "lapply",
                         "printf",
-                        "break",
+                        "break", "next",
                         ".R", ".typeInfo", ".signature", ".varDecl", ".pragma",
                         ".assert", ".debug",
                         "stop", "warning"
