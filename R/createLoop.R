@@ -76,7 +76,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    incrBlock = Block(fun, sprintf("incr.%s", label))   
    bodyBlock = Block(fun, sprintf("body.%s", label))
    if(is.null(nextBlock)) {
-cat("[createLoopCode] creating nextBlock\n") ; browser()
+#cat("[createLoopCode] creating nextBlock\n") ; browser()
        nextBlock = Block(fun, sprintf("after.%s", label))
    }
 

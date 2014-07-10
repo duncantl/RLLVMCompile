@@ -301,7 +301,8 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
 #browser()            
             popNextBlock(env)  # popping the wrong thing!
             b = afterBlock
-            setInsertBlock(ir, b)
+            if(!is.null(b))
+                setInsertBlock(ir, b)
         }
 #        # One approach to handling the lack of an explicit return is to
 #        # create the return instruction ourselves, or to add a return
@@ -585,7 +586,6 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
     if(identical(returnType, VoidType)) {
-browser()        
        ir$createReturn()
      }
 
