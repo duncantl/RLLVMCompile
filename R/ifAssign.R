@@ -41,7 +41,7 @@ fixIfAssign.function =
 function(expr, var = character(), ...)
 {
     #XXX Default values also
-   body(expr) = fixIfAssign(body(expr), recurse = TRUE)
+   body(expr) = fixIfAssign(body(expr), recurse = TRUE, ...)
    expr
 }
 
@@ -65,11 +65,11 @@ function(expr, var = character(), recurse = TRUE, ...)
 {
 
    if(recurse) {
-      expr[-1] = lapply(expr[-1], fixIfAssign, recurse = recurse)
+      expr[-1] = lapply(expr[-1], fixIfAssign, recurse = recurse, ...)
      return(expr)
    } else if(length(var)) {
       n = length(expr)
-      expr[[n]] = fixIfAssign(expr[[n]], var, recurse = recurse)
+      expr[[n]] = fixIfAssign(expr[[n]], var, recurse = recurse, ...)
    }
 
    expr
@@ -78,7 +78,7 @@ function(expr, var = character(), recurse = TRUE, ...)
 `fixIfAssign.for` =
 function(expr, var = character(), recurse = FALSE, ...)
 {
-   expr[[4]] = fixIfAssign(expr[[4]], var, recurse = TRUE)
+   expr[[4]] = fixIfAssign(expr[[4]], var, recurse = TRUE, ...)
 
    expr
 }
@@ -94,14 +94,18 @@ function(expr, var = character(), recurse = FALSE, ...)
 function(expr, var = character(), addPragma = FALSE, ...)
 {
    if(is(expr[[3]], "if")) {
+      if(addPragma)
+          return(substitute(pragma(IfAssign, v, e), list(v = expr[[2]], e = expr[[3]])))
+
       expr[[3]][[3]] = fixIfAssign(expr[[3]][[3]], expr[[2]], recurse = TRUE, ...)
       if(length(expr[[3]]) >= 4)
-         expr[[3]][[4]] = fixIfAssign(expr[[3]][[4]], expr[[2]], recurse = TRUE, ...)
+          expr[[3]][[4]] = fixIfAssign(expr[[3]][[4]], expr[[2]], recurse = TRUE, ...)
 
-      if(addPragma)
-          substitute(pragma(IfAssign, v, e), list(v = expr[[2]], e = expr[[3]]))
-      else
-         expr[[3]]  # remove the a = if() and just give back the updated if
+      
+#    if(addPragma)
+#        substitute(pragma(IfAssign, v, e), list(v = expr[[2]], e = expr[[3]]))
+#    else
+       expr[[3]]  # remove the a = if() and just give back the updated if
          
       
    } else
