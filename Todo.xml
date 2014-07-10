@@ -370,12 +370,12 @@ See call.R@86 and WrongNumArgs error.
 <title>General</title>
 <items>
 
-<item>
+<item status="check">
 Fix while loops the way we did for the  for() loops,
 i.e. nextBlock, nextIterBlock and so on.
 </item>
 
-<item>
+<item status="done">
 for() loop with a  break doesn't break.
 Related to the nextBlock changes we made.
 Jump to the incr. block since that is nextBlock.
@@ -392,6 +392,7 @@ See tests/realSimpleIf.R
 Problem is that there is no return value in the function and so no
 expression following the if statement. Now we get an error.
 </item>
+
 <item>
 See if we can recover in tests/realSimpleIf.R when return type is VoidType.
 See if.R@100

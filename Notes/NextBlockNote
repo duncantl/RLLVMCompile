@@ -7,9 +7,9 @@ For whileBreak.R
   If we add back in the ir$setInsertPoint(cond) in while.R, it works.
 
   The following causes problems.
-   source("tests/forWhileLoop.R")
+[Fixed]   source("tests/forWhileLoop.R")
 
-   We need to do operations on ... to avoid having duplicate elements in ... when they are passed on.
+   [Done] We need to do operations on ... to avoid having duplicate elements in ... when they are passed on.
 
 
 In createLoopCode:  
