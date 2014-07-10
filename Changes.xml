@@ -1,5 +1,12 @@
 <changelog>
 <version>
+
+<change>
+<r:func>compileFunction</r:func> adds a readonly attribute to Arguments/parameters in 
+a generated function for pointer types that are determined to be constant based on 
+analysis via <r:func>constInputs</r:func> in  the <omg:pkg>CodeAnalysis</omg:pkg> package.
+</change>
+
 <change>
 Reorganization for handling if expressions within for and while  loops.
 </change>

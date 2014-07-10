@@ -416,7 +416,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .localVarTypes = list(), .fixIfAssign = TRUE,
          .CallableRFunctions = list(), 
          .RGlobalVariables = character(),
-         .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE)
+         .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE,
+         .duplicateParams = TRUE)
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -456,7 +457,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
      
     if(length(args)  > length(types)) {
        stop("need to specify the types for all of the arguments for the ", name, " function")
-    }
+    } else if(length(types) > length(args))
+       warning("more types specified than parameters for the new routine")
 
     if(length(names(types)) == 0)
       names(types) = names(args)
@@ -581,7 +583,22 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     if(.insertReturn)
        fun = insertReturn(fun, env = nenv)        
     fbody <- body(fun)
-    nenv$.Rfun = fun     
+    nenv$.Rfun = fun
+
+    if(.duplicateParams) {
+       k = constInputs(fun)
+#       mayMutate = setdiff(names(formals(fun)), k)
+       if(length(k)) {
+          idx =  match(k, names(argTypes))
+           if(any(is.na(idx)))
+               stop("mismatch in parameter names and types")
+          mapply(function(type, arg) {
+                      if(isPointerType(type))
+                         setParamAttributes(arg, LLVMAttributes["ReadOnly"])
+                   }, argTypes[k], llvm.fun[idx])
+
+       }
+    }
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
