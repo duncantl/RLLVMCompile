@@ -13,8 +13,8 @@ instructions using the Rllvm package and then generate native/compiled
 code and invoke it from the R session, serialize it for use in other
 sessions or even applications (e.g. JavaScript, Python).
 
-Vince Buffalo and I started this package several years ago - late 2010
-- after the development of the Rllvm package.  Unfortunately, I had
+Vince Buffalo and I started this package several years ago (late 2010)
+after the development of the Rllvm package.  Unfortunately, I had
 other committments (the book XML and Web Technologies with R, and
 another "Data Science in R: A Case Studies Approach to Computational
 Reasoning and Problem Solving").  I am now getting back to this
