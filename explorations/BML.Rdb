@@ -41,6 +41,7 @@ Moving the cars is the expensive, time-critical version.
 This is because we call it twice for each unit of time
 and we have lots of these.
 </para>
+
 <para>
 We'll assume that we have both the grid and two parallel vectors
 <r:var>rows</r:var> and <r:var>cols</r:var> which contain the
@@ -101,15 +102,18 @@ function(grid, rows, cols, dir = RED)
 
       if(dir == RED) {
          nextRow = i
-	 nextCol = if(i <= nc ) i + 1L else 1L
+	 nextCol = if(j < nc ) j + 1L else 1L
        } else {
+.debug(printf("setting blue\n"))
          nextCol = j
-	 nextRow = if(j <= nr ) j + 1L else 1L
+	 nextRow = if(i < nr ) i + 1L else 1L
+.debug(printf("done\n"))
        }  
 
-printf("HERE\n")
+.debug(printf("(%d, %d) -> (%d, %d)\n", i, j, nextRow, nextCol))
 
        if(grid[nextRow, nextCol] == EMPTY) {
+.debug(printf("moving\n"))
           ctr = ctr + 1L
           grid[nextRow, nextCol] = dir
 	  grid[i, j] = EMPTY
@@ -117,7 +121,8 @@ printf("HERE\n")
           cols[k] = nextCol
        }
   }
-#  printf("num moved %d\n", ctr)
+.debug(  printf("num moved %d\n", ctr))
+  ctr
 }
 ]]></r:function>
 <fix>Use nrow and ncol and have the compiler convert these to Rf_nrows(), etc. But ignore them as global functions</fix>
@@ -129,9 +134,9 @@ We can compile this with
 <r:code id="compile">
 library(RLLVMCompile)
 m = Module()
-moveCars_f = compileFunction(moveCars, VoidType, 
+moveCars_f = compileFunction(moveCars, Int32Type, 
                              list(MatrixType(Int32Type), INTSXPType, INTSXPType, Int32Type),
-                              .constants = list(EMPTY = EMPTY, RED = RED, BLUE = BLUE), module = m, .debug = TRUE)
+                              .constants = list(EMPTY = EMPTY, RED = RED, BLUE = BLUE), module = m, .debug = FALSE)
 </r:code>
 
 
@@ -146,7 +151,15 @@ g[cbind(blue.rows, blue.cols)] = 2L
 </r:code>
 
 <r:code>
+print(g)
+print(red.cols)
 o = .llvm(moveCars_f,  g, red.rows, red.cols,  RED, .all = TRUE)
+print(red.cols)
+print(blue.rows)
+print(g)
+o = .llvm(moveCars_f,  g, blue.rows, blue.cols,  BLUE, .all = TRUE)
+print(blue.rows)
+print(g)
 </r:code>
 
 </para>
@@ -189,24 +202,24 @@ lrunBML =
 function(g, rrows, rcols, brows, bcols, niter)
 {
    for(i in 1:niter) {
-printf("[lrunBML] time %d\n", i)
-Rf_PrintValue(g)
-Rf_PrintValue(rcols)
-Rf_PrintValue(brows)
-printf("\tstart %d\n", i)
+.debug(printf("[lrunBML] time %d\n", i))
+.debug(Rf_PrintValue(g))
+.debug(Rf_PrintValue(rcols))
+.debug(Rf_PrintValue(brows))
+.debug(printf("\tstart %d\n", i))
       moveCars(g, rrows, rcols, RED)
       moveCars(g, brows, bcols, BLUE)
-printf("\tend %d\n", i)
+.debug(printf("\tend %d\n", i))
    }
 }
 ]]></r:function>
 
-<r:code eval="false">
+<r:code eval="true">
 lrunBML_c = compileFunction(lrunBML, VoidType, 
-                             list(MatrixType(Int32Type), INTSXPType, INTSXPType, INTSXPType, INTSXPType, Int32Type), module = m)
+                             list(MatrixType(Int32Type), INTSXPType, INTSXPType, INTSXPType, INTSXPType, Int32Type), module = m, .debug = FALSE)
 </r:code>
 
-<r:code eval="false">
+<r:code eval="true">
 ee = ExecutionEngine(m)
 
 set.seed(3)
@@ -220,15 +233,123 @@ o = .llvm(moveCars_f,  g, red.rows, red.cols,  RED, .all = TRUE)
 
 o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 2L, .all = TRUE, .ee = ee)
 
-old.red.rows = as.numeric(red.rows)
+old.red.cols = as.numeric(red.cols)
+old.blue.rows = as.numeric(blue.rows)
 g.orig = .Call("Rf_duplicate", g) + .0
-o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 20L, .all = TRUE, .ee = ee)
+o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1L, .all = TRUE, .ee = ee)
 </r:code>
 </para>
 
 
+</section>
+
+<section r:eval="false" id="timings">
+<title>Run-time performance</title>
+
+<para>
+<r:code id="run1">
+set.seed(3)
+g = convertGrid(createGrid(100, .24))
+red.rows = row(g)[g == 1L]
+red.cols = col(g)[g == 1L]
+blue.rows = row(g)[g == 2L]
+blue.cols = col(g)[g == 2L]
+tm1 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
+plot(g)
+</r:code>
+
+</para>
+<para>
+<r:code id="run2">
+set.seed(3)
+g = convertGrid(createGrid(100, .5))
+red.rows = row(g)[g == 1L]
+red.cols = col(g)[g == 1L]
+blue.rows = row(g)[g == 2L]
+blue.cols = col(g)[g == 2L]
+tm2 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
+plot(g)
+</r:code>
+</para>
 
 
+<para>
+<r:code id="run3">
+set.seed(3)
+g = convertGrid(createGrid(1000, .5))
+red.rows = row(g)[g == 1L]
+red.cols = col(g)[g == 1L]
+blue.rows = row(g)[g == 2L]
+blue.cols = col(g)[g == 2L]
+tm3 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
+plot(g)
+</r:code>
+</para>
+
+<para>
+<r:code id="run4">
+set.seed(3)
+g = convertGrid(createGrid(1000, .2))
+red.rows = row(g)[g == 1L]
+red.cols = col(g)[g == 1L]
+blue.rows = row(g)[g == 2L]
+blue.cols = col(g)[g == 2L]
+tm4 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
+plot(g)
+</r:code>
+</para>
+
+
+<para>
+If we compare this to the C code in CaseStudies/BML.Rdb and the associated files in that directory,
+we basically have that a 1000x1000 grid with density .5 run for 1000 iterations
+takes 4.4 seconds in C and 11.8 seconds with our LLVM-compiled code here.
+The C code is compiled with clang, so we are using the same basic technology.
+So there is room for further optimizations here.
+</para>
+
+
+<para>
+Let's see if any simple code-elimination passes improve matters
+<r:code>
+mm = as(lrunBML_c, "Module")
+str = showModule(mm, TRUE)
+mm = clone(mm)
+p = list(createAggressiveDCEPass, createDeadStoreEliminationPass, createDeadStoreEliminationPass)
+mgr = passManager(NULL, FALSE)
+lapply(p, function(f) addPass(mgr, f()))
+run(mgr, mm)
+str1 = showModule(mm, TRUE)
+</r:code>
+
+<r:code id="run5">
+.ee = ExecutionEngine(mm)
+set.seed(3)
+g = convertGrid(createGrid(1000, .5))
+red.rows = row(g)[g == 1L]
+red.cols = col(g)[g == 1L]
+blue.rows = row(g)[g == 2L]
+blue.cols = col(g)[g == 2L]
+# Run once to JIT
+system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 2L, .all = TRUE, .ee = ee)})
+tm5 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
+plot(g)
+</r:code>
+This brings the time down to about 9.8 seconds.
+This is about 2 times slower than the <c/> code.
+However, this seems to be be because we are running it on the output
+from the previous run and so the cars have reached equilibrium.
+So this improvement is not real!
+</para>
+
+
+</section>
+
+
+
+
+<ignore>
+<section>
 <para>
 The following is a semi-vectorized version.
 It uses loops to move the cars, but it uses vectors to find the cars.
@@ -272,6 +393,7 @@ function(grid, color = RED)
 </r:code>
 </para>
 </section>
+</ignore>
 
 
 </article>

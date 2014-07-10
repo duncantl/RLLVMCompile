@@ -17,7 +17,7 @@ ee1 = ExecutionEngine(m)
 # http://lunarglass.googlecode.com/svn/branches/3.1upgrade/TopToBottom.cpp
 passManager = passManager(NULL, FALSE) # getPassManager(m, ee) # passManager(m)
 #Doesn't work: passManager = getPassManager(m, ee) # passManager(m)
-# This is the pass that kills of the assignment to a.
+# This is the pass that kills off the assignment to a.
 deadStore = createDeadStoreEliminationPass()
 addPass(passManager, deadStore)
 #deadCode = .Call("R_createDeadCodeEliminationPass")
@@ -32,7 +32,7 @@ showModule(m)
 Optimize(m, ee1, mgr = passManager)
 showModule(m)
 
-N = 1e7
+N = 1e6
 ee = ExecutionEngine(as(fc, "Module"))
 tm = system.time(replicate(N, .llvm(fc, 10L, .ee = ee)))
 tm1 = system.time(replicate(N, .llvm(fc1, 10L, .ee = ee1)))

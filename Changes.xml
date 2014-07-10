@@ -1,6 +1,9 @@
 <changelog>
 <version>
 <change>
+Reorganization for handling if expressions within for and while  loops.
+</change>
+<change>
 <r:pkg>CodeAnalysis</r:pkg> package on github.com:duncantl/CodeAnalysis.
 </change>
 <change>

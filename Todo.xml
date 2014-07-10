@@ -1334,6 +1334,26 @@ fixIfAssign broken again. BML.Rdb
 For literals, we didn't do the assignment.
 </item>
 
+<item status="high">
+Make math convert literal values to integers if they are actually integers.
+Different from R but more natural.
+</item>
+
+<item status="high">
+<r:code>
+f =
+function(x, y)
+{
+  a = 1
+  b = 2
+  c = 1 + x # XXX  putting x here causes problems!!!!
+  x
+}
+
+fc = compileFunction(f, Int32Type, list(Int32Type, Int32Type), optimize = FALSE)
+</r:code>
+</item>
+
 <item>
 Use SelectInst as a ternary operator.
 </item>
