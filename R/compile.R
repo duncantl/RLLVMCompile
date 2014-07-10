@@ -276,11 +276,18 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
                 afterBlock = if(length(afterBlock)) afterBlock else Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
             else { 
                 afterBlock = nextBlock
-#               if(is(exprs[[i]], "if")) {
-#                  tmp = list(...)$nextIterBlock
-#                  if(!is.null(tmp))
-#                      afterBlock = tmp
-#               }
+               if(is(exprs[[i]], "if")) {
+                    # THIS SEEMS ugly. It handles the case of a while() { } where the last expression in the {}
+                    #  is an if() expr with no else.
+                    #  We need to return to the while() condition, not jump to nextBlock. 
+                   if(length(env$.loopStack) && env$.loopStack[1] == "while") {
+                      tmp = list(...)$nextIterBlock
+                      if(!is.null(tmp)) 
+                         afterBlock = tmp
+                      else
+                          stop("probably something wrong!!!")
+                   }
+               }
             }
 
             pop = TRUE                
@@ -567,6 +574,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
     nenv$.ExecEngine = .execEngine
     nenv$.SetCallFuns = list()
+
+    nenv$.loopStack = character()
 
     if(.insertReturn)
        fun = insertReturn(fun, env = nenv)        

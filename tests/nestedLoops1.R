@@ -18,3 +18,5 @@ f = function(n) {
 fc = compileFunction(f, Int32Type, list(Int32Type))
 
 stopifnot(.llvm(fc, 10) == 55)
+cat("okay\n")
+

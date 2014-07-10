@@ -4,7 +4,12 @@ For whileBreak.R
   in the condition.
 
   If we add an expression after the if(ctr == 5L) break,  then compilation error - no terminator.
- (That's if we take out the ir$setInsertPoint(cond) in while.R)
+  If we add back in the ir$setInsertPoint(cond) in while.R, it works.
+
+  The following causes problems.
+   source("tests/forWhileLoop.R")
+
+   We need to do operations on ... to avoid having duplicate elements in ... when they are passed on.
 
 
 In createLoopCode:  
@@ -77,3 +82,4 @@ TEST:
  source("explorations/simplerNestedIfInLoop.R")
  source("explorations/simplerNestedIfInLoop1.R")
  source("explorations/simplerNestedIfInLoop2.R")
+ source("tests/whileBreak.R")

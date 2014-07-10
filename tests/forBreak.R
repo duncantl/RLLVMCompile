@@ -31,4 +31,5 @@ function()
 }
 
 gc = compileFunction(g, Int32Type, .fixIfAssign = FALSE)
+cat("\n\n\n\n\nCalling gc\n")
 .llvm(gc)

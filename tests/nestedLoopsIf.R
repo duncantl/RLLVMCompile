@@ -12,6 +12,9 @@ f = function(n) {
 }
 
 fc = compileFunction(f, Int32Type, list(Int32Type))
-print(.llvm(fc, 10L, .ee = ee))
+stopifnot(.llvm(fc, 10L) == 55L)
+cat("okay\n")
+
+
 
 

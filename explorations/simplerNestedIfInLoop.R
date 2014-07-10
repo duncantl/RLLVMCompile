@@ -47,5 +47,5 @@ fc = compileFunction(moveCars, Int32Type,
                               .constants = list(EMPTY = EMPTY, RED = RED, BLUE = BLUE), module = m)
 
 showModule(m)
-.llvm(fc, 5, 1:10, 1:10, RED)
+stopifnot(.llvm(fc, 5, 1:10, 1:10, RED) == 5L)
 #.llvm(fc, 5, 1:10, 1:10, BLUE)

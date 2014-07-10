@@ -13,6 +13,7 @@ f = function(n) {
 fc = compileFunction(f, Int32Type, Int32Type)
 
 stopifnot(.llvm(fc, 10) == 55L)
+cat("okay\n")
 
 if(FALSE) {
 library(compiler)

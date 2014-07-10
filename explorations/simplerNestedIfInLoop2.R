@@ -65,5 +65,5 @@ blue.cols = as.integer(c(1, 3, 4, 5))
 g[cbind(red.rows, red.cols)] = 1L
 g[cbind(blue.rows, blue.cols)] = 2L
 
-.llvm(fc, g, nrow(g), ncol(g), red.rows, red.cols, RED)
+stopifnot(.llvm(fc, g, nrow(g), ncol(g), red.rows, red.cols, RED) == 2L)
 

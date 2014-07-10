@@ -2,8 +2,11 @@ compile.while = whileHandler =
   #
   # This generates the code corresponding to an while() {} loop in R.
   #
-function(call, env, ir, ..., fun = env$.fun, nextBlock = NULL)
+function(call, env, ir, ..., fun = env$.fun, nextBlock = NULL, breakBlock = NULL, nextIterBlock = NULL)
 {
+   env$.loopStack = c("while", env$.loopStack)
+   on.exit(env$.loopStack <- env$.loopStack[-1])
+   
     label = deparse(call)
 
          # create blocks for evaluating the condition
@@ -34,8 +37,8 @@ function(call, env, ir, ..., fun = env$.fun, nextBlock = NULL)
      compile(call[[3]], env, ir, ..., breakBlock = nextBlock, nextIterBlock = cond, nextBlock = nextBlock)
     
 #      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) 
-#       if(length(getTerminator(ir$getInsertBlock())) == 0)  
-#           ir$createBr(cond)
+       if(length(getTerminator(ir$getInsertBlock())) == 0)  
+           ir$createBr(cond)
 
    ir$setInsertPoint(nextBlock)    
 }

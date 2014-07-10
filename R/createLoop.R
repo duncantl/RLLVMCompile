@@ -1,7 +1,10 @@
 
 compile.for = compileForLoop =
-function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL)
+function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL, breakBlock = NULL, nextIterBlock = NULL)
 {
+  env$.loopStack = c("for", env$.loopStack)
+  on.exit(env$.loopStack <- env$.loopStack[-1])
+   
   var = as.character(call[[2]])
   inn = call[[3]]
   isSeq = isSequence(inn)
@@ -47,7 +50,7 @@ function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL)
    }
 
   class(ans) = "ForLoop"
-  createLoopCode(ans$var, ans$limits, ans$body, env, , ir = ir, nextBlock = nextBlock, label = deparse(call))
+  createLoopCode(ans$var, ans$limits, ans$body, env, , ir = ir, nextBlock = nextBlock, label = deparse(call), ..., breakBlock = NULL, nextIterBlock = NULL)
   ans
 }
 
@@ -59,7 +62,7 @@ createLoopCode =
   #
   #
 function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module = NULL, nextBlock = NULL,
-          label = ".", zeroBased = FALSE, ...)
+          label = ".", zeroBased = FALSE, ..., breakBlock = NULL, nextIterBlock = NULL)
 {
    env$.loopDepth = env$.loopDepth + 1L
    on.exit( env$.loopDepth <- env$.loopDepth - 1L)
