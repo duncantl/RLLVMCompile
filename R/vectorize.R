@@ -74,7 +74,7 @@ function(expr) {
   if(i)
     return(i)
 
-  (is.call(expr) && as.character(expr[[1]]) %in% c("+", "-") && isLiteral(expr[[2]]))
+  length(expr) == 2 && (is.call(expr) && as.character(expr[[1]]) %in% c("+", "-") && isLiteral(expr[[2]]))
 }
 
 examineArgDepends =
