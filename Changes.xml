@@ -1,4 +1,4 @@
-<changelog>
+<changelog xmlns:r="http://www.r-project.org">
 <version>
 <change>
 Simple assignments of the form <r:expr>x = 2</r:expr> will treat the right-hand-side
