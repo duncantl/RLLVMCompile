@@ -11,7 +11,7 @@ function(e)
 
 isSelect =
 function(call) 
-  FALSE && length(call) == 4 && all(sapply(call[3:4], isSingleExpression))
+  length(call) == 4 && all(sapply(call[3:4], isSingleExpression))
 
 
 compile.if = ifHandler =

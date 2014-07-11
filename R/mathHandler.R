@@ -63,11 +63,12 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   toCast = NULL
 
      # we are getting the types here w/o compiling the expressions (?). So they may not be what we end up with.
+
   types = lapply(call[-1], getTypes, env)
   if(any(nulls <- sapply(types, is.null))) {
      i = which(nulls) + 1L
      call[i] = lapply(call[i], compile, env, ir, ...)
-     types = lapply(call[-1], getType)
+     types[nulls] = lapply(call[-1][nulls], getType)
 #     stop("NULL value for component type in math operation")
   }
 

@@ -43,6 +43,7 @@ function(x)
   total
 }
 m = Module()
+#debug(RLLVMCompile:::mathHandler)
 oc = compileFunction(o, Int32Type, INTSXPType, .fixIfAssign = FALSE, module = m, optimize = FALSE)
 stopifnot(.llvm(oc, 1:10) == 5L)
 
