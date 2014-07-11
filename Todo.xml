@@ -1335,6 +1335,11 @@ For literals, we didn't do the assignment.
 </item>
 
 <item status="high">
+Make constParams process functions that are called from the original and
+see which ones modify their parameters.
+</item>
+
+<item status="high">
 Make math convert literal values to integers if they are actually integers.
 Different from R but more natural.
 </item>

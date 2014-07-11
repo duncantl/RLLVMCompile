@@ -254,8 +254,8 @@ red.rows = row(g)[g == 1L]
 red.cols = col(g)[g == 1L]
 blue.rows = row(g)[g == 2L]
 blue.cols = col(g)[g == 2L]
-tm1 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
-plot(g)
+tm1 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
+plot(o[[1]])
 </r:code>
 
 </para>
@@ -267,8 +267,8 @@ red.rows = row(g)[g == 1L]
 red.cols = col(g)[g == 1L]
 blue.rows = row(g)[g == 2L]
 blue.cols = col(g)[g == 2L]
-tm2 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
-plot(g)
+tm2 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
+plot(o[[1]])
 </r:code>
 </para>
 
@@ -281,8 +281,8 @@ red.rows = row(g)[g == 1L]
 red.cols = col(g)[g == 1L]
 blue.rows = row(g)[g == 2L]
 blue.cols = col(g)[g == 2L]
-tm3 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
-plot(g)
+tm3 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
+plot(o[[1]])
 </r:code>
 </para>
 
@@ -294,8 +294,8 @@ red.rows = row(g)[g == 1L]
 red.cols = col(g)[g == 1L]
 blue.rows = row(g)[g == 2L]
 blue.cols = col(g)[g == 2L]
-tm4 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
-plot(g)
+tm4 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
+plot(o[[1]])
 </r:code>
 </para>
 
@@ -333,7 +333,7 @@ blue.cols = col(g)[g == 2L]
 # Run once to JIT
 system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 2L, .all = TRUE, .ee = ee)})
 tm5 = system.time({o = .llvm(lrunBML_c,  g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee)})
-plot(g)
+plot(o[[1]])
 </r:code>
 This brings the time down to about 9.8 seconds.
 This is about 2 times slower than the <c/> code.

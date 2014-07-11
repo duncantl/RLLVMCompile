@@ -48,7 +48,11 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
          structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE,
-         .zeroBased = logical(), .localVarTypes = list())
+         .zeroBased = logical(), .localVarTypes = list(),
+          .fixIfAssign = TRUE, .CallableRFunctions = list(), 
+         .RGlobalVariables = character(),
+         .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE,
+         .duplicateParams = TRUE, .readOnly = constInputs(fun))
 }
 \arguments{
   \item{fun}{the R function to be compiled.}
@@ -132,7 +136,39 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
  \item{.localVarTypes}{a named list giving the type objects for any of
          the local variables. These are "hints". The types should be
   LLVM types, i.e. objects in the \code{Rllvm} package representing
-    explicit types.}
+  explicit types.}
+\item{.fixIfAssign}{a logical value that controls if we process the
+  R function code to rewrite assignments of the form \code{x = if(cond) a else b},
+   to \code{if(cond) x = a else x = b} via the \code{\link{fixIfAssign}}
+  function.}
+\item{.CallableRFunctions}{a list with named elements. Each element
+  identifies an R function that can be called from the compiled code.
+  Each element is a list specifying the return type of the function and
+  for the parameters of that function. These are specified as LLVM
+  types.  The type information can also be specified within the R code
+  via  \code{.R(foo(a, b), list(returnType, arg1Type, arg2Type))}.}
+\item{.RGlobalVariables}{a character vector specifying the names of variables
+  that are  in the R global environment. The types of these variables is
+  computed at compile time if necessary.}
+\item{.debug}{either a logical value or a character vector. If
+  \code{TRUE}, calls in the R code of the form \code{.debug(...)} are
+  compiled. If \code{FALSE}, they are omitted. If a character vector is
+  provided, this allows the caller to specify other names for functions
+  which are considered debugging calls.}
+\item{.assert}{similar to \code{.debug} but for assertions. By default,
+  these are of the form \code{.assert(condition)}}
+\item{.addSymbolMetaData}{a logical value that controls whether meta
+                           data about the external symbols invoked in
+                           the compiled code are added to the
+  Module. This allows another session/application to resolve those
+  symbols correctly when the module is deserialized.}
+%\item{.duplicateParams}{}
+\item{.readOnly}{a character vector giving the names of any parameters
+ in the compiled code that are pointer types but read-only and not
+  written to.  The \code{constInputs} function in the
+  \code{CodeAnalysis} package can determine this in common cases.
+  However, one can avoid the cost of that analysis or provide the
+  information that it cannot determine directly.}
 }
 \value{
  If \code{asFunction}, this returns an R function that has the same
