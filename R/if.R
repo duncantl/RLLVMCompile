@@ -1,3 +1,19 @@
+isSingleExpression =
+function(e)
+{
+  if(is.atomic(e))
+      return(TRUE)
+  
+  ((is(e, "{") && length(e) == 2 && (k <- is.call(e[[2]]) ) ) || (k <-is.call(e))) &&
+      !(class(k) %in% c("while", "for", "if"))
+}
+
+
+isSelect =
+function(call) 
+  FALSE && length(call) == 4 && all(sapply(call[3:4], isSingleExpression))
+
+
 compile.if = ifHandler =
   #
   # Generate code for an if statement
@@ -16,6 +32,10 @@ function(call, env, ir, ..., fun = env$.fun, continue = FALSE, nextBlock = NULL)
         return( compile(e[[4]], env, ir, ..., nextBlock = nextBlock) )
     }
 
+
+    if(isSelect(call))
+        return( makeSelect(call, env, ir, ...) )
+    
 
     
    # This is not elegant, but brute force.
@@ -170,3 +190,15 @@ function(env)
 
   NULL
 }    
+
+
+
+makeSelect =
+function(call, env, ir, ...)
+{
+browser()    
+   cond = compile(call[[2]], env, ir, ...)
+   a = compile(call[[3]], env, ir, ...)
+   b = compile(call[[4]], env, ir, ...)   
+   ir$createSelect(cond, a, b, deparse(call))
+}

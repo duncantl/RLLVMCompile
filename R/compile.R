@@ -274,7 +274,9 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
 
             if(i < length(idx))  # length(afterBlock) == 0 &&
                 afterBlock = if(length(afterBlock)) afterBlock else Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
-            else { 
+            else if(is(exprs[[i]], "if") && isSelect(exprs[[i]])) {
+                afterBlock = NULL
+            } else { 
                 afterBlock = nextBlock
                if(is(exprs[[i]], "if")) {
                     # THIS SEEMS ugly. It handles the case of a while() { } where the last expression in the {}
@@ -291,7 +293,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
             }
 
             pop = TRUE                
-            pushNextBlock(env, afterBlock)
+            #pushNextBlock(env, afterBlock)
         }
         
         compile(exprs[[i]], env, ir, fun = fun, name = name, nextBlock = afterBlock, ...)
@@ -299,7 +301,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
         if(pop) {
              # Do we setInsertBlock() for this next block?
 #browser()            
-            popNextBlock(env)  # popping the wrong thing!
+            #popNextBlock(env)  # popping the wrong thing!
             b = afterBlock
             if(!is.null(b))
                 setInsertBlock(ir, b)
@@ -364,6 +366,9 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
 compile.default <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
+    if(is(e, "("))
+       return(compile(e[[2]], env, ir, .targetType = .targetType))
+    
     if(is(e, "Value") || is(e, "Instruction"))
       return(e)
     

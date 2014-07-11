@@ -80,10 +80,10 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
        nextBlock = Block(fun, sprintf("after.%s", label))
    }
 
-   pushNextBlock(env, nextBlock)
-   on.exit(popNextBlock(env))
-   pushContinueBlock(env, incrBlock)
-   on.exit(popContinueBlock(env))   
+#   pushNextBlock(env, nextBlock)
+#   on.exit(popNextBlock(env))
+#   pushContinueBlock(env, incrBlock)
+#   on.exit(popContinueBlock(env))   
 
 # replace each set of 3 lines with a call to createCompilerLocalVariable   
    iv = createFunctionVariable(Int32Type, var, env, ir)  #  ir$createLocalVariable(Int32Type, var)
@@ -238,16 +238,20 @@ function(expr)
 }
 
 
+
+# Made these all noOPs for now to see if it makes any difference
+
 pushNextBlock =
 function(env, block)
 {
-    
+  return(NULL)    
   env$.nextBlock = c(block, env$.nextBlock)
 }
 
 popNextBlock =
 function(env)
 {
+  return(NULL)    
   ans = env$.nextBlock[[1]]
   env$.nextBlock = env$.nextBlock[-1]
   ans
@@ -256,12 +260,14 @@ function(env)
 pushContinueBlock =
 function(env, block)
 {
+  return(NULL)    
   env$.continueBlock = c(block, env$.continueBlock)
 }
 
 popContinueBlock =
 function(env)
 {
+  return(NULL)
   ans = env$.continueBlock[[1]]
   env$.continueBlock = env$.continueBlock[-1]
   ans

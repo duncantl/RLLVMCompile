@@ -20,8 +20,8 @@ function(call, env, ir, ..., fun = env$.fun, nextBlock = NULL, breakBlock = NULL
 
 #   pushNextBlock(env, nextBlock)
 #   on.exit(popNextBlock(env))
-   pushContinueBlock(env, cond)
-   on.exit(popContinueBlock(env), add = TRUE)       
+#   pushContinueBlock(env, cond)
+#   on.exit(popContinueBlock(env), add = TRUE)       
 
           # We have to explicitly jump from the current block
           # before the while() loop to our condition code.
