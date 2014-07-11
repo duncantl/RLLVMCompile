@@ -395,7 +395,26 @@ function(fun, merge = FALSE, ignoreDefaultArgs = TRUE)
   }
   ans
 }
+
+
+addArgSEXPTypeMetadata =
+function(className, id, module)
+{
+  name = sprintf("%s.SEXPType", id)
+  setMetadata(module, name, list("SEXPType", className))
+}
+
+
+addSEXPTypeMetadata =
+function(module, argTypes)
+{
+  k = sapply(argTypes, class)
+  i = (k != "SEXPType")
+  if(any(i)) 
+      mapply(addArgSEXPTypeMetadata,  k[i], names(argTypes)[i], MoreArgs = list(module = module))
   
+  any(i)
+}
 
 
 compileFunction <-
@@ -417,7 +436,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .CallableRFunctions = list(), 
          .RGlobalVariables = character(),
          .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE,
-         .duplicateParams = TRUE)
+         .readOnly = constInputs(fun))  # .duplicateParams = TRUE
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -490,6 +509,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, module)
 
+    if(any( i <- sapply(argTypes, is, "SEXPType")))
+       addSEXPTypeMetadata(module, argTypes[i])
+
       # if we picked up any .R() expressions in the function, add the resulting types
       # to the .CallableRFunctions.
     if(length(.globals$skippedExpressions) &&
@@ -528,7 +550,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 #XXX temporary to see if we should declare and load these individually when we encounter them
 # Really need the user to specify the DLL not just the name in case of ambiguities, so often easier to do this separately.
     if(length(.routineInfo))
-        processExternalRoutines(module, .funcs = .routineInfo)
+        processExternalRoutines(module, .funcs = .routineInfo, .addMetaData = .addSymbolMetaData)
 
     if(length(.globals$functions)) 
        compileCalledFuncs(.globals, module, .functionInfo)
@@ -585,8 +607,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     fbody <- body(fun)
     nenv$.Rfun = fun
 
-    if(.duplicateParams) {
-       k = constInputs(fun)
+    if(length(.readOnly)) {
+       k = .readOnly  
 #       mayMutate = setdiff(names(formals(fun)), k)
        if(length(k)) {
           idx =  match(k, names(argTypes))
@@ -598,7 +620,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                    }, argTypes[k], llvm.fun[idx])
 
        }
-    }
+   }
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
@@ -720,7 +742,7 @@ function(type)
 
 
 processExternalRoutines =
-function(mod, ..., .funcs = list(...), .lookup = TRUE)
+function(mod, ..., .funcs = list(...), .lookup = TRUE, .addMetaData = TRUE)
 {
   names(.funcs) = mapRoutineName(names(.funcs))
 
@@ -733,12 +755,59 @@ function(mod, ..., .funcs = list(...), .lookup = TRUE)
 
   if(.lookup) {
     syms = lapply(names(.funcs),
-                    function(x) getNativeSymbolInfo(x)$address)
+                    function(x) {
+                       info = getNativeSymbolInfo(x)
+                       if(.addMetaData) {
+                           pkg = info$package
+                             # do we need the path? yes if it is not part of a package.
+                             # Some of these will be "wrong", i.e. too specific
+                             # e.g. finding printf in RLLVMCompile since libc is linked to RLLVMCompile.so.
+                             # But that is R's problem, i.e. should be fixed there or we should specify
+                             # where it is in the registration information in this package for known
+                             # external routines
+                           setMetadata(mod, sprintf("symbolInfo.%s", info$name),
+                                            list("package", pkg[["name"]], "path", pkg[["path"]]))
+                       }
+                       info$address
+                    })
     llvmAddSymbol(.syms = structure( syms, names = names(.funcs)))
   }
   ans
 }
 
+
+getSymbolInfoMetadata =
+function(module, id = character())
+{
+  if(length(id) == 0) {
+     # get all the metadata
+     # get the names of all metadata, find those named symbolInfo\\..* and then call this function in an lapply()      
+     all = getMetadata(module)
+     i = grepl("^symbolInfo\\.", names(all))
+     return(lapply(all[i], function(node) getSymbolInfoMetadata(module, node)))
+  }
+
+  if(length(id) > 1) {
+      ans = lapply(id, function(x) getSymbolInfoMetadata(module, x))
+      if(is.character(id))
+          names(ans) = i
+      return(ans)
+  }
+
+
+  md = if(is.character(id))
+          md = getMetadata(module, sprintf("symbolInfo.%s", id))
+       else
+          id
+  
+  if(is.null(md))
+      stop("no symbolInfo metadata for ", id)
+
+  a = md[[1]]
+  vals = names(a[])
+  i = seq(1, length(vals)-1, by = 2)
+  structure(vals[i+1], names = vals[i])
+}
 
 
 getConstants =

@@ -68,3 +68,4 @@ export(BasicCompiler)
 
 
 
+export(getSymbolInfoMetadata)

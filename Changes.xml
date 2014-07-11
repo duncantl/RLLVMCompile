@@ -2,6 +2,20 @@
 <version>
 
 <change>
+<r:func>compileFunction</r:func> adds information about the specific type of SEXPType
+of a parameter declaration as metadata in the Module.  This allows the information
+to be recovered.
+</change>
+<change>
+<r:func>compileFunction</r:func> can optionally add information about external routines
+called by a generated function as metadata in the Module. This allows other <r/> sessions
+or applications to resolve those symbols.
+The symbol information is metadata named symbolInfo.routineName and 
+is given in pairs of values corresponding to the name of the package and the full path to the
+DLL.
+The function <r:func>getSymbolInfoMetadata</r:func> can be used to retrieve this information.
+</change>
+<change>
 <r:func>compileFunction</r:func> adds a readonly attribute to Arguments/parameters in 
 a generated function for pointer types that are determined to be constant based on 
 analysis via <r:func>constInputs</r:func> in  the <omg:pkg>CodeAnalysis</omg:pkg> package.
