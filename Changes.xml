@@ -1,6 +1,10 @@
 <changelog>
 <version>
-
+<change>
+Simple assignments of the form <r:expr>x = 2</r:expr> will treat the right-hand-side
+as an integer if <r:arg>.integerLiterals</r:arg> is <r:true/>.
+In other words, when the value of an assignment is a literal
+</change>
 <change>
 <r:func>compileFunction</r:func> adds information about the specific type of SEXPType
 of a parameter declaration as metadata in the Module.  This allows the information

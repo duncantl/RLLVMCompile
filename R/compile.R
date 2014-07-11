@@ -84,6 +84,10 @@ function(call, env, ir, ...)
    if(isLiteral(args[[2]])) {  #!! these are the args, not the call
       tmp = val = eval(args[[2]])
       ctx = getContext(env$.module)
+
+      if(env$.integerLiterals  && val == floor(val)) {
+          tmp = val = as.integer(val)
+      }
       type = getDataType(I(val), env)
       val = makeConstant(ir, val, type, ctx)
       type = getDataType(val, env)
@@ -438,7 +442,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .CallableRFunctions = list(), 
          .RGlobalVariables = character(),
          .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE,
-         .readOnly = constInputs(fun))  # .duplicateParams = TRUE
+         .readOnly = constInputs(fun),
+         .integerLiterals = TRUE
+         )  # .duplicateParams = TRUE
 {
    if(missing(name))
      name = deparse(substitute(fun))
@@ -590,6 +596,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.zeroBased = .zeroBased
     nenv$.localVarTypes = .localVarTypes
 
+    nenv$.integerLiterals = .integerLiterals
     nenv$.useFloat = .useFloat
     nenv$.debug = .debug
     nenv$.assertFunctions = .assert

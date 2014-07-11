@@ -52,7 +52,7 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
           .fixIfAssign = TRUE, .CallableRFunctions = list(), 
          .RGlobalVariables = character(),
          .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE,
-         .duplicateParams = TRUE, .readOnly = constInputs(fun))
+         .readOnly = constInputs(fun), .integerLiterals = TRUE)
 }
 \arguments{
   \item{fun}{the R function to be compiled.}
@@ -169,6 +169,11 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
   \code{CodeAnalysis} package can determine this in common cases.
   However, one can avoid the cost of that analysis or provide the
   information that it cannot determine directly.}
+\item{.integerLiterals}{a logical value. If this is \code{TRUE},
+  assignments of the form \code{x = 2} will treat the numeric value
+  as an integer. This is different from R which treats 2 as a
+  \code{numeric} object evethough its value - not its type - is an integer.
+ }
 }
 \value{
  If \code{asFunction}, this returns an R function that has the same

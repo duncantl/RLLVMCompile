@@ -10,3 +10,10 @@
  source("explorations/simplerNestedIfInLoop2.R")
  source("tests/whileBreak.R")
  source("tests/select.R")
+
+
+if(require('XML')) {
+   xmlSource("explorations/BML.Rdb")
+   xmlSource("explorations/BML.Rdb", xnodes = "//section[@id = 'timings']//r:code", force = TRUE)
+}
+

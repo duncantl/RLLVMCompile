@@ -348,6 +348,11 @@ and not matching the types when calling functions with more
 specific types.
 </item>
 
+<item>
+Consolidate the 2 getLimits functions.
+</item>
+
+
 
 <item status="low">
 Think about introducing a run-time package, e.g. RLLVMCompileRT
@@ -1305,9 +1310,6 @@ We can hope the LLVM optimizer will
 
 </item>
 
-<item>
-Consolidate the 2 getLimits functions.
-</item>
 
 <item status="done">
 May want to simplify compile() and not call getArgs() and pass them to
@@ -1322,7 +1324,7 @@ to even worry.  So we don't need to create the blocks for each
 expression and pass the nextBlock argument.
 </item>
 
-<item status="high">
+<item status="verify">
 Fix the if() mechanism. See explorations/BML.Rdb.
 The if inside the if (for assigning nextRow) in moveCars
 is jumping to the wrong place.
@@ -1339,12 +1341,14 @@ Make constParams process functions that are called from the original and
 see which ones modify their parameters.
 </item>
 
-<item status="high">
+<item status="done">
 Make math convert literal values to integers if they are actually integers.
 Different from R but more natural.
+<br/>
+It happens elsewhere already.
 </item>
 
-<item status="high">
+<item status="done">
 <r:code>
 f =
 function(x, y)
