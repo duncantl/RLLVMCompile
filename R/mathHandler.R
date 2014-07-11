@@ -63,7 +63,6 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   toCast = NULL
 
      # we are getting the types here w/o compiling the expressions (?). So they may not be what we end up with.
-
   types = lapply(call[-1], getTypes, env)
   if(any(nulls <- sapply(types, is.null))) {
      i = which(nulls) + 1L

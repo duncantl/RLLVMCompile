@@ -4,9 +4,9 @@ function(e)
   if(is.atomic(e))
       return(TRUE)
   
-  ((is(e, "{") && length(e) == 2 && (k <- is.call(e[[2]]) ) ) || (k <-is.call(e))) &&
-      !(class(k) %in% c("while", "for", "if"))
-}
+  ((is(e, "{") && length(e) == 2 && ( is.call(k <- e[[2]]) ) ) || (is.call(k <- e))) &&
+      !(class(k) %in% c("while", "for", "if", "=", "<-", "<<-", "{"))
+ }
 
 
 isSelect =
@@ -196,7 +196,6 @@ function(env)
 makeSelect =
 function(call, env, ir, ...)
 {
-browser()    
    cond = compile(call[[2]], env, ir, ...)
    a = compile(call[[3]], env, ir, ...)
    b = compile(call[[4]], env, ir, ...)   

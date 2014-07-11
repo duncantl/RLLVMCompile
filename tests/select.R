@@ -3,7 +3,7 @@ library(RLLVMCompile)
 f =
 function(a)
 {
-  b = if(a < 10L) 2L else 4L
+  if(a < 10L) 2L else 4L
 }
 
 #debug(RLLVMCompile:::pushNextBlock)
@@ -11,6 +11,17 @@ m = Module()
 fc = compileFunction(f, Int32Type, Int32Type, .fixIfAssign = FALSE, module = m, optimize = TRUE)
 stopifnot(.llvm(fc, 4) == 2L)
 stopifnot(.llvm(fc, 20) == 4L)
+
+f =
+function(a)
+  if(a < 10L) 2L else 4L
+
+#debug(RLLVMCompile:::pushNextBlock)
+m = Module()
+fc = compileFunction(f, Int32Type, Int32Type, .fixIfAssign = FALSE, module = m, optimize = TRUE)
+stopifnot(.llvm(fc, 4) == 2L)
+stopifnot(.llvm(fc, 20) == 4L)
+
 
 
 g =

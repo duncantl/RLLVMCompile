@@ -9,3 +9,4 @@
  source("explorations/simplerNestedIfInLoop1.R")
  source("explorations/simplerNestedIfInLoop2.R")
  source("tests/whileBreak.R")
+ source("tests/select.R")

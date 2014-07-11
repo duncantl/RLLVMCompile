@@ -81,10 +81,17 @@ function(expr, nested = FALSE, ...)
 {
 #   body(expr) = insertReturn(body(expr))
    b = body(expr)
-   if(class(b) == "{")
-      b[[length(b)]] = insertReturn(b[[length(b)]])
-   else
-      b = insertReturn(b)
+   if(class(b) == "{") {
+      b[[length(b)]] = if(isSelect(b[[length(b)]]))
+                         substitute(return(x), list(x = b[[length(b)]]))
+                       else
+                         insertReturn(b[[length(b)]])
+   } else {
+      b = if(isSelect(b))
+            substitute(return(x), list(x = b))
+          else
+            insertReturn(b)
+   }
 
    body(expr) = b
    expr

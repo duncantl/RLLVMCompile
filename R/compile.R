@@ -274,9 +274,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
 
             if(i < length(idx))  # length(afterBlock) == 0 &&
                 afterBlock = if(length(afterBlock)) afterBlock else Block(env$.fun, sprintf("after.%s", deparse(exprs[[i]])))
-            else if(FALSE && is(exprs[[i]], "if") && isSelect(exprs[[i]])) { #!!! This can go (probably)
-                afterBlock = NULL
-            } else { 
+            else { 
                 afterBlock = nextBlock
                if(is(exprs[[i]], "if")) {
                     # THIS SEEMS ugly. It handles the case of a while() { } where the last expression in the {}
