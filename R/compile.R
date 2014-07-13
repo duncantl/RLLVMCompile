@@ -1,9 +1,10 @@
 ## compile.R - compile R functions
-# Some of this is inspired by Tierney's compiler package.
+# Some of this was inspired by Tierney's compiler package.
 
 MathOps = c("+", "-", "*", "/", "%/%", "^")
 LogicOps = c("<", ">", "<=", ">=", "!=", "==", "!")
 
+#??? Kill off
 XXXX.assignHandler =
 function(call, env, ir)
 {
@@ -626,7 +627,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
           mapply(function(type, arg) {
                       if(isPointerType(type))
                          setParamAttributes(arg, LLVMAttributes["ReadOnly"])
-                   }, argTypes[k], llvm.fun[idx])
+                   }, argTypes[k], getFunctionArgs(llvm.fun)[idx])
 
        }
    }
