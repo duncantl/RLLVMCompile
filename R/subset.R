@@ -32,10 +32,32 @@ function(call, env, ir, ..., objType = getElementAssignmentContainerType(call, e
     if(SEXPToPrimitive) {
       r = getSEXPTypeElementAccessor(objType)
       declareFunction(env$.builtInRoutines[[r]], r, env$.module)
+
       e1 = substitute(.tmp <- f(x), list(f = as.name(r), x = call[[2]]))
       e2 = substitute(.tmp[i], list(i = call[[3]]))
-      compile(e1, env, ir)
+
+      if(length(env$.loopStack)) {
+          # lift this accessor to the entry block and create as a non-loop local variable
+          # If this is in a nested loop, we have to be careful in case the variable is loop-local
+          # i.e. in the parent loop.
+          # If we are subsetting a parameter, no problem, as long as it is a simple x[].
+          # If it is x[i][j] then we have to be more careful.
+          #
+
+          cur = getInsertBlock(ir)
+                # Need to put new code before the existing terminator in the entry block.
+          term = getTerminator(env$.entryBlock)
+          eraseFromParent(term, FALSE)
+          setInsertBlock(ir, env$.entryBlock)
+          tmpVarName = e2[[2]] = e1[[2]] =  as.name(sprintf("%s.%s", r, as.character(call[[2]]))) # make a fake name
+          compile(e1, env, ir)
+          insertAtEnd(term, env$.entryBlock)
+          setInsertBlock(ir, cur)
+      } else 
+          compile(e1, env, ir)
+      
       return(compile(e2, env, ir))
+
     } else
        stop("subsetting SEXPs as SEXPs is not implemented yet")
     }
