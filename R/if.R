@@ -3,6 +3,10 @@ function(e)
 {
   if(is.atomic(e))
       return(TRUE)
+
+     # if the expression is return(expr)  then say no.
+  if(is.call(e) && as.character(e[[1]]) == "return")
+      return(FALSE)
   
   ((is(e, "{") && length(e) == 2 && ( is.call(k <- e[[2]]) ) ) || (is.call(k <- e))) &&
       !(class(k) %in% c("while", "for", "if", "=", "<-", "<<-", "{"))
@@ -10,7 +14,8 @@ function(e)
 
 
 isSelect =
-function(call) 
+    # checks if the body and alternative of an if() statement are single expressions.
+function(call)
   length(call) == 4 && all(sapply(call[3:4], isSingleExpression))
 
 
