@@ -275,7 +275,7 @@ function(call, callVar, env, ir, ...)
 usesLocalVariables =
 function(expr, env)
 {
- f = function() e
+ f = function() "will be replaced by expr"
  body(f) = expr
  info = findGlobals(f, FALSE)
  localVarNames = c(names(env$.localVarTypes),  env$.params@names, names(env$.types))

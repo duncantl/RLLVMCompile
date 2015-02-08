@@ -252,7 +252,7 @@ function(e, env, ir, ..., .targetType = NULL)
   #
   # This compiles a group of expressions.
   # It handles moving from block to block with a block for
-  # each expression.
+  # each expression. <Is this still true? or is it more sophisticated about blocks now?>
 function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL, ..., afterBlock = NULL, nextBlock = NULL)
 {
   #insertReturn(exprs)
@@ -264,15 +264,14 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
       
     exprs = exprs[-1]
 
-     
     idx = seq_along(exprs)
 
     for (i in idx) {
         cur = ir$getInsertBlock()
-        if(length(getTerminator(cur))) {
+        if(length(getTerminator(cur))) 
             break
-         }
-         env$.remainingExpressions = exprs[ - (1:i) ]
+
+        env$.remainingExpressions = exprs[ - (1:i) ]
 
         pop = FALSE
         if(is.call(exprs[[i]]) && (is(exprs[[i]], "if") || is(exprs[[i]], "for") || is(exprs[[i]], "while")) ) {
@@ -290,7 +289,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
                       if(!is.null(tmp)) 
                          afterBlock = tmp
                       else
-                          stop("probably something wrong!!!")
+                         stop("probably something wrong!!!")
                    }
                }
             }

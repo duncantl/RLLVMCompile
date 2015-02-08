@@ -999,11 +999,15 @@ See tests/intComparison.R
 
 <item>
 Is the code generated for the tests/simpleFor.R correct?
-It works, but the incrementing of the loop counter is in the body.
+It works, but the incrementing of the loop counter is in the body. That is okay. Did we want a separate block? Unnecessary!
+<br/>
 Also, the condition block has an extra instruction that seems irrelevant.
 <pre>
 %3 = load i32* %ctr
 </pre>
+But it is necessary. It loads the current value of ctr so that the body block can add 1 to the %3 variable.
+Why isn't this in the body?  It looks like the insertion point is added back to the condition block
+when the body is being processed.
 </item>
 
 

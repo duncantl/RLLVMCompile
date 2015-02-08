@@ -6,7 +6,7 @@ useDynLib(RLLVMCompile)
 import(Rllvm)
 import(methods)
 import(CodeAnalysis)
-#import(codetools)
+importFrom(codetools, findGlobals)
 
 export(compileFunction) #, compile)
 export(getCompilerHandlers)
@@ -61,7 +61,7 @@ export(traverseExpressions, rewriteRNGCalls)
 export(STRSXP, LGLSXP, REALSXP, INTSXP, CPLXSXP, ANYSXP, CHARSXP, LANGSXP, SYMSXP, VECSXP, S4SXP, RAWSXP, EXPTRSXP, EXPRSXP, ENVSXP)
 
 
-export(loadRObjectFromString)
+#export(loadRObjectFromString)
 
 
 export(BasicCompiler)

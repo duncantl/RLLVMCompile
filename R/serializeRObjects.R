@@ -1,5 +1,5 @@
 #
-# This serializes R objects to a C variable and also restores them
+# This serializes R objects and also restores them
 #
 
 saveRObjectAsString =

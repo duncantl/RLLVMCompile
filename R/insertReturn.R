@@ -70,7 +70,7 @@ function(expr, nested = FALSE, ...)
 }
 
 `insertReturn.=` = `insertReturn.<-` =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, ..., value = NULL)
 {
   substitute(return(x), list(x = expr))
 }
