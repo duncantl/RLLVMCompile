@@ -1,0 +1,28 @@
+BODY {
+  background: #FFF;
+  margin-left: 7%;
+  margin-right: 10%; 
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+
+PRE.programlisting { background-color: #E0E0E0; }
+
+PRE.S {color: brown;
+       background-color: lightgrey;
+      }
+
+PRE.rfunction {
+       color: brown;
+       background-color: lightgrey;
+      }
+
+PRE.PYTHON {color: darkgreen;}
+PRE.perl {color: salmon;}
+
+PRE.VB {color: purple;}
+
+
+i.note { color: green; }
+
+

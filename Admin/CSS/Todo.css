@@ -1,0 +1,115 @@
+dt { color: blue }
+
+li.need-example { color: green; }
+
+dd.high, dt.high, a.high, td.high { color: red }
+
+dd.test, dt.test { background-color: lightblue }
+
+dd.low, dt.low, a.low, td.low { color: #008080 }
+
+dd.medium, dt.medium { background-color: pink }
+
+dt.need-doc, dd.need-doc, td.need-doc  { color: magenta }
+
+dt.info, dd.info, td.info, a.info, i.info { color: Lime; font-style: italic  }
+dt.note, dd.note, td.note, a.note, i.note { color: #00FF00; font-style: italic  }
+
+a.easy, i.easy, dt.easy, dd.easy, td.easy { color: #00FF33; }
+
+a.fix, i.fix, dt.fix, dd.fix, td.fix { color: orange; }
+
+dt.check, dd.check, a.check, li.check, td.check, p.check { color: purple }
+
+lt.partial, dd.partial, a.partial, li.partial, td.partial, p.partial { color: orange }
+
+
+dt.complete { background-color: orange}
+
+dd.question, dt.question { background-color: lightblue }
+
+
+td.done, dd.done, dt.done, a.done { color: black }
+
+a.no-status, td.no-status { color: #FF6666 }
+
+dt.warning, dd.warning, td.warning { color: orange }
+
+dt.later, dd.later, td.later { color: grey }
+
+em.emphasis { color: red ; margin-left: 20pt}
+
+div.count-tables { color: red }
+
+
+div.todoItem { 
+      background: lightgrey;
+      margin: 4pt;
+      padding: 4pt;
+}
+
+/* We are padding the wrong element. We want a sub-element which contains just the sub-items. But works for now. */
+div.nestedItems { 
+/*      background: yellow;
+      border: red 3px solid; */
+      padding-left: 24pt;
+}
+
+
+div.topic-table { border: red 0px solid;}
+
+i.done, P.done, BR.done { color: red; }
+
+
+
+
+div.table-count { border: 1px solid black; }
+
+.CToolTip {
+      position: absolute; visibility: hidden;
+      left: 0; top: 0; max-width: 50%;
+      background-color: lightgreen;
+      padding: 5px;
+      border-width: 1px 2px 2px 1px; border-style: solid; border-color: #000000;
+      font-size: 8pt 
+}
+
+
+a.improve, td.improve, dt.improve {
+  color: magenta;
+}
+
+div.reply {
+  color: red;
+  padding-left: 20pt;
+}
+
+b.confirm {
+   font-size: 125%;   
+   border: solid 1px black;
+}
+
+b.questionMarker {
+  color: red;
+  text-decoration: blink;
+}
+/*
+p.question {
+  color: #444444;   
+}
+*/
+
+i.notDone {
+    color: red;
+}
+
+div.solution {
+    color: green;
+    padding:  20pt;
+}
+
+
+div.searchQuery {
+  color:  green;
+  border: solid 1px red;
+}

@@ -1,0 +1,31 @@
+@import url("OmegaTech.css");
+
+div.ApproachSelector {
+  background-color: lightgrey;   
+  float: left;
+}
+
+div.ApproachSelectorTitle {
+  float: left;
+}
+
+div.ApproachSelectorLabels {
+  float: left;
+  padding-left: 20pt;    
+}
+
+
+.hidden { display: none; }
+.unhidden { display: block; }
+
+.toggleLink {
+      float: left
+}
+div.codeToggle div.unhidden {
+  float: left;   
+}
+
+div.clearFloat {
+   clear: both;   
+}
+

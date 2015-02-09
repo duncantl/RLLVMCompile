@@ -42,7 +42,8 @@ compileFunction(fun, returnType, types = list(), module = Module(name), name = N
          .functionInfo = list(...),
          .routineInfo = list(),
          .compilerHandlers = getCompilerHandlers(),
-         .globals = findGlobals(fun, merge = FALSE, .ignoreDefaultArgs),
+         .globals = getGlobals(fun, names(.CallableRFunctions), .ignoreDefaultArgs, 
+                                .assert = .assert, .debug = .debug),
          .insertReturn = !identical(returnType, VoidType),
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
@@ -231,7 +232,12 @@ function(x, y)
 
 
   # Here we return an R function that is directly callable.
+
+ # Create a new module and we will need foo in that. So recreate.
+ foo.c = compileFunction(foo, DoubleType, list(DoubleType, DoubleType),
+                      .routineInfo = list( sqrt = list(DoubleType, DoubleType) ))
  fb = compileFunction(foobar, DoubleType, list(DoubleType, DoubleType),
+                       module = as(foo.c, "Module"),
                       .routineInfo = list( sqrt = list(DoubleType, DoubleType) ),
                        foo = list(returnType = DoubleType,
                                   params = c(DoubleType, DoubleType)),

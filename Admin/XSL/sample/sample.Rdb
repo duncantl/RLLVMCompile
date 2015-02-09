@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<article xmlns:r="http://www.r-project.org"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<articleinfo>
+
+<title>A Sample Case Study</title>
+<subtitle>Testing the XSL Formatting</subtitle>
+
+<author><firstname>Duncan</firstname><surname>Temple Lang</surname>
+  <affiliation><orgname>University of California at Davis</orgname>
+               <orgdiv>Department of Statistics</orgdiv>
+  </affiliation>
+</author>
+</articleinfo>
+
+
+<computingPrereqs>
+ <topic level="introductory">string manuipulation</topic>
+ <topic level="intermediate">data manuipulation</topic>
+ <topic level="intermediate">programming</topic>
+ <topic level="intermediate">graphics</topic>
+</computingPrereqs>
+<statPrereqs>
+<topic>empirical distributions</topic>
+<topic>summary statistics (mean, median, inter-quartile range)</topic>
+</statPrereqs>
+
+<computingTopics>
+<topic>data structures and representation</topic>
+<topic>data input</topic>
+<topic>grid search</topic>
+<topic>efficiency</topic>
+</computingTopics>
+
+<statTopics>
+<topic>k nearest neighbor classification</topic>
+<topic>cross validation</topic>
+</statTopics>
+
+
+<section id="intro">
+<title>A Section</title>
+
+<para>
+
+</para>
+
+<instructor><para>
+This is intended for material that is for instructors.
+When projecting the document to a view for students, this
+will be omitted.  Additionally, we can extract these
+directly for instructors so that she can  quickly
+lookup "notes" on  the material.
+</para></instructor>
+
+
+<para>
+We often want to call the student's/reader's attention to a generally good practice or rule of thumb.
+For example, after doing a non-trivial transformation of data to create "derived" variables,
+we should examine the result and verify that the results are as we expect.
+We identify this general rule of thumb using the <xml:tag>ruleOfThumb</xml:tag> element, such as
+<ruleOfThumb><para>
+after doing a non-trivial transformation of data to create "derived" variables,
+we should examine the result and verify that the results are as we expect,
+plotting the results, and computing numerical summaries and 
+testing random observations.
+</para></ruleOfThumb>
+</para>
+
+
+</section>
+
+<section>
+<title></title>
+
+<para>
+<data>
+1, 2, 3,, 5
+A, 1, 3,BCDE,7
+</data>
+</para>
+</section>
+
+<section>
+<title></title>
+
+<para>
+Here are some exercises
+</para>
+
+<exercise>
+<q>
+This is the first questio
+<a>
+Here is the answer along with code
+<r:code><![CDATA[
+ replicate(100000, 1/median(rnorm(N)))
+]]></r:code>
+
+</a>
+</q>
+
+<q>
+Draw a plot of Y versus X, but condition on Z.
+Is the relationship the same for different levels of Z.
+
+</q>
+
+</exercise>
+
+</section>
+
+<section>
+<title>Threads, Tasks and Alternatives</title>
+
+<para>
+Here we talk about 
+</para>
+</section>
+
+</article>

@@ -1,0 +1,271 @@
+@import "html.css";
+
+BODY {
+  background: #FFF;
+  margin-left: 3em; /* # 1%; */
+  margin-right: 3em; /* #10%;  */
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+H1 {
+  color: red;
+}
+
+h2 {
+  color: blue;
+}
+H3 { 
+  color: green; 
+  font-style: italic
+}
+
+.link {
+  text-decoration: underline;
+}
+
+
+B { color: green; } 
+B.object { color: red; }
+
+CODE { color: brown; font-family: Courier; }
+
+CODE.rstr,  CODE.rint, CODE.rnum, CODE.rlog { color: black; font-family: Courier; }
+
+CODE.comment { color: red; }
+CODE.codeComment { color: red; }
+CODE.object { color: green; }
+CODE.keyword { color: darkgreen; font-style: italic; }
+
+CODE.sfunction { color: darkblue; }
+CODE.rfunction  { background-color: #f0ffff; 
+                 color: red; 
+                 font-family: Courier; }
+
+CODE.s3class  { background-color: #f0ffff; 
+                color: gray; 
+              }
+
+
+
+CODE.envvar { color: brown; }
+CODE.dir    { color: blue; }
+
+CODE.file   {color: green ; font-style: italic}
+CODE.shellScript, code.executable  {color: blue ; font-style: italic}
+
+CODE.shellCmd {color: red}
+
+CODE.jclass { color: brown ; }
+
+CODE.class { color: red ; }
+
+CODE.method { color: red ; font-family: courier }
+
+CODE.JavaProperty { color: brown ; font-style: italic}
+
+CODE.makeVar { color: magenta ; font-style: italic }
+
+CODE.xsl-param { color: gray ; font-style: italic }
+
+PRE.xml { background-color: lightgray ; font-style: italic }
+
+
+DIV.rfunction  { background-color: #f0ffff; color: red; }
+
+A.within-doc-rfunction { color: green; }
+
+DIV.literallayout  { color: purple ; }
+
+PRE  { color: brown ; }
+PRE.Scode  { color: red ; }
+PRE.S, PRE.rcode, PRE.exampleCode, div.r-commands {
+       color: green; 
+       border: 1pt black; 
+       background-color: #f0ffff;
+       padding: .5em 0; 
+       margin: .5em .5em .5em .5em;
+       overflow: auto ;
+     }
+PRE.C  { color: #b22222 ; background-color: #e6e6fa;  }
+PRE.soutput, PRE.routput  { 
+      color: blue ; 
+      clear: both;
+ }
+PRE.cpp  { color: #b22222 ; background-color: #e6e6fa; }
+
+PRE.rerror  { color: red ;
+              background-color: #f0ffff;
+            }
+
+PRE.rwarning, PRE.swarning  { color: blue ; background-color: #dcdcdc}
+
+B.cnull { color: grey;
+          font-family: courier;
+        }
+
+FONT.JavaPackage { font-family: sans-serif ; color: brown}
+FONT.JavaClass { font-family: sans-serif ; color: red}
+FONT.JavaInterface{ font-family: sans-serif ; color: olive}
+FONT.JavaMethod { font-family: sans-serif ; color: blue}
+FONT.JavaField { font-family: sans-serif ; color: orange}
+
+FONT.OmegaPackage { font-family: courier; font-size: larger ; color: brown}
+FONT.OmegaClass { font-family: courier; font-size: larger ; color: red}
+FONT.OmegaInterface{ font-family: courier; font-size: larger ; color: olive}
+FONT.OmegaMethod { font-family: courier; font-size: larger ; color: blue}
+FONT.OmegaField { font-family: courier; font-size: larger ; color: orange}
+
+FONT.file { font-family: courier ; color: navy}
+FONT.dir { font-family: courier ; color: blue}
+
+FONT.OMega { font-weight: bold; color: red}
+FONT.Omegahat { font-weight: bold; color: red}
+FONT.Java { font-weight: bold; color: red}
+FONT.CORBA { font-weight: bold; color: red}
+
+FONT.perlSub { font-weight: bold; color: blue}
+
+DIV.done { margin-left: 5%;
+           padding-left: 30px;
+           padding-right: 30px;
+	   visibility: hidden; 
+         }
+
+I.rslot    { color: blue; font-family: courier;}
+I.relement { color: darkblue; font-family: courier;}
+
+code.arg { 
+     font-style: italic;
+   }
+
+
+code.shellCommand { font-family: courier ; color: green;} 
+
+I.note { color: red;
+         background-color: lightgrey;}
+
+I.question { font-size: larger ; color: brown }
+
+
+TH {  font-family: Verdana, Arial, Helvetica, sans-serif; }
+
+P.note {
+      padding: 10pt;
+      margin-left: -70pt;
+      color: red;
+      font-family: sans-serif;
+      border: 1pt solid green;
+    }
+
+
+PRE.shell { 
+    padding: 3pt;
+    color: green;
+    background-color: lightgray;
+  }
+
+PRE.perl { 
+    padding: 3pt;
+    color: #2f4f4f;
+    background-color: #afeeee;
+    font-family: courier sans-serif;
+  }
+
+
+/*
+ For displaying the name and a link to 
+ a function in an R XML document for a 
+ parameter that is specific to one of the functions
+ being documented.
+*/
+A.funcArgRef {
+   color: red;
+   font-size: 75%   
+}
+
+A.exampleIdentifier {
+   color: green   
+}
+
+
+DIV.r-code-chunk-refs-box {
+       text-align: right;
+}
+
+A.r-code-chunk-name {
+   color: darkgreen;   
+}
+
+tr.trColNames > td {
+  color: red;
+}
+
+tr.trColNames {
+  color: red;
+}
+
+hr.rtopRule {
+  color: blue;
+  height: 0pt;
+}
+
+
+th.thRowName  {
+  color: blue;
+  text-align: right;
+}
+
+iframe {
+  border-width: 0;
+}
+
+
+font.xmlAttribute { 
+   color: red;   
+   font-style: italic;
+}
+
+
+code.pseudocode { 
+   color: blue;   
+   font-style: italic;
+   font-weight: bold;
+   font-family: courier;
+}
+
+
+div.data {
+  background-color: lightgrey;   
+}
+
+pre.data {
+ font-family: courier;
+ color: darkgrey;
+}
+
+
+ /* space after an img in an incorrect admonition. */
+div.admonImage img {
+  padding-right: 5pt;   
+}
+
+div.dynFigure {
+    border-style: solid; 
+    border-color: grey;     
+    border-width: 2pt; 
+    padding: 3pt;
+}
+
+
+
+code.jsKeyword {
+      
+}
+
+code.xpath-func {
+      
+}
+
+code.xpath {
+      
+}

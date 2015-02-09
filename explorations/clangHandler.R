@@ -40,6 +40,7 @@ fc = compileFunction(h, Int32Type, list( cursorType, cursorType, pointerType(Int
                        structInfo = list(CXCursor = cursorType))
 
 reset = function() ctr <- 0L
+# Could add  kinds[] = 0L and have compileFunction recognize that as a call to memset()
 creset = compileFunction(reset, VoidType, module = mod)
 
 ee = ExecutionEngine(mod)

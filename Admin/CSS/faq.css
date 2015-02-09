@@ -1,0 +1,11 @@
+@import "OmegaTech.css";
+
+dt.question {
+  background: #CCCCCC;
+}
+
+dd.answer {
+   padding: 4pt;
+   border: solid 1pt red;
+   background: #EEDD82;  /* CCCCFF; */
+}

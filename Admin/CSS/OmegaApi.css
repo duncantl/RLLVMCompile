@@ -1,0 +1,9 @@
+## this is largely a dummy version
+##
+## It is used as an argument to javadoc in the make JavaDocs rule in org/omegahat,
+## but to avoid problems with local references in import statements, the contents
+## of the two "imported" files are the copied in by the make rule.
+
+@import org/omegahat/OmegaTech.css;
+@import stylesheet.css;
+

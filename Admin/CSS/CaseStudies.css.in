@@ -1,0 +1,12 @@
+@import url("@CSS@");
+
+div.instructor {
+  border: solid 1pt;
+  padding: 4pt;  
+}
+
+
+div.ruleOfThumb {
+  border: solid 2pt;
+  padding: 4pt;  
+}

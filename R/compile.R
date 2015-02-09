@@ -633,9 +633,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
      
     compileExpressions(fbody, nenv, ir, llvm.fun, name)
 
-    if(identical(returnType, VoidType)) {
+    if(identical(returnType, VoidType)) 
        ir$createReturn()
-     }
+
 
      if(length(nenv$.SetCallFuns)) {
            # This is for the callbacks to R. We have to get the expressions for the callback to the module.
