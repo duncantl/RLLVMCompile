@@ -247,3 +247,29 @@ function(val, env, call = NULL)
     NULL
   }
 }
+
+
+getRVectorFunFromScalar =
+function(scalarType)
+{
+   rtypes = lapply(c(Int32Type, DoubleType, Int8Type), getTypeID)
+#   types = list(INTSXPType, REALSXPType, LGLSXPType)
+   types = list("integer", "numeric", "logical")
+   i = match(getTypeID(scalarType), rtypes)
+   if(is.na(i))
+       stop("need to match R type for")
+   types[[i]]
+}
+
+getRVectorTypeFromScalar =
+function(scalarType)
+{
+   rtypes = lapply(c(Int32Type, DoubleType, Int8Type), getTypeID)
+   types = list(INTSXPType, REALSXPType, LGLSXPType)
+   i = match(getTypeID(scalarType), rtypes)
+   if(is.na(i))
+       stop("need to match R type for")
+   types[[i]]
+}
+
+
