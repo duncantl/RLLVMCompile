@@ -42,7 +42,6 @@ function(f, fc = NULL, typeInfo = NULL, module = as(fc, "Module"),
    types = c(x = REALSXPType, lapply(params[-1], getType)) #XXX get the correct type
    tyOut = getRVectorTypeFromScalar(tyOut)
    tyOut = REALSXPType
-browser()   
    
    compileFunction(lfun, tyOut, types,  module = module, name = name, ...)    
 }
