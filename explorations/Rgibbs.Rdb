@@ -5,6 +5,8 @@
 
 <articleinfo>
 
+  <!-- Compilation ends in error. Problem with division of a real by an int coming from an expression y * y + 4 -->
+
 <title>Compiling the Simple 2D Random Walk Code</title>
 
 <author><firstname>Duncan</firstname><surname>Temple Lang</surname>
@@ -20,7 +22,7 @@ This example comes from Doug Bates, back in 2012
 in a comparison of <r/>, <r:pkg>Rcpp</r:pkg> and Julia.
 The blog post is at <ulink url="http://dmbates.blogspot.com/"/>
 (Before anyone says anything, we started devloping this 
-R-LLVM compilation approach around the same time as Julia. We just let it sit for
+R-LLVM compilation approach almost exactly at the same time as, and without knowledge of,  Julia. We just let it sit for
 a long time. So we are not copying Julia, but just further behind in the same idea but with
 all the baggage of <r/>, and also all the existing functionality.)
 </para>
@@ -78,7 +80,7 @@ We've moved the definition of <r:var>mat</r:var> to be a parameter
 with the value specified by the caller. See 2DRandomWalk.Rdb for why this is more flexible.
 Secondly, we changed the assignment to the first and second column of the i-th row 
 to be direct. Again, this is just a trivial simplification. The compiler will be able to 
-deal with <r:expr>mat[i,] &lt;- c(x, y)</r:expr>.
+deal with <r:expr eval="false">mat[i,] &lt;- c(x, y)</r:expr>.
 However, it is not clear we want to do this as it involves creating a new vector object.
 So this modified version may actually be preferable. If we want the other version,
 we should at least recognize that we can perform a one-time allocation of a vector  of length 2 to hold x and y
@@ -112,7 +114,7 @@ Rgibbs <- function(N, thin, mat = matrix(0, ncol = 2, nrow = N))
 <para>
 As with the 2D random walk in <ulink url="2DRandomWalk.Rdb"/> document, 
 we need to susbtitute calls to <r:func>rgamma</r:func> of the form
-<r:expr>rgamma(1, a, b)</r:expr> to <r:expr>Rf_rgamma(a, b)</r:expr>
+<r:expr eval="false">rgamma(1, a, b)</r:expr> to <r:expr eval="false">Rf_rgamma(a, b)</r:expr>
 to correspond to the C routines <r/> provides in the Rmath library to access the
 random number generation facilities.
 We can either rewrite those or specify a method for handling all calls and 
@@ -122,15 +124,15 @@ rewrite these before using the regular call handler.
 <para>
 Currently, the only additional aspect we have to add is assigning to rows and cells in a matrix.
 We need to implement a mechanism to address the memory corresponding to the cell 
-<r:expr>mat[i, 1]</r:expr> and <r:expr>mat[i, 2]</r:expr>.
+<r:expr eval="false">mat[i, 1]</r:expr> and <r:expr eval="false">mat[i, 2]</r:expr>.
 If <r:var>mat</r:var> is a data frame, we can easily extract the specific column and then
 index to the i-th element. We would need to know  the type of the column ahead of time if
 we are to avoid determining this at run-time.
 For a matrix, we need to know the number of rows, i.e. <r:var>N</r:var>
 and be able to associate this with <r:var>mat</r:var>.
-If we know this, <r:expr>mat[i, 1]</r:expr> corresponds to the 
+If we know this, <r:expr eval="false">mat[i, 1]</r:expr> corresponds to the 
 the i-th element in the 2 * N long array of elements.
-<r:expr>mat[i, 2]</r:expr> corresponds to  N  + i.
+<r:expr eval="false">mat[i, 2]</r:expr> corresponds to  N  + i.
 This is due to <r/> storing the matrix column-wise, i.e, in column order.
 </para>
 
