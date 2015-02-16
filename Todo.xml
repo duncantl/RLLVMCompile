@@ -63,9 +63,14 @@ sc = new("Script", as.list(body(compileFunction)))
 inputs = getInputs(sc)
 </r:code>
 There are 8 expressions in the function and inputs has 8 elements.
-Problems with this. Need to explore and fix CodeDepends for functions
+The if() statements, etc. are dealt with as one input and unraveled. So should this be a recursive data structure that gets returned? It is processed recursively, but
+the question is whether it should be returned as a recursive data structure.
+<br/>
+[Check] Need to explore and fix CodeDepends for functions
 and in-memory expressions/calls rather than from scripts.
-Need to turn the expressions into a Script object with new("Script", body(fun))
+<br/>
+Need to turn the expressions into a Script object with new("Script", body(fun)).
+That's done.
 </item>
 
 <item status="extend">
@@ -146,8 +151,9 @@ We could identify when the variable is no longer needed
 and add code to release it then.
 </item>
 
+
 <item>
-Figure out why conCall doesn't give much speed.
+Figure out why explorations/conCall.R doesn't give much speed.
 </item>
 
 <item status="done">
@@ -340,6 +346,11 @@ Same for while that has a break.
 </item>
 
 <item>
+Check if statement with a continue/next/break inside a loop  works correctly.
+See inst/examples/repeat.R
+</item>
+
+<item>
 Really want to be able to distinguish between REALSXPType and INTSXPType, etc.
 i.e. not all just SEXPType and same pointer.
 <br/>
@@ -374,6 +385,48 @@ See call.R@86 and WrongNumArgs error.
 <topic>
 <title>General</title>
 <items>
+
+<item>
+Write functions to visualize the blocks and the jumps.
+Create a graph and then use Rgraphviz or igraph to render it.
+</item>
+
+
+<item status="high">
+tests/convolve.R doesn't do the looping correctly.
+It goes into an infinite loop. Are we testing the wrong llen variables?
+Do we introduce these erroneously since we already have na and nb.
+Or are we merging the setup for the two loops (the initialization one for the result, and the actual one that does  that the convolution).
+<br/>
+Problem is that the branch for the <xml:tag>i in  1:na</xml:tag> loop goes to the body or
+back to the after <xml:tag>for(k in 1:n)</xml:tag> block which starts things all over again.
+So setting the next block is incorrect.
+We don't seem to be processing the return expression.
+<br/>
+Seems like we have the after k block is left on the stack when we enter compiling the i loop.
+<br/>
+Is it that we initialize i = 1 for the second loop and then branch in that block ("after k....")
+<br/>
+[No] Is it that we use i in both loops?
+</item>
+
+<item status="done">
+Get the compilation of a vectorization function of a scalar working.
+See vec.R and makeVectorized.R
+</item>
+
+<item>
+Use CXCursor example (or XML parsing) example to use a customized subsetting 
+operation, i.e. <r:expr>cursor[[1]]</r:expr> to mean <r:expr>children(x)[[1]]</r:expr>
+and in fact to map that to a more explicit function that calculates this.
+Currently it does this in RCIndex by vising all the nodes.
+</item>
+
+<item status="done">
+For asFunction = TRUE in compileFunction, add ... to the formals of the 
+function.
+</item>
+
 
 <item status="check">
 Fix while loops the way we did for the  for() loops,
@@ -772,7 +825,10 @@ handle case of serial assignment
 xpos = ypos = numeric(n)
 </r:code>
 to ensure create a new vector.
-Do we do this for the SEXP types, i.e. call Rf_duplicate() when assigning.
+Do we do this for the SEXP types, i.e. call Rf_duplicate() when assigning? No.
+See tests/serialAssign.R.
+So need to recognize that assigning a SEXP to a SEXP needs to duplicate to
+respect the R semantics.
 </item>
 
 <item>
