@@ -6,7 +6,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
 {
    funName = as.character(call[[1]])
 
-   if(funName == "<-" || funName == "=")
+   if(funName == "<-" || funName == "=" || funName == "<<-")
      return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
    else if(funName %in% c("numeric", "integer", "character", "logical")) {
      if(length(call) == 1)
