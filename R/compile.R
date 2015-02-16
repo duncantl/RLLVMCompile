@@ -256,6 +256,8 @@ function(e, env, ir, ..., .targetType = NULL)
 function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL, ..., afterBlock = NULL, nextBlock = NULL)
 {
   #insertReturn(exprs)
+   given.afterBlock = !missing(afterBlock)
+   
   if(as.character(exprs[[1]]) != "{")
       compile(exprs, env, ir, fun = fun, name = name)
   else {
@@ -304,6 +306,7 @@ function(exprs, env, ir, fun = env$.fun, name = getName(fun), .targetType = NULL
              # Do we setInsertBlock() for this next block?
             #popNextBlock(env)  # popping the wrong thing!
             b = afterBlock
+            afterBlock = NULL
             if(!is.null(b))
                 setInsertBlock(ir, b)
         }
@@ -348,6 +351,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
 compile.numeric <-
 function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
 {
+
   if(length(e) == 1) {
      if(length(.targetType))
        createConstant(val = e, type = .targetType)    
@@ -376,10 +380,19 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
     if (is.call(e)) {
            # Recursively compile arguments
       call.op <- findCall(e[[1]], env$.compilerHandlers)
-      if (typeof(call.op) != "closure" && is.na(call.op)) 
-        call.op = findCall("call", env$.compilerHandlers)
+      
+      if(is.list(call.op)) {
+          for(f in call.op) {
+              tmp = f(e, env, ir, ...)
+              if(!is.null(tmp))
+                  return(tmp)
+          }
+      } else {
+         if (typeof(call.op) != "closure" && is.na(call.op)) 
+           call.op = findCall("call", env$.compilerHandlers)
 
-      call.op(e, env, ir, ...)
+         call.op(e, env, ir, ...)
+      }
 
     } else if (is.symbol(e)) {
       var <- as.character(e)
@@ -431,13 +444,14 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .functionInfo = list(...),
          .routineInfo = list(),
          .compilerHandlers = getCompilerHandlers(),
-         .globals =  getGlobals(fun, names(.CallableRFunctions), .ignoreDefaultArgs, .assert = .assert, .debug = .debug), #  would like to avoid processing default arguments.
+         .globals = getGlobals(fun, names(.CallableRFunctions), .ignoreDefaultArgs, .assert = .assert, .debug = .debug), #  would like to avoid processing default arguments.
                                  # findGlobals(fun, merge = FALSE, .ignoreDefaultArgs), 
          .insertReturn = !identical(returnType, VoidType),
          .builtInRoutines = getBuiltInRoutines(),
          .constants = getConstants(),
          .vectorize = character(), .execEngine = NULL,
-         structInfo = list(), .ignoreDefaultArgs = TRUE, .useFloat = FALSE, .zeroBased = logical(),
+         structInfo = list(), .ignoreDefaultArgs = TRUE,
+         .useFloat = FALSE, .zeroBased = logical(),
          .localVarTypes = list(), .fixIfAssign = TRUE,
          .CallableRFunctions = list(), 
          .RGlobalVariables = character(),
