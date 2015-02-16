@@ -141,7 +141,7 @@ createCast =
 function(env, ir, toType, fromType, val, ...)
 {
   # The logic seems to be off here. We have to find
-  # use both the from and to types rather than
+  # both the from and to types rather than
   # matching on the from type and then picking a function.
 
   if (sameType(toType, fromType))
