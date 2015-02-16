@@ -3,10 +3,12 @@
 \title{Create a vectorized version of a scalar function}
 \description{
   This function takes an R scalar function or a compiled version
-  of an R function and generates a compiled version of a new function
+  of an R function and generates a new function
   that loops over its inputs element at a time
   and calls the original scalar function.
-  This is merely a compilation of a call to \code{sapply}.
+  In the near future, this function will generate
+  a compiled version of the vectorized version.
+  This will be merely a compilation of a call to \code{sapply}.
 }
 \usage{
 vectorizeFunction(f, fc = NULL, typeInfo = NULL, module = as(fc, "Module"),
