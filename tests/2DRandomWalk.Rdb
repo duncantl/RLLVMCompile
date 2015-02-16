@@ -14,6 +14,12 @@
 </author>
 </articleinfo>
 
+<invisible>
+<r:code>
+library(Rllvm)
+library(RLLVMCompile)
+</r:code>
+</invisible>
 
 <para>
 In this document, we discuss code for a 2-D random walk.
@@ -106,7 +112,7 @@ If we want to use the resulting sequence of positions in
 comiled code, we have to access them through the <r/> object.
 This is not a serious issue as we can access the numeric sequence
 as a <c:type>double *</c:type> via the <r/> routine <c:func>REAL</c:func>.
-However, this is unncessary.
+However, this is unnecessary.
 </para>
 <para>
 If we allow the caller to specify vectors, then the caller can choose
@@ -167,27 +173,38 @@ void rw2d1(int n, double *xpos, double *ypos)
 </c:code>
 This corresponds to the signature
 <r:code>
-fun = Function("rw2d1", VoidType, list(DoublePtrType, DoublePtrType))
+fun = Function("rw2d1", VoidType, list(Int32Type, DoublePtrType, DoublePtrType))
 </r:code>
 </para>
 <para>
 We remove the first expression in the body of the function, i.e.
-<r:expr>xpos = ypos = numeric(n)</r:expr>.
-We also remove the final expression <r:expr>list(x = xpos, y = ypos)</r:expr>.
+<r:expr eval="false">xpos = ypos = numeric(n)</r:expr>.
+We also remove the final expression <r:expr eval="false">list(x = xpos, y = ypos)</r:expr>.
 To call the resulting routine from <r/> as we would call <r:func>rw2d1</r:func>,
 we need an <r/> function:
 <r:function>
-rw2d = function(n, xpos = numeric(n), ypos = numeric(n))
-           .llvm(fun, as.integer(n), xpos, ypos, .all = TRUE)[c(2, 3)]
+rw2d = function(n, xpos = numeric(n), ypos = numeric(n), ...)
+           .llvm(fun, as.integer(n), xpos, ypos, .all = TRUE, ...)[c(2, 3)]
 </r:function>
 Thus
-<r:code>
+<r:code eval="false">
 N = 1e6
 rw2d(N)
 rw2d1(N)
 </r:code>
 are equivalent.
 </para>
+
+<para>
+Note that we added <r:dots/> to the signature of the function.
+This allows us to pass an execution engine and other arguments to the <r:func>.llvm</r:func> invocation.
+</para>
+<para>
+Our <r:func>rw2d</r:func> function uses a global variable.
+We should use a closure to ensure that this is local to the function.
+However, this is not the point of this example.
+</para>
+
 
 <note>
 <para>
@@ -265,7 +282,7 @@ involving the least amount of new code.
 We can fake out the need to compile <r:func>runif</r:func> before we generate the code for the function
 by specifying <r:func>runif</r:func> as a built-in function:
 <r:code>
-builtIns = getBuiltInRoutines(runif = list(DoubleType, list(DoubleType, DoubleType))
+builtIns = getBuiltInRoutines(runif = list(DoubleType, list(DoubleType, DoubleType)))
 </r:code>
 We can specify our own call method via the <r:arg>.compilerHandlers</r:arg> parameter
 of <r:func>compileFunction</r:func>. We need to be able to call the regular handler,
@@ -284,7 +301,7 @@ quite simply: if we see <r:func>runif(1)</r:func>, we create a new call
 <r:func>Rf_runif(0.0, 1.0)</r:func> and then pass this to the regular call handler;
 otherwise, we just pass the call to the regular handler.
 This doesn't handle more complex calls to <r:func>runif</r:func>, but that is fine for now.
-We can extend this easily for different minimum and maximum for the range, e.g. <r:expr>runif(1, a, b)</r:expr>.
+We can extend this easily for different minimum and maximum for the range, e.g., <r:expr eval="false">runif(1, a, b)</r:expr>.
 Calls that create more than one random value are more complex but do not fit in this computational model.
 We'll generalize to these later.
 </para>
@@ -316,7 +333,7 @@ fun = compileFunction(tmp, VoidType, list(Int32Type, DoublePtrType, DoublePtrTyp
                       .builtInRoutines = builtIns)
 </r:code>
 
-Before we can run the
+Before we can run the <fix/>
 <r:code>
 
 </r:code>
@@ -335,6 +352,18 @@ rtm/lltm
      user    system   elapsed 
  161.5620 3478.5000  178.9816 
 ]]></r:output>
+</r:code>
+</para>
+
+
+<para>
+
+<r:code>
+ee = ExecutionEngine(as(fun, "Module"))
+Optimize(as(fun, "Module"),  execEngine = ee)
+lltm = system.time(rw2d(1e7))
+tm = replicate(4, system.time(rw2d(1e7)))
+rtm/rowMeans(tm)
 </r:code>
 </para>
 
