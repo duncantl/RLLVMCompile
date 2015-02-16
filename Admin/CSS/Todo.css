@@ -13,7 +13,7 @@ dd.medium, dt.medium { background-color: pink }
 dt.need-doc, dd.need-doc, td.need-doc  { color: magenta }
 
 dt.info, dd.info, td.info, a.info, i.info { color: Lime; font-style: italic  }
-dt.note, dd.note, td.note, a.note, i.note { color: #00FF00; font-style: italic  }
+dt.note, dd.note, td.note, a.note, i.note { color: #DD00DD; font-style: italic  }
 
 a.easy, i.easy, dt.easy, dd.easy, td.easy { color: #00FF33; }
 
