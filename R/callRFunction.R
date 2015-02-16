@@ -72,6 +72,7 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
    # Then evaluate the call
   e = substitute(r_ans <- Rf_eval(callVar, R_GlobalEnv), list(callVar = as.name(id)))
   val = compile(e, env, ir, ...)
+  compile(quote(Rf_protect(r_ans)), env, ir, ...)
    
 # Do we need to protect this return value?
 #  compile(quote(Rf_protect(r_ans)), env, ir, ...)
@@ -91,7 +92,12 @@ env$.SetCallFuns[[ length(env$.SetCallFuns) + 1L]] = createCall = list(var = id,
       stop("don't know how to handle this type")
   }
 
-  compile(marshallAns, env, ir)
+  e = compile(marshallAns, env, ir)
+
+#  compile(quote(Rf_PrintValue(r_ans)), env, ir, ...)   
+  compile(quote(Rf_unprotect(1L)), env, ir, ...)
+
+  e
 }
 
 
