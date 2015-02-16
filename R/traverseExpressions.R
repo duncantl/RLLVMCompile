@@ -26,7 +26,7 @@ function(x, fun = function(x) x, ...)
    } else if(is(x, "{")) {
        x[2:length(x)] = lapply(x[2:length(x)], traverseExpressions, fun, ...)
        x
-   } else if(is(x, "<-") || is(x, "=")) {
+   } else if(is(x, "<-") || is(x, "=") || (is.call(x) && as.name("<<-") == x[[1]])) {
        x[2:3] = lapply(x[2:3], traverseExpressions, fun, ...)
        x
    } else
