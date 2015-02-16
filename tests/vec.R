@@ -19,9 +19,9 @@ g =  function(x, mu, sd) {
 
 gc = compileFunction(g, REALSXPType, list(REALSXPType, DoubleType, DoubleType), modul = as(fc, "Module"))
 
-.llvm(gc, c(-1, 0, 1), 0, 1)
+ans = .llvm(gc, c(-1, 0, 1), 0, 1)
 
 stopifnot(all(.llvm(gc, c(-1, 0, 1), 0, 1) == dnorm(c(-1,0,1))))
 
 v = vectorizeScalarFunction(Dnorm, fc)
-
+stopifnot(ans == .llvm(v, c(-1, 0, 1), 0, 1))
