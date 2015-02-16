@@ -61,7 +61,7 @@ export(traverseExpressions, rewriteRNGCalls)
 export(STRSXP, LGLSXP, REALSXP, INTSXP, CPLXSXP, ANYSXP, CHARSXP, LANGSXP, SYMSXP, VECSXP, S4SXP, RAWSXP, EXPTRSXP, EXPRSXP, ENVSXP)
 
 
-#export(loadRObjectFromString)
+export(loadRObjectFromString)
 
 
 export(BasicCompiler)
@@ -69,3 +69,5 @@ export(BasicCompiler)
 
 
 export(getSymbolInfoMetadata)
+
+export(vectorizeScalarFunction)
