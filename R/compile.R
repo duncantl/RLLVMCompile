@@ -447,18 +447,17 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          )  # .duplicateParams = TRUE
 {
    if(missing(name))
-     name = deparse(substitute(fun))
+      name = deparse(substitute(fun))
 
    if(is.logical(.assert))
-       .assert = if(.assert) ".assert" else character()
+      .assert = if(.assert) ".assert" else character()
 
-  if(!missing(types) && !is.list(types))
-    types = structure(list(types), names = names(formals(fun))[1])
+   if(!missing(types) && !is.list(types))
+      types = structure(list(types), names = names(formals(fun))[1])
 
-  if(is.logical(.execEngine) && .execEngine)
+   if(is.logical(.execEngine) && .execEngine)
       .execEngine = ExecutionEngine(module)
       
-   
    if(.fixIfAssign)
      fun = fixIfAssign(fun)
   
@@ -671,7 +670,6 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     if(optimize && verifyModule(module))
        Optimize(module, execEngine = .execEngine)
 
-
      
     if(asFunction) 
        makeFunction(fun, llvm.fun, .vectorize = .vectorize, .execEngine = .execEngine, .lengthVars = lengthVars)
@@ -853,9 +851,6 @@ function(..., env = NULL, useFloat = FALSE)
                   sqrt = list(DoubleType, DoubleType))      
 
 
-  
-  
-        # These should be understood to be vectorized also.  
  ans =  list(
        length = list(Int32Type, getSEXPType("REAL")),
        Rf_length = list(Int32Type, getSEXPType("REAL")),        # same as length. Should rewrite name length to Rf_length.
@@ -925,7 +920,7 @@ function(..., env = NULL, useFloat = FALSE)
 # Should this just be names of CompilerHandlers?
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
-                        ":", "=", "<-", "[<-", '[', "[[", "for", "if", "while",
+                        ":", "=", "<-", "<<-", "[<-", '[', "[[", "for", "if", "while",
                         "repeat", "(", "!", "^", "$", "$<-",
                         "sapply", "lapply",
                         "printf",
@@ -977,20 +972,21 @@ function(fun, compiledFun, .vectorize = character(),  .execEngine = NULL, .lengt
   e$.irCode = showModule(compiledFun, TRUE)
   
   if(is.null(.execEngine))  
-    .execEngine = ExecutionEngine(as(compiledFun, "Module"))  # evaluate this now or quote it.
+     .execEngine = ExecutionEngine(as(compiledFun, "Module"))  # evaluate this now or quote it.
   
-  args = c(as.name('.fun'), lapply(names(formals(fun)), as.name))
+  args = c(as.name('.fun'), lapply(names(formals(fun)), as.name), as.name("..."))
   k = call('.llvm')
   k[2:(length(args) + 1)] = args
 
   if(length(.lengthVars))
-    k[.lengthVars] = lapply(gsub("_(.*)_length", "\\1", .lengthVars),
+     k[.lengthVars] = lapply(gsub("_(.*)_length", "\\1", .lengthVars),
                              function(id)
                                substitute(length(x), list(x = as.name(id))))
   
   k[[".ee"]] = as.name('.ee')
   
   formals(fun)$.ee = .execEngine
+  formals(fun) = c(formals(fun), formals(function(...){}))
   body(fun) = k
   environment(fun) = e
   fun
