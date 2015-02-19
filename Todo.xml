@@ -5,6 +5,16 @@
 
 
 <topic>
+<title>Tools</title>
+<items>
+<item>
+Visualize a module, i.e., the relationships between its blocks, etc.
+Allow the user to see the flow and then to click on a block and see the instructions.
+</item>
+</items>
+</topic>
+
+<topic>
 <title>Compilation Strategies</title>
 <items>
 
@@ -387,12 +397,69 @@ See call.R@86 and WrongNumArgs error.
 <items>
 
 <item>
+Add Block graph diagrams to show control flow.
+And allow the text to flow around these if they are small.
+</item>
+
+<item>
+<r:code>
+fc = compileFunction(function(x, y) x^y, Int32Type, list(Int32Type, Int32Type))
+</r:code>
+fails because pow is declared for double types.
+This works
+<r:code>
+fc = compileFunction(function(x, y) x^y, DoubleType, list(DoubleType, DoubleType))
+</r:code>
+</item>
+
+<item status="done">
+tests/multiCondIf.R doesn't work. Can't find <![CDATA[&&]]>.
+This is missing from <r:func>getCompilerHandlers</r:func>,
+as is || and | and &amp;.
+<br/>
+This is compiled. But the problem is something else.
+We end up in the <r:func>createConditionCode</r:func> code.
+<br/>
+The <r:func>insertReturn</r:func> doesn't seem to be putting the return in the correct place 
+and that is the problem for the code below:
+<r:code><![CDATA[
+f = function(x, y)  { if(x < y && x > y/2)  3 else 4}
+gc = compileFunction(f, Int32Type, list(DoubleType, DoubleType))
+]]></r:code>
+
+The following works
+<r:code><![CDATA[
+gc = compileFunction(function(x, y)  { if(x < y && x > y/2)  return(3) else return(4)}, Int32Type, list(DoubleType, DoubleType), .insertReturn = FALSE)
+]]></r:code>
+
+</item>
+
+<item>
+Does the compile.for have to move the counter incrementing code to a separate Block if
+there is just a break in the body of the loop, but not a next?
+Seems like we could branch to the nextBlock on a break, but still increment the code
+at the end of the loop otherwise.
+</item>
+
+<item status="no">
+Add comments to the code to make it easier to understand.
+Can't do it. Use metadata in the IR. But we can't add comments  in the IR.
+</item>
+
+
+<item>
 Write functions to visualize the blocks and the jumps.
 Create a graph and then use Rgraphviz or igraph to render it.
 </item>
 
-
 <item status="high">
+Add calls to Rf_protect and Rf_unprotect appropriately in the compiler.
+Possibly need to add an .on.exit to the compiler which will generate code
+in the final block.
+Also, add a counter for the number of protects for cases where it is deterministic at compile time.
+</item>
+
+<item status="done">
 tests/convolve.R doesn't do the looping correctly.
 It goes into an infinite loop. Are we testing the wrong llen variables?
 Do we introduce these erroneously since we already have na and nb.
@@ -402,6 +469,8 @@ Problem is that the branch for the <xml:tag>i in  1:na</xml:tag> loop goes to th
 back to the after <xml:tag>for(k in 1:n)</xml:tag> block which starts things all over again.
 So setting the next block is incorrect.
 We don't seem to be processing the return expression.
+<br/>
+We needed to set the afterBlock to NULL after we pop it.
 <br/>
 Seems like we have the after k block is left on the stack when we enter compiling the i loop.
 <br/>

@@ -11,7 +11,8 @@ insertReturn(expr, nested = FALSE, ...)
 }
 \arguments{
   \item{expr}{the function or expression to be potentially modified}
-  \item{nested}{a logical value   ...?}
+  \item{nested}{a logical value   that controls whether we explicitly
+    wrap a call within a \code{return} call.}
   \item{\dots}{additional parameters for methods such as the compiler object}
 }
 \value{
