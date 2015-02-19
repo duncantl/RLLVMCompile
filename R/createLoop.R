@@ -1,7 +1,7 @@
-
 compile.for = compileForLoop =
 function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL, breakBlock = NULL, nextIterBlock = NULL)
 {
+
   env$.loopStack = c("for", env$.loopStack)
   on.exit(env$.loopStack <- env$.loopStack[-1])
    
@@ -14,7 +14,7 @@ function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL, breakBlock = 
   } else {
        # we have a call to something and so
        # may need to create a temporary variable
-       # Then we need to loop over those
+       # Then we need to loop over those elements
        # and so create limits from that object, i.e.
        # 1 to length(var).
        # if the inn is a symbol, then we loop over its elements.
@@ -43,7 +43,7 @@ function(call, env, ir, ..., nextBlock = NULL, .targetType = NULL, breakBlock = 
      e = quote(x <- y)
      e[[2]] = as.name(ans$var)
      ans$var = "i"  #XXX pick an unused variable name
-     warning("compute name for counter in loop to be unique")
+     warning("<fix> compute name for counter in loop so that it is unique")
      e[[3]] = substitute(y[i], list(y = inn))
      b[[2]] = e
      ans$body = b
@@ -158,7 +158,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
      if(!identical(ir$getInsertBlock(), incrBlock) && length(getTerminator(ir$getInsertBlock())) == 0) {
 #         cat("In createLoop: browser()\n")
 # It is possible that the compile() has put us into the incrBlock in which case we don't want to add a Branch.
-#         browser()
+
         ir$createBr(incrBlock)
      }
 
