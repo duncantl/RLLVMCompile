@@ -76,7 +76,7 @@ function(expr, env = NULL, ir = NULL)
   # candidate for removal
   if(typeof(expr) != "language")
      stop("expr must be of type 'language' in getArgs")
-  ans = sapply(expr[-1], function(x) x)
+  ans = sapply(expr[-1], function(x) x) # why not just expr[-1] ??
   if(!is.null(env))
     lapply(ans, compile, env, ir)
   else
