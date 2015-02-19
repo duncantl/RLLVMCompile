@@ -140,8 +140,9 @@ function(code, params, len, var) {
       break()
     }
   }
-  if (replace)
-    return(list(new.call, replaced))
+  
+  if(replace)
+     return(list(new.call, replaced))
   return(FALSE)
 }
 
