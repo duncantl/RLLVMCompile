@@ -10,5 +10,6 @@ function(x)
 }
 
 fc = compileFunction(f, Int32Type, list(DoubleType))
-.llvm(fc, 7) # 20L
-.llvm(fc, 12) # -1L
+stopifnot(.llvm(fc, 7) == 20L)
+stopifnot(.llvm(fc, 12) == -1L)
+
