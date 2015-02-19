@@ -15,6 +15,7 @@ function(e)
 
 isSelect =
     # checks if the body and alternative of an if() statement are single expressions.
+    # Select corresponds to the LLVM concept of a Select, i.e.,  x ? a : b
 function(call)
   length(call) == 4 && all(sapply(call[3:4], isSingleExpression))
 
@@ -156,14 +157,15 @@ nextBlock = getNextBlock(env)
        }
       
       if(length(getTerminator(ir$getInsertBlock())) == 0) {
-        if(!is.null(nextBlock)) {
-
-          if(! identical(nextBlock, getInsertBlock(ir)) )
-             ir$createBr(nextBlock)  # jump to the end of the entire if statement
+         if(!is.null(nextBlock)) {
+            if(! identical(nextBlock, getInsertBlock(ir)) )
+               ir$createBr(nextBlock)  # jump to the end of the entire if statement
       } else if(!is.null(condBlocks[["final"]]) && length(getTerminator(condBlocks[["final"]])) == 0) {
 #XXX TIDY THIS MESS UP after all the explorations relating to the compile.if and 2DRandomWalk.Rdb.
        #  ir$createBr(condBlocks[["final"]])
       } else if(length(env$.nextBlock)) {  # THIS IS PROBABLY THE WRONG THING TO DO AND SHOULD GO. IT WAS JUST A NEVER WORKING EXPERIMENT.
+          warning("probably the wrong thing to do")
+          browser()
           ir$createBr(env$.nextBlock[[1]])
       } else
         stop("need a terminator")
