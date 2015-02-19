@@ -3,6 +3,11 @@ logicOpHandler =
 # !). This includes: ==, !=, >, <, >=, <= for both real and integer
 # values (so far). Type coercion is needed, as LLVM has type-specific
 # comparison operators like FCmp.
+    #
+    #  Where are &, &&, | and || handled.
+    #  in createConditionCode(), etc.
+    #  See tests/fib.R for an example.
+    #
 function(call, env, ir, ...)
 {
 #if(call[[1]] == as.name("!"))  browser()
