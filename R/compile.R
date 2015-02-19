@@ -378,30 +378,37 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
       return(e)
     
     if (is.call(e)) {
-           # Recursively compile arguments
-      call.op <- findCall(e[[1]], env$.compilerHandlers)
-      
-      if(is.list(call.op)) {
-          for(f in call.op) {
-              tmp = f(e, env, ir, ...)
-              if(!is.null(tmp))
-                  return(tmp)
-          }
-      } else {
-         if (typeof(call.op) != "closure" && is.na(call.op)) 
-           call.op = findCall("call", env$.compilerHandlers)
-
-         call.op(e, env, ir, ...)
-      }
-
+      disptchCompilerHandlers(e, env$.compilerHandlers, env, ir, ...)
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
-    } else if(is.character(e)) {
+    } else if(is.character(e)) 
        return(compile.character(e, env, ir, ...))
-    } else
+    else
       stop("can't compile objects of class ", class(e))
 }
+
+dispatchCompilerHandlers =
+    #XXX Dispatch across lists.
+function(e, handlers, env, ir, ...)
+{
+           # Recursively compile arguments
+    call.op <- findCall(e[[1]], env$.compilerHandlers)
+      
+    if(is.list(call.op)) {
+        for(f in call.op) {
+            tmp = f(e, env, ir, ...)
+            if(!is.null(tmp))
+                return(tmp)
+        }
+    } else {
+         if (typeof(call.op) != "closure" && is.na(call.op)) 
+           call.op = findCall("call", env$.compilerHandlers)
+
+          # XXX Dispatch across list here if we get back a list.
+         call.op(e, env, ir, ...)
+     }
+}    
 
 
 findGlobals=
@@ -931,7 +938,10 @@ function(..., env = NULL, useFloat = FALSE)
   ans
 }
 
-# Should this just be names of CompilerHandlers?
+# Should this just be names of CompilerHandlers? No, need more than those.
+# Although we could add these items to CompilerHandlers and have them map
+# to the existing handlers, e.g., sapply = ...
+# But this is not a good idea. printf is just a regular call.
 ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         LogicOps, "||", "&&", # add more here &, |
                         ":", "=", "<-", "<<-", "[<-", '[', "[[", "for", "if", "while",
@@ -975,7 +985,6 @@ function(globalInfo, mod, .functionInfo = list())
                compileFunction(funs[[id]], module = mod, name = id)
            })
 }
-
 
 
 makeFunction =
