@@ -40,8 +40,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      k[[3]] = call[[2]]
      k[[1]] = call[[1]]
      call = k
-  }
-
+ }  # Finished with unary operation
  
   call[2:length(call)] = lapply(call[-1], rewriteExpressions, env, isSubsetIndex = isSubsetIndex)
 
@@ -50,6 +49,8 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   lit <- sapply(call[-1], is.numeric) # literals
 
   if(all(lit)) {
+          # The two operands are literal values so no need to compile run-time code.
+          # So compute the result here and return.
     value = eval(call)
     if(is.numeric(value) && env$.useFloat)
        return(createFloatingPointConstant(value, getContext(env$.module), FloatType))
@@ -58,8 +59,8 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   }    
 
   
-  # Need to handle the case where we have a literal and we can convert it to the
-  # target type.
+   # Need to handle the case where we have a literal and we can convert it to the
+   # target type.
   toCast = NULL
 
      # we are getting the types here w/o compiling the expressions (?). So they may not be what we end up with.
@@ -70,7 +71,6 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
      types[nulls] = lapply(call[-1][nulls], getType)
 #     stop("NULL value for component type in math operation")
   }
-
 
 
   if(any(lit)) {
@@ -124,7 +124,7 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   opName = as.character(call[[1]]) 
   op = codes[ opName ]
 
-if(any(w <- sapply(e, is, "Constant"))) {
+  if(any(w <- sapply(e, is, "Constant"))) {
       # if any of the operands are constants
      if(all(w)) { # constant fold
          warning("should constant fold here")
@@ -138,7 +138,7 @@ if(any(w <- sapply(e, is, "Constant"))) {
             (v == 1 && names(op) == "/" && which(w) == 2))
                       return(e[!w][[1]])
     }
- }
+  }
 
   if(!is.na(op)) {
       ins = ir$binOp(op, e[[1]], e[[2]], id = deparse(origCall))
