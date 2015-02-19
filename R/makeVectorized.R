@@ -50,6 +50,11 @@ loopifyScalarFun =
     # Given a scalar function, create an R function that vectorizes it via a loop.
     # That is so that it can be compiled relatively easily to yield a vectorized
     # version of the scalar routine.
+    #
+    # Should allow the caller to create a version that doesn't return a SEXP, but a C array
+    # e.g. to vectorize to double[] for use in other non-R code.
+    # Who owns the memory?
+    #
 function(f, scalarFunName, rvecType = "numeric")
 {    
    g = function(x) {
