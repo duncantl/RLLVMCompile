@@ -1,4 +1,4 @@
-callHandler =
+compile.call = callHandler =
   #
   # This handles calls to other functions.
   #
@@ -6,6 +6,10 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
 {
    funName = as.character(call[[1]])
 
+   if(funName %in% names(env$.compilerHandlers))
+       return(dispatchCompilerHandlers(call, env$.compilerHandlers, env, ir, ...))
+
+        # Can probably remove the following first if() since that is now in dispatchCompulerHandlers.
    if(funName == "<-" || funName == "=" || funName == "<<-")
      return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
    else if(funName %in% c("numeric", "integer", "character", "logical")) {
@@ -34,7 +38,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
          
          call = call[[2]]
          funName = as.character(call[[1]])
-    } else if(length(env$.assertFunctions) && funName %in%  env$.assertFunctions) {
+    } else if(length(env$.assertFunctions) && funName %in% env$.assertFunctions) {
           # Add support for structured errors in assertions.
          if("class" %in% names(call)) {
              classes = call[["class"]]
@@ -57,7 +61,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
                    classes = as.character(classes[-1])  # not evaluating these
         } 
         classes = c(classes, if(funName == "stop") "error" else "warning")
-browser()        
+
         msg = call[[2]]
         err = substitute(R_va_raiseStructuredError(msg, nclass), list(msg = msg, nclass = length(classes)))
         err[3 + seq(along = classes)] = classes
