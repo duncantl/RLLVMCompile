@@ -82,7 +82,7 @@ function(expr, nested = FALSE, ...)
 #   body(expr) = insertReturn(body(expr))
    b = body(expr)
    if(class(b) == "{") {
-      b[[length(b)]] = if(isSelect(b[[length(b)]]))
+      b[[length(b)]] = if(FALSE && isSelect(b[[length(b)]])) #XXX we had no FALSE && here. Why did we want that?
                          substitute(return(x), list(x = b[[length(b)]]))
                        else
                          insertReturn(b[[length(b)]])
