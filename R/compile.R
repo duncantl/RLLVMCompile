@@ -377,8 +377,9 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
     if(is(e, "Value") || is(e, "Instruction"))
       return(e)
     
-    if(is.call(e)) {
-        dispatchCompilerHandlers(e, env$.compilerHandlers, env, ir, ...)
+
+    if (is.call(e)) {
+      dispatchCompilerHandlers(e, env$.compilerHandlers, env, ir, ...)
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
