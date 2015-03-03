@@ -369,7 +369,7 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
   e
 
 compile.default <-
-function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)  
+function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)
 {
     if(is(e, "("))
        return(compile(e[[2]], env, ir, .targetType = .targetType))
@@ -377,8 +377,8 @@ function(e, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NUL
     if(is(e, "Value") || is(e, "Instruction"))
       return(e)
     
-    if (is.call(e)) {
-      disptchCompilerHandlers(e, env$.compilerHandlers, env, ir, ...)
+    if(is.call(e)) {
+        dispatchCompilerHandlers(e, env$.compilerHandlers, env, ir, ...)
     } else if (is.symbol(e)) {
       var <- as.character(e)
       return(var) ## TODO: lookup here, or in OP function?
@@ -464,7 +464,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
          .RGlobalVariables = character(),
          .debug = TRUE, .assert = TRUE, .addSymbolMetaData = TRUE,
          .readOnly = constInputs(fun),
-         .integerLiterals = TRUE
+         .integerLiterals = TRUE,
+         .loadExternalRoutines = TRUE
          )  # .duplicateParams = TRUE
 {
    if(missing(name))
@@ -577,11 +578,11 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
 #XXX temporary to see if we should declare and load these individually when we encounter them
 # Really need the user to specify the DLL not just the name in case of ambiguities, so often easier to do this separately.
-    if(length(.routineInfo))
+    if(.loadExternalRoutines && length(.routineInfo))
         processExternalRoutines(module, .funcs = .routineInfo, .addMetaData = .addSymbolMetaData)
 
     if(length(.globals$functions)) 
-       compileCalledFuncs(.globals, module, .functionInfo)
+       compileCalledFuncs(.globals, module, .functionInfo, optimize = FALSE)
 
     if(length(.globals$variables)) {
 
@@ -603,7 +604,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.params = params
     nenv$.types = types
     nenv$.returnType = returnType
-    nenv$.entryBlock = block     
+    nenv$.entryBlock = block
+    nenv$.funName = name  # name of the routine being compiled.     
 
     nenv$.module = module
     nenv$.compilerHandlers = .compilerHandlers
@@ -960,7 +962,7 @@ compileCalledFuncs =
   #
   #  The .functionInfo
   #
-function(globalInfo, mod, .functionInfo = list())
+function(globalInfo, mod, .functionInfo = list(), ...)
 {
   funs = setdiff(globalInfo$functions, ExcludeCompileFuncs)
 
@@ -979,7 +981,8 @@ function(globalInfo, mod, .functionInfo = list())
                compileFunction(funs[[id]],
                                types$returnType,
                                types = types$params,
-                               module = mod, name = id
+                               module = mod, name = id,
+                               ...
                                )
              } else
                compileFunction(funs[[id]], module = mod, name = id)
