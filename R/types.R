@@ -97,7 +97,7 @@ function(name, .useFloat = FALSE)
 
 getMathOpType =
 # Convenience function for checking types in math ops: if types are
-# same, return the common type; it not, return DoubleType (as this
+# same, return the common type; if not, return DoubleType (as this
 # will be what we should coerce to).
 function(types)
 {
@@ -108,6 +108,11 @@ function(types)
    
    if( identical(types[[1]], types[[2]]) )
      return(types[[1]])
+
+   ints = c(Int1Type, Int8Type, Int16Type, Int32Type)
+   i = match(types, ints)
+   if(!any(is.na(i)))
+       return(ints[[max(i)]])
 
    i = match(types, c(Int32Type, DoubleType))
    if(!any(is.na(i)))

@@ -11,6 +11,8 @@ importFrom(codetools, findGlobals)
 export(compileFunction) #, compile)
 export(getCompilerHandlers)
 
+export(compile)
+export(compile.call)
 # Need to export the compile methods to make things work.
 # Otherwise, we get an error about compile.call not found.
 S3method(compile,default)

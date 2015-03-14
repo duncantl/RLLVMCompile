@@ -2,11 +2,11 @@ compile.call = callHandler =
   #
   # This handles calls to other functions.
   #
-function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL)
+function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = NULL, .useHandlers = TRUE)
 {
    funName = as.character(call[[1]])
 
-   if(funName %in% names(env$.compilerHandlers))
+   if(.useHandlers && funName %in% names(env$.compilerHandlers))
        return(dispatchCompilerHandlers(call, env$.compilerHandlers, env, ir, ...))
 
         # Can probably remove the following first if() since that is now in dispatchCompulerHandlers.
@@ -135,6 +135,12 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
    
    
    call
+}
+
+addFun =
+function(env, name, returnType, params)
+{
+  env$.builtInRoutines[[name]] = c(returnType, params)
 }
 
 findFun =

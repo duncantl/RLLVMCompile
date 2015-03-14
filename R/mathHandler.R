@@ -93,10 +93,14 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
   }
 
   isIntType = sameType(targetType, Int32Type) || sameType(targetType, Int64Type)
-  e = lapply(call[-1], function(x)
-                       if(is(x, "Value"))
-                          x
-                       else if(is(x, "numeric")) {
+  e = lapply(call[-1], function(x) {
+
+                       if(is(x, "Value")) {
+                           if(is.null(toCast))
+                              x
+                           else
+                             createCast(env, ir, targetType, Rllvm::getType(x), x)
+                       } else if(is(x, "numeric")) {
 
                           if(isIntType)
                             createIntegerConstant(as.integer(x))
@@ -105,14 +109,15 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
                           else
                             createFloatingPointConstant(as.numeric(x), type = FloatType)
                        } else if(is.name(x)) {
-                          if (!is.null(toCast) && x == toCast) {
-                            # Casting to double needed
-                            return(createCast(env, ir, DoubleType, Int32Type,
-                                             getVariable(x, env, ir)))
+                          if (!is.null(toCast) && identical(x, toCast)) {
+                                # Casting to double needed
+                            var = getVariable(x, env, ir)
+                            return(createCast(env, ir, targetType, Rllvm::getType(var), var))
                          } else 
                            getVariable(x, env, ir)
                        } else
-                         compile(x, env, ir, ...))
+                         compile(x, env, ir, ...)
+                     })
 
     # XXX Have to deal with different types.
   if(isIntType)

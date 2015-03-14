@@ -46,7 +46,7 @@ function(call, env, ir, ..., objType = getElementAssignmentContainerType(call, e
 
           cur = getInsertBlock(ir)
                 # Need to put new code before the existing terminator in the entry block.
-          term = getTerminator(env$.entryBlock)
+          term = getTerminator(env$.entryBlock)  #XXX is this always the entry block????
           eraseFromParent(term, FALSE)
           setInsertBlock(ir, env$.entryBlock)
           tmpVarName = e2[[2]] = e1[[2]] =  as.name(sprintf("%s.%s", r, as.character(call[[2]]))) # make a fake name
