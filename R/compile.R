@@ -648,7 +648,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
                stop("mismatch in parameter names and types")
           mapply(function(type, arg) {
                       if(isPointerType(type))
-                         setParamAttributes(arg, LLVMAttributes["ReadOnly"])
+                         setParamAttributes(arg, LLVMAttributes["ReadOnly"]) # 28L, TRUE) 
                    }, argTypes[k], getFunctionArgs(llvm.fun)[idx])
 
        }

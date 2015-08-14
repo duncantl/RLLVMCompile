@@ -1,7 +1,6 @@
 rewriteExpressions =
 function(expr, env, isSubsetIndex = FALSE)
 {
-
   if(is.name(expr) && as.character(expr) %in% names(env$.Constants))
      env$.Constants[[ as.character(expr)]]
   else if(isSubsetIndex && is.numeric(expr))

@@ -1,5 +1,7 @@
 getSApplyType =
   # returns NULL if not a case we would rewrite an sapply()
+    # The intent here is when we are using the apply() idiom on an non-R object
+    # just for expressiveness.
 function(call, env, funName = as.character(call[[1]])) {
  if(funName %in% c("sapply", "lapply") &&  isSEXPType(type <- getDataType(call[[2]], env))  )
     type
