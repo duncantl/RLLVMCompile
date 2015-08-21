@@ -42,9 +42,14 @@ if(FALSE) {
        idx = ir$createSExt(i, 64L)
        ptr = compile(call[[2]], env, ir, ...)
        return(ir$createGEP(ptr, idx))
- } else
-     return(createLoad(ir, createSEXPGEP(call, env, ir, ...))) #!!! Was just createSEXPGEP(). See what this breaks! load added for matrixSubsetCmp.R
+ } else {
+     gep = createSEXPGEP(call, env, ir, ...)
+     if(length(call) > 3 && any(sapply(call[-(1:2)], `==`, "")))
+         return(gep)
+     
+     return(createLoad(ir, gep)) #!!! Was just createSEXPGEP(). See what this breaks! load added for matrixSubsetCmp.R
                 # Check matrixSubset.R
+    }
    } # else ArrayType.
 
 
@@ -71,3 +76,6 @@ if(FALSE) {
     p
     
 }
+
+
+

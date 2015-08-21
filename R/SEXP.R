@@ -74,9 +74,12 @@ function(call, env, ir, ..., type = NULL)
      # Now compute the index of the element - not elements.
      # THIS IS NOT VECTORIZED but SCALAR
 
-   idx = compileMatrixOffset(call, env, ir, ...)
+   isVector = length(call) > 3 && any(sapply(call[-(1:2)], `==`, ""))
+   
+   idx = compileMatrixOffset(call, env, ir, ..., asSEXT = TRUE) # !isVector)
    
    gep = ir$createGEP(ptr, idx)
+   
    return(gep)
 #
 # rest ignored     
@@ -221,6 +224,9 @@ function(call, env, ir, ...)
           ee = ee[[3]]
       else if(is.numeric(call[[3]]) && call[[3]] == 1L)
            ee = ee[[2]]
+
+     if(call[[3]] == "")
+        ee = ee[[2]]     
 
       compile(ee, env, ir, ...)
 }
