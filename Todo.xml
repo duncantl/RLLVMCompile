@@ -8,7 +8,8 @@
 <title>Tools</title>
 <items>
 <item>
-Visualize a module, i.e., the relationships between its blocks, etc.
+See getBlockGraph()
+<br/>Visualize a module, i.e., the relationships between its blocks, etc.
 Allow the user to see the flow and then to click on a block and see the instructions.
 </item>
 </items>
@@ -447,9 +448,11 @@ Can't do it. Use metadata in the IR. But we can't add comments  in the IR.
 </item>
 
 
-<item>
+<item status="finish">
 Write functions to visualize the blocks and the jumps.
 Create a graph and then use Rgraphviz or igraph to render it.
+<br/>
+See  showBlocks.R and getBlockGraph()
 </item>
 
 <item status="high">
@@ -488,7 +491,7 @@ See vec.R and makeVectorized.R
 Use CXCursor example (or XML parsing) example to use a customized subsetting 
 operation, i.e. <r:expr>cursor[[1]]</r:expr> to mean <r:expr>children(x)[[1]]</r:expr>
 and in fact to map that to a more explicit function that calculates this.
-Currently it does this in RCIndex by vising all the nodes.
+Currently it does this in RCIndex by visiting all the nodes.
 </item>
 
 <item status="done">
@@ -1071,7 +1074,10 @@ This is done in fixIfAssign.
 
 <item>
 Map switch() in R to a switch in LLVM when the conditions are integers.
-Also recognize an series of if() statements.
+Also recognize a series of if() statements.
+<br/>
+Can use LLVM's SwitchInst class, but not for cases we have a string.
+
 </item>
 
 <item>

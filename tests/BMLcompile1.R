@@ -55,6 +55,8 @@ tms = replicate(5, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue
 print(tms)
 #plot(o[[1]])
 
+tms1 = replicate(400, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))[3,]
+
 
 # Compare this with the code in CaseStudies/BML/BML.Rdb
 # The C version seems to be about 12 times faster!!!!

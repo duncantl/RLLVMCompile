@@ -115,6 +115,8 @@ red.cols = col(g)[g == 1L]
 blue.rows = row(g)[g == 2L]
 blue.cols = col(g)[g == 2L]
 
+if(FALSE)
+ tm.rr = system.time({ o =  runBML(g, red.rows, red.cols, blue.rows, blue.cols, 100L) })
 
 
 

@@ -3,18 +3,18 @@ source("BML.R")
 library(RLLVMCompile)
 m = Module()
 moveCars_f = compileFunction(moveCars, Int32Type, 
-                             list(MatrixType(Int32Type), INTSXPType, INTSXPType, Int32Type),
+                             list(MatrixType(Int32Type), INTSXPType, INTSXPType, Int32Type),  # Int32Type, Int32Type, Int32Type),
                               .constants = list(EMPTY = EMPTY, RED = RED, BLUE = BLUE), module = m, .debug = FALSE)
 
 lrunBML_c = compileFunction(runBML, VoidType, 
                              list(MatrixType(Int32Type), INTSXPType, INTSXPType, INTSXPType, INTSXPType, Int32Type), module = m, .debug = FALSE)
 
 ee = ExecutionEngine(m)
-tm1 = system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 100L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
-tm1 = system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 100L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
+tm1 = system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
+tm1 = system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
 plot(o[[1]])
 
-tms = replicate(5, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 100L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))
+tms.nopass = tms = replicate(400, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))
 
 
 # Compare this with the code in CaseStudies/BML/BML.Rdb

@@ -74,7 +74,7 @@ blue.cols = col(g)[g == 2L]
 
 
 
-
+if(FALSE) { #XXXX FIX
 
 library(RLLVMCompile)
 m = Module()
@@ -101,3 +101,4 @@ plot(o[[1]])
 tms = replicate(5, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))
 print(tms)
 
+}
