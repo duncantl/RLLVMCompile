@@ -92,7 +92,11 @@ function(call, env, ir, ...)
       if( (is.null(lhs.type) || !sameType(DoubleType, lhs.type))  && env$.integerLiterals  && val == floor(val) ){
           tmp = val = as.integer(val)
       }
-      type = getDataType(I(val), env)
+      if(!is.null(lhs.type))
+          type = lhs.type
+      else
+           type = getDataType(I(val), env)
+      
       val = makeConstant(ir, val, type, ctx)
       type = getDataType(val, env)
       if(is.character(tmp)) 
