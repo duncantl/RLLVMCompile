@@ -3,14 +3,11 @@ library(RLLVMCompile)
 isum =
 function(x, n)
 {
-  total = 0L
+  total = 0
   for(i in 1:n)
       total = total + x[i]
   total
 }
-
-m = Module()
-compileFunction(isum, Int32Type, list(pointerType(Int32Type), Int32Type), module = m)
 
 f =
 function(x, nr, nc)  # have the compiler add nc
@@ -22,9 +19,35 @@ function(x, nr, nc)  # have the compiler add nc
   ans
 }
 
+m = Module()
+compileFunction(isum, Int32Type, list(pointerType(Int32Type), Int32Type), module = m)
 fc = compileFunction(f, SEXPType, list(new("MatrixType", elType = Int32Type), Int32Type, Int32Type), module = m)
-# pointerType(Int32Type)
+
 
 mat = matrix(1:15, 3, 5)
-.llvm(fc, mat, nrow(mat), ncol(mat))
+ans = .llvm(fc, mat, nrow(mat), ncol(mat))
+stopifnot(all( ans == colSums(mat)))
+
+
+# Compile for numeric matrices
+
+
+isum =
+function(x, n)
+{
+  total = 0
+  for(i in 1:n)
+      total = total + x[i]
+  total
+}
+
+body(f)[[2]][[3]][[1]] = as.name("numeric")
+m1 = Module()
+compileFunction(isum, DoubleType, list(pointerType(DoubleType), Int32Type), module = m1, .localVarTypes = list(total = DoubleType))
+fc = compileFunction(f, SEXPType, list(new("MatrixType", elType = DoubleType), Int32Type, Int32Type), module = m1)
+
+
+mat = matrix(1:15+.5, 3, 5)
+ans = .llvm(fc, mat, nrow(mat), ncol(mat))
+stopifnot(all( ans == colSums(mat)))
 

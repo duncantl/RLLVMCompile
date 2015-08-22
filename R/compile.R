@@ -82,11 +82,14 @@ function(call, env, ir, ...)
    }
    
        # look at the RHS
-   if(isLiteral(args[[2]])) {  #!! these are the args, not the call
+   if(isLiteral(args[[2]])) {  #!! these are the args, not the call - so first element is not = or <-, but the LHS.
+       
       tmp = val = eval(args[[2]])
       ctx = getContext(env$.module)
 
-      if(env$.integerLiterals  && val == floor(val)) {
+      lhs.type = getDataType(args[[1]], env)
+
+      if( (is.null(lhs.type) || !sameType(DoubleType, lhs.type))  && env$.integerLiterals  && val == floor(val) ){
           tmp = val = as.integer(val)
       }
       type = getDataType(I(val), env)

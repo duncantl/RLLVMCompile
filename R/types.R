@@ -168,7 +168,10 @@ function(val, env, call = NULL)
 getDataType.character =
 function(val, env, call = NULL)
 {
-  env$.types[[val]]
+   if(val %in% names(env$.types))
+       env$.types[[val]]
+   else
+      env$.localVarTypes[[val]]
 }
 
 getDataType.integer =
