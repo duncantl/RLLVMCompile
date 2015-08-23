@@ -5,6 +5,8 @@ function(obj, env, elementType = FALSE, .useFloat = env$.useFloat)
       Int32Type
    else if(is(obj, "numeric")) {
       if(.useFloat) FloatType else DoubleType   
+   } else if(is.character(obj)) {
+      StringType
    } else if(is.name(obj)) {
 
      id = as.character(obj)
@@ -99,11 +101,11 @@ getMathOpType =
 # Convenience function for checking types in math ops: if types are
 # same, return the common type; if not, return DoubleType (as this
 # will be what we should coerce to).
-function(types)
+function(types, values = NULL)
 {
    if(length(types) == 1)
      return(types[[1]])
-  
+
    types = lapply(types, function(x) if(is(x, "Type")) x@ref else x)
    
    if( identical(types[[1]], types[[2]]) )
@@ -112,12 +114,22 @@ function(types)
    ints = c(Int1Type, Int8Type, Int16Type, Int32Type)
    i = match(types, ints)
    if(!any(is.na(i)))
-       return(ints[[max(i)]])
+       return(ints[[ max(i)  ]])
 
    i = match(types, c(Int32Type, DoubleType))
    if(!any(is.na(i)))
       return(DoubleType)
-   
+
+   i = match(types, c(Int8Type, StringType))
+   if(all(!is.na(i))) {
+       if(length(values)) {
+           isChar = sapply(values, function(x) is.character(x) && nchar(x) == 1)
+           if(any(isChar))
+                return(Int8Type)
+
+           return(StringType)
+       }
+   }
 }
 
 getTypeOfElement =

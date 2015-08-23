@@ -10,7 +10,6 @@ logicOpHandler =
     #
 function(call, env, ir, ...)
 {
-#if(call[[1]] == as.name("!"))  browser()
    if(length(call) == 2) {
      val = compile(call[[2]], env, ir, ...)
      ty.val = getType(val)
@@ -44,20 +43,29 @@ function(call, env, ir, ...)
   }
    
   types = lapply(call[-1], getTypes, env)
-  targetType = getMathOpType(types)
-  isIntType = identical(targetType, Int32Type)  
+  targetType = getMathOpType(types, call[-1])
 
+    # Need to change order of call[2:3] if one is a literal and the other is a character a and b, 
+    # could be call[[2]] e.g.  "z" == x
+  if(sameType(targetType, Int8Type) && is.character(call[[3]]) && nchar(call[[3]]) == 1) { 
+      tmp = Rllvm:::asciiCode(call[[3]])
+      b = createIntegerConstant(tmp, type = targetType, bitwidth = 8L) # type is ignored
+      # b = compile(tmp, env, ir)
+  } else
+      b = compile(call[[3]], env, ir)
    
   a = compile(call[[2]], env, ir) 
-  b = compile(call[[3]], env, ir) 
 
-  if(isIntType)
+   
+  isIntType = identical(targetType, Int32Type)   || identical(targetType, Int8Type)  
+   
+
+  if(isIntType) {
      codes = c("==" = ICMP_EQ, "!=" = ICMP_NE, ">" = ICMP_SGT, "<" = ICMP_SLT, ">=" = ICMP_SGE, "<=" = ICMP_SLE)
-  else {
-    codes = c("==" = FCMP_UEQ, "!=" = FCMP_UNE, ">" = FCMP_UGT, "<" = FCMP_ULT, ">=" = FCMP_UGE, "<=" = FCMP_ULE)
-    
+  } else {
+     codes = c("==" = FCMP_UEQ, "!=" = FCMP_UNE, ">" = FCMP_UGT, "<" = FCMP_ULT, ">=" = FCMP_UGE, "<=" = FCMP_ULE)
+
     # Coerce type TODO replace with more generic type coercion?
-#    browser()
     vars = list(a, b)
     convert.i = which(sapply(types, function(x) !sameType(x, targetType)))   # sameType replaces identical
     if(length(convert.i))
