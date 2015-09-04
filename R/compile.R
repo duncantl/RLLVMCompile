@@ -72,10 +72,18 @@ assignHandler = `compile.=` =   # `compile.<-`
   #
 function(call, env, ir, ...)
 {
+
+    if(!is.na(i <- match(as.character(call[[1]]), names(env$.compilerHandlers)))) {
+        return(env$.compilerHandlers[[i]](call, env, ir, ...))
+    }
+    
+    
    args = call[-1]  # drop the = or <-
    stringLiteral = FALSE
    type = NULL
-   
+
+browser()
+    
 #XXX may not need to do this but maybe can compile the RHS as usual.
    if(isSubsettingAssignment(call) && is(ty <- getElementAssignmentContainerType(call[[2]], env), "STRSXPType")) {
      return(assignToSEXPElement(call[[2]], call[[3]], env, ir, type = ty))
@@ -192,10 +200,32 @@ function(call, env, ir, ...)
       }
    }
 
+   setVarType(env, args[[1]], val)
+
+
    val  # return value - I (Vince) changed this to val from ans (the createStore() return).
         # There seems to be very little we can do with the object of class
         # StoreInst. Note: this seems to be the way it's done here
         # too: http://llvm.org/docs/tutorial/LangImpl7.html
+}
+
+
+setVarType =
+    #
+    # This adds the type to 
+    #
+function(env, lhs, rhs, meta = FALSE)
+{
+   if(is.name(lhs)) {
+       lhs = as.character(lhs)
+       ty = getType(rhs)
+       if(!is.null(tmp <- attr(rhs, "RType")))
+           ty = get(tmp, globalenv(), inherits = TRUE)
+       env$.localVarTypes[[ lhs ]] = ty
+
+       if(meta)
+           setMetadata(env$.module, lhs, class(ty))
+   }
 }
 
 getElementAssignmentContainerType =
@@ -451,8 +481,11 @@ function(module, argTypes)
 }
 
 
+
+
 compileFunction <-
 function(fun, returnType, types = list(), module = Module(name), name = NULL,
+         compiler = makeCompileEnv(),
          NAs = FALSE,
          asFunction = FALSE, asList = FALSE,
          optimize = TRUE, ...,
@@ -510,7 +543,8 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
         returnType = types[[1]]
         types =  types[[2]]
     }
-     
+
+    
     if(length(args)  > length(types)) {
        stop("need to specify the types for all of the arguments for the ", name, " function")
     } else if(length(types) > length(args))
@@ -545,6 +579,9 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
      
     argTypes <- types
     llvm.fun <- Function(name, returnType, argTypes, module)
+
+
+
 
     if(any( i <- sapply(argTypes, is, "SEXPType")))
        addSEXPTypeMetadata(module, argTypes[i])
@@ -582,7 +619,6 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     params <- getParameters(llvm.fun)  # TODO need to load these into nenv
     ir <- IRBuilder(block)
 
-    nenv = makeCompileEnv()     
 
 #XXX temporary to see if we should declare and load these individually when we encounter them
 # Really need the user to specify the DLL not just the name in case of ambiguities, so often easier to do this separately.
@@ -608,6 +644,10 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     }
     
 
+    compiler = compiler(.compilerHandlers, NAs, .builtInRoutines, .functionInfo, structInfo, .zeroBased,
+                        .integerLiterals, .useFloat, .debug, .assert, .addSymbolMetaData, .CallableRFunctions,
+                        compiler = compiler)
+    nenv = compiler
     nenv$.fun = llvm.fun
     nenv$.params = params
     nenv$.types = types
@@ -615,35 +655,23 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     nenv$.entryBlock = block
     nenv$.funName = name  # name of the routine being compiled.     
 
-    nenv$.module = module
-    nenv$.compilerHandlers = .compilerHandlers
-    nenv$.builtInRoutines = .builtInRoutines
-    nenv$.functionInfo = .functionInfo
-    nenv$.Constants = .constants
-    nenv$.NAs = NAs
-    nenv$.structInfo = structInfo
-    nenv$.loopDepth = 0L
-    nenv$.zeroBased = .zeroBased
-    nenv$.localVarTypes = .localVarTypes
-
-    nenv$.integerLiterals = .integerLiterals
-    nenv$.useFloat = .useFloat
-    nenv$.debug = .debug
-    nenv$.assertFunctions = .assert
-    nenv$.addSymbolMetaData = .addSymbolMetaData
-
-    nenv$.dimensionedTypes = dimTypes
-
-    nenv$.CallableRFunctions = .CallableRFunctions
-
     nenv$.ExecEngine = .execEngine
-    nenv$.SetCallFuns = list()
+    nenv$.module = module
 
-    nenv$.loopStack = character()
+    nenv$.localVarTypes = .localVarTypes
+    nenv$.Constants = .constants
+    nenv$.dimensionedTypes = dimTypes     
+     
 
     if(.insertReturn)
        fun = insertReturn(fun, env = nenv)        
     fbody <- body(fun)
+
+   last = fbody[[length(fbody)]]
+   if(sameType(VoidType, returnType) && is.call(last) && as.character(last[[1]]) == "if" && length(last) == 3)
+      fbody[[ length(fbody) + 1L ]] = quote(return( ))
+   
+     
     nenv$.Rfun = fun
 
     if(length(.readOnly)) {
@@ -692,9 +720,6 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
 
      }
 
-
-#showModule(module)     
-
     ## This may ungracefully cause R to exit, but it's still
     ## preferably to the crash Optimize() on an unverified module
     ## creates.
@@ -709,7 +734,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
     else
        llvm.fun
   } else if(!isIntrinsic(name))
-     stop("compileFunction can only handle closures. Failing on ", name)
+     stop("compileFunction can currently only handle closures. Failing on ", name)
 }
 
 

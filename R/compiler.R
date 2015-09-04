@@ -54,3 +54,33 @@ function(compiler, ..., merge = TRUE)
   
   compiler
 }
+
+
+
+
+mkCompiler =
+function(fun = NULL, curBlock = NULL, .types = list(), mod = NULL,
+         .compilerHandlers = getCompilerHandlers(),
+         .builtInRoutines = getBuiltInRoutines(),         
+         ...)
+{
+    if(missing(mod) && !missing(fun))
+        mod = as(fun, "Module")
+    
+    nenv = makeCompileEnv()
+    nenv$.entryBlock = curBlock
+    nenv$.types = .types
+    nenv$.module = mod
+    nenv$.compilerHandlers = .compilerHandlers
+    nenv$.loopDepth = 0L
+    nenv$.SetCallFuns = list()
+    nenv$.loopStack = character()
+    nenv$.builtInRoutines = .builtInRoutines    
+    
+    opts = list(...)
+    mapply(function(name, val)
+             assign(name, val, nenv),
+           names(opts), opts)
+    
+    nenv
+}

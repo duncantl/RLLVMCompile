@@ -75,8 +75,8 @@ export(getSymbolInfoMetadata)
 export(vectorizeScalarFunction)
 
 
-export(mkCompiler)
-
+#export(mkCompiler)
+export(compiler)
 
 
 export(setVarType)
