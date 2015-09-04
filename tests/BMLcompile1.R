@@ -9,6 +9,7 @@ moveCars_f = compileFunction(moveCars, Int32Type,
 lrunBML_c = compileFunction(runBML, VoidType, 
                              list(MatrixType(Int32Type), INTSXPType, INTSXPType, INTSXPType, INTSXPType, Int32Type), module = m, .debug = FALSE, optimize = FALSE)
 
+pre = showModule(m, TRUE)
 
 mgr = passManager(NULL, FALSE)
 passes = list(
@@ -16,7 +17,6 @@ passes = list(
  createDeadCodeEliminationPass,
  createDeadStoreEliminationPass,
 # createInstructionCombiningPass,
- createPromoteMemoryToRegisterPass,
 # createDemoteRegisterToMemoryPass,
 # createReassociatePass
 # createCFGSimplificationPass
@@ -35,28 +35,45 @@ passes = list(
  createIndVarSimplifyPass,
  createLoopStrengthReducePass,
 # createGlobalMergePass,
- createLoopDeletionPass
+ createLoopDeletionPass,
 # createCorrelatedValuePropagationPass,
 # createPartiallyInlineLibCallsPass
+   createPromoteMemoryToRegisterPass
     )
+
+passes = list( createPromoteMemoryToRegisterPass )
 
 invisible(lapply(passes, function(f)  addPass(mgr, f())))
 
+oldM = clone(m)
+
 run(mgr, m)
 
-ee = ExecutionEngine(m)
+post = showModule(m, TRUE)
 
+setdiff(strsplit(pre, "\\n")[[1]], strsplit(post, "\\n")[[1]])
+
+xrun = 
+function(m, n = 200)
+{    
+   ee = ExecutionEngine(m)
+   tms = replicate(n, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))[3,]
+}
+
+a = xrun(oldM)
+b = xrun(m)
+
+
+if(FALSE) {
 tm1 = system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
 tm1 = system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)})
 
 print(tm1)
-
-tms = replicate(5, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))[3,]
 print(tms)
 #plot(o[[1]])
 
 tms1 = replicate(400, system.time({o = .llvm(lrunBML_c, g, red.rows, red.cols, blue.rows, blue.cols, 1000L, .all = TRUE, .ee = ee, .duplicate = 1:5)}))[3,]
-
+}
 
 # Compare this with the code in CaseStudies/BML/BML.Rdb
 # The C version seems to be about 12 times faster!!!!
