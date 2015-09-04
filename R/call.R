@@ -9,16 +9,28 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
    if(.useHandlers && funName %in% names(env$.compilerHandlers))
        return(dispatchCompilerHandlers(call, env$.compilerHandlers, env, ir, ...))
 
+   rtype = NULL
+
         # Can probably remove the following first if() since that is now in dispatchCompulerHandlers.
    if(funName == "<-" || funName == "=" || funName == "<<-")
      return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
    else if(funName %in% c("numeric", "integer", "character", "logical")) {
      if(length(call) == 1)
        call[[2]] = 1L #XXX or 0 for an empty vector?
+
+
+     rtype = switch(funName,
+                     numeric = "REALSXPType",
+                     integer = "INTSXPType",
+                     character = "STRSXPType",
+                     logical = "LGLSXPType")
      
      call[[3]] = call[[2]]
      call[[2]] = getSEXPTypeNumByConstructorName(funName)
-     call[[1]] = as.name(funName <- "Rf_allocVector")     
+     call[[1]] = as.name(funName <- "Rf_allocVector")
+
+
+     
    } else if(funName == "$") {
       return(env$.compilerHandlers[["$"]](call, env, ir, ...))
    } else if(funName %in% c(".typeInfo", ".signature")) {
@@ -129,6 +141,11 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
    call = ir$createCall(ofun, .args = args)
    if(isTailFunction(env$.Rfun, env$.hints))
      setTailCall(call)
+
+   if(!is.null(rtype)) 
+       attr(call, "RType") = rtype
+
+       
 
    # If pass an aggregate by value
    #     setArgByVal(call, 1L)
