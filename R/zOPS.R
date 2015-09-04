@@ -8,6 +8,15 @@ returnHandler =
 function(call, env, ir, ..., .targetType = NULL) 
 {
 #XXX  connect with insertReturn.call and avoid doing anything here.
+
+     if(length(call) == 1) {
+         if(!sameType(env$.returnType, VoidType))
+             stop("empty return but the routine expects to return ", as(env$.returnType, "character"))
+         
+         return(createRetVoid(ir))
+     }
+         
+    
      if(is.call(call[[2]]) && !is.null(getSApplyType(call[[2]], env))) {
          # so now we have a return(sapply(...)) and so it contains a call to return(r_ans)
          # and we don't need to do this.
@@ -99,6 +108,9 @@ function(...)
      # add any others user supplied.
    others = list(...)
    CompilerHandlers[names(others)] = others
+
+   if(!("=" %in% names(CompilerHandlers)))
+        CompilerHandlers[["="]] = CompilerHandlers[["<-"]]
  
   invisible(CompilerHandlers)
 }
