@@ -13,26 +13,26 @@ insertReturn =
   # insertReturn(quote(if(x < 10) { x= 3; sqrt(x) } else { x = 100; sqrt(x)}  ))      
   #
   #XXX Need to handle while, if  
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, isVoid = FALSE, ...)
   UseMethod("insertReturn")
 
 
 `insertReturn.{` =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, isVoid = FALSE, ...)
 {
      expr[[length(expr)]] = insertReturn(expr[[length(expr)]], nested)
      expr
 }
 
 insertReturn.name =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, isVoid = FALSE, ...)
 {
    substitute(return(x), list(x = expr))
 }
 
 
 `insertReturn.call` =
-function(expr, nested = FALSE, env = NULL, ...)
+function(expr, nested = FALSE, isVoid = FALSE, env = NULL, ...)
 {
 #XXXX rework this strategy
   if(!is.null(env) && !is.null(getSApplyType(expr, env)))
@@ -45,7 +45,7 @@ function(expr, nested = FALSE, env = NULL, ...)
 }
 
 insertReturn.if =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, isVoid = FALSE, ...)
 {
   expr[[3]] = insertReturn(expr[[3]], nested = TRUE)
   if(length(expr) == 4)
@@ -55,7 +55,7 @@ function(expr, nested = FALSE, ...)
 
 insertReturn.numeric = insertReturn.logical = insertReturn.character =
   insertReturn.integer = `insertReturn.(` =     # should check for (return(x+1))
-   function(expr, nested = FALSE, ...) {
+   function(expr, nested = FALSE, isVoid = FALSE, ...) {
      k = call('return')
      k[[2]] = expr
      k
@@ -63,21 +63,21 @@ insertReturn.numeric = insertReturn.logical = insertReturn.character =
 
 
 insertReturn.while =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, isVoid = FALSE, ...)
 {
   expr[[3]] = insertReturn(expr[[3]], nested = TRUE)
   expr
 }
 
 `insertReturn.=` = `insertReturn.<-` =
-function(expr, nested = FALSE, ..., value = NULL)
+function(expr, nested = FALSE, isVoid = FALSE, ..., value = NULL)
 {
   substitute(return(x), list(x = expr))
 }
 
 
 `insertReturn.function` =
-function(expr, nested = FALSE, ...)
+function(expr, nested = FALSE, isVoid = FALSE, ...)
 {
 #   body(expr) = insertReturn(body(expr))
    b = body(expr)
@@ -93,6 +93,12 @@ function(expr, nested = FALSE, ...)
             insertReturn(b)
    }
 
+   # Add a return() if the last expression is  if() { ... } with no else
+   # Do we really want to do this?
+   last = b[[length(b)]]
+   if(is.call(last) && as.character(last[[1]]) == "if" && length(last) == 3)
+      b[[ length(b) + 1L ]] = quote(return( ))
+   
    body(expr) = b
    expr
 }
