@@ -180,10 +180,36 @@ function(val, env, call = NULL)
 getDataType.character =
 function(val, env, call = NULL)
 {
-   if(val %in% names(env$.types))
+   ty = if(val %in% names(env$.types))
        env$.types[[val]]
-   else
-      env$.localVarTypes[[val]]
+   else if(val %in% names(env$.localVarTypes))
+       env$.localVarTypes[[val]]
+   else {
+          # look it up in the module.
+       var = env$.module[[ val ]]
+       if(is.null(var))
+           return(NULL)
+       getElementType(getType(var))
+   }
+
+   typeFromMetadata(ty, val, env)   
+}
+
+typeFromMetadata =
+function(ty, id, env)    
+{
+   if(sameType(ty, SEXPType)) {
+       # Try to get more specific SEXP type by looking in the module's metadata.
+       md = getMetadata(env$.module, id)
+       if(!is.null(md)) {
+          ty = as(md[[1]][[1]], "character")
+          ty = gsub('[!"]', "", ty)
+          return(get(ty, globalenv(), inherits = TRUE))
+      }
+   }
+
+   ty
+   
 }
 
 getDataType.integer =
