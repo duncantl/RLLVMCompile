@@ -9,5 +9,5 @@ Comment: Need to depend on Rllvm as variables such as Int32Type are defined at l
          for the package directly.
 Depends: Rllvm
 Imports: methods, CodeAnalysis, codetools
-xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R 
+xCollate: createLoop.R expressions.R guessType.R vectorize.R while.R compile.R compiler.R
 

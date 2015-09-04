@@ -73,3 +73,10 @@ export(BasicCompiler)
 export(getSymbolInfoMetadata)
 
 export(vectorizeScalarFunction)
+
+
+export(mkCompiler)
+
+
+
+export(setVarType)
