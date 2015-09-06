@@ -94,10 +94,10 @@ function(...)
             "break" = breakHandler,
             "next" = nextHandler,
             'repeat' = repeatHandler,
-            'call' = callHandler,
+#            'call' = callHandler,
              #XXX These are needed for the rewriteSApply() code which doesn't seem to dispatch. Any programmatically generated code?
-            'for' = `compile.for`,
-            '<-' = `compile.=`,
+#            'for' = `compile.for`,
+#            '<-' = `compile.=`,
             '$' = `compile.$`                        
            )
 
