@@ -203,7 +203,7 @@ function(ty, id, env)
        md = getMetadata(env$.module, id)
        if(!is.null(md)) {
           ty = as(md[[1]][[1]], "character")
-          ty = gsub('[!"]', "", ty)
+          ty = gsub('[!"]', "", gsub("^metadata ", "", ty))   # the "metadata " is from LLVM 3.5
           return(get(ty, globalenv(), inherits = TRUE))
       }
    }
