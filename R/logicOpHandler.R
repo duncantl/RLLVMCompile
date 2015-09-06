@@ -10,6 +10,7 @@ logicOpHandler =
     #
 function(call, env, ir, ...)
 {
+    
    if(length(call) == 2) {
      val = compile(call[[2]], env, ir, ...)
      ty.val = getType(val)
@@ -45,6 +46,7 @@ function(call, env, ir, ...)
   types = lapply(call[-1], getTypes, env)
   targetType = getMathOpType(types, call[-1])
 
+
     # Need to change order of call[2:3] if one is a literal and the other is a character a and b, 
     # could be call[[2]] e.g.  "z" == x
   if(sameType(targetType, Int8Type) && is.character(call[[3]]) && nchar(call[[3]]) == 1) { 
@@ -55,6 +57,11 @@ function(call, env, ir, ...)
       b = compile(call[[3]], env, ir)
    
   a = compile(call[[2]], env, ir) 
+
+  if(all(sapply(types, sameType, StringType))) {
+      e = substitute(strcmp(a, b) == 0L, list(a = a, b = b))
+      return(compile(e, env, ir, ...))
+  }
 
    
   isIntType = identical(targetType, Int32Type)   || identical(targetType, Int8Type)  
