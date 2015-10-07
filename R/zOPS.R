@@ -98,7 +98,9 @@ function(...)
              #XXX These are needed for the rewriteSApply() code which doesn't seem to dispatch. Any programmatically generated code?
 #            'for' = `compile.for`,
 #            '<-' = `compile.=`,
-            '$' = `compile.$`                        
+            '$' = `compile.$`,
+            # This is for getting pointers from index operations.
+            '.byref' = byrefHandler
            )
 
 

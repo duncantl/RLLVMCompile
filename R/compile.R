@@ -225,7 +225,12 @@ function(env, lhs, rhs, meta = FALSE)
    }
 }
 
+
+#'
+#'
+#' Get the data type of a variable, possibly in the format `x[`.
 getElementAssignmentContainerType =
+# FIXME: do we really need this function?
   #
   #  called from just above for x[.....]
   #
@@ -1004,7 +1009,8 @@ ExcludeCompileFuncs = c("{", "sqrt", "return", MathOps,
                         "break", "next",
                         ".R", ".typeInfo", ".signature", ".varDecl", ".pragma",
                         ".assert", ".debug",
-                        "stop", "warning"
+                        "stop", "warning",
+                        ".byref"
     
                        )  # for now
 
