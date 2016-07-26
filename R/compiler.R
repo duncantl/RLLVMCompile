@@ -1,6 +1,7 @@
 
 compiler =
-function(.compilerHandlers = getCompilerHandlers(), NAs = FALSE,
+function(.compilerHandlers = getCompilerHandlers(),
+         NAs = FALSE,
          .builtInRoutines = getBuiltInRoutines(),
          .functionInfo = list(),
          structInfo = list(),
@@ -9,7 +10,12 @@ function(.compilerHandlers = getCompilerHandlers(), NAs = FALSE,
          .useFloat = FALSE,
          .debug = TRUE, .assert = TRUE,
          .addSymbolMetaData = TRUE,
-         .CallableRFunctions = list(), 
+         .CallableRFunctions = list(),
+         irbuilder = NULL,         
+         module = NULL,
+         block = NULL,
+         fun = NULL,
+         types = list(),
          ...,  compiler = makeCompileEnv())
 {
     addToCompiler(compiler,
@@ -32,6 +38,22 @@ function(.compilerHandlers = getCompilerHandlers(), NAs = FALSE,
     compiler$.SetCallFuns = list()
     compiler$.loopStack = character()
 
+    compiler$.irbuilder = irbuilder
+    if(!is.null(irbuilder) && is.null(block) )
+        block = getInsertBlock(irbuilder)
+
+    if(!is.null(block) && is.null(fun) )
+        fun = as(block, "Function")
+    compiler$.fun = fun
+
+    if(!is.null(fun) && is.null(module))
+        module = as(fun, "Module")
+    compiler$.module = module
+
+    compiler$.entryBlock = block
+
+    compiler$.types = types
+    
     compiler
 }
 
