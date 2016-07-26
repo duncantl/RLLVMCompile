@@ -1,4 +1,4 @@
-compile.call = callHandler =
+compile.call = 
   #
   # This handles calls to other functions.
   #
@@ -13,7 +13,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
 
         # Can probably remove the following first if() since that is now in dispatchCompulerHandlers.
    if(funName == "<-" || funName == "=" || funName == "<<-")
-     return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
+      return(env$.compilerHandlers[["<-"]](call, env, ir, ...))  #XXX should lookup the  or "=" - was `compile.<-`
    else if(funName %in% c("numeric", "integer", "character", "logical")) {
      if(length(call) == 1)
        call[[2]] = 1L #XXX or 0 for an empty vector?
@@ -101,6 +101,19 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
    
    funName = mapRoutineName(funName)
 
+
+   v <- getVariable(funName, env)
+   ofun = NULL
+   if(!is.null(v)) {
+
+       ty = getElementType(getType(v))
+       if(getTypeID(ty) == Rllvm:::PointerTyID && getTypeID(getElementType(ty)) == Rllvm:::FunctionTyID) {
+           ofun = ir$createLoad(v)
+           pfun = getElementType(ty)
+           targetTypes = .Call("R_getFunctionTypeArgTypes", pfun, PACKAGE = "Rllvm")
+       }
+
+   } 
     # Here we utilize the polymorphic nature of intrinsics.
     # We may not want this flexibility. e.g. if we have an integer
     # and are calling log(), then we get an int32 returned. We probably
@@ -109,14 +122,15 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
    if(FALSE && isIntrinsic(funName)) {
       argTypes = lapply(as.list(call[-1]), getTypes, env)
       ofun = getIntrinsic(env$.module, funName, argTypes)
-   } else 
+   } else if(is.null(ofun)) {
       ofun = findFun(funName, env)
-
    
-     #??? Need to get the types of parameters and coerce them to these types.
-     # Can we pass this to compile and have that do the coercion as necessary
+    #??? Need to get the types of parameters and coerce them to these types.
+    # Can we pass this to compile and have that do the coercion as necessary
 
-   targetTypes = getParamTypes(call[[1]], env, TRUE)
+      targetTypes = getParamTypes(call[[1]], env, TRUE)
+  }
+
 
      # if we have a mismatch between the length of targetTypes and call (w/o the function name)
      # we either have ... or an error.
