@@ -68,6 +68,7 @@ function(call, env, ir, ..., type = NULL)
 
      # So get the variable and then call REAL(), INTEGER(), or whatever on it
      # so that ptr is the collection of elements.
+
    var = getVariable(varName, env, ir)
    ptr = ir$createCall(fn, var)
 
@@ -100,7 +101,7 @@ function(call, env, ir, ..., asSEXT = TRUE)
     call[-(1:2)] = lapply(call[-(1:2)], function(x) if(is.numeric(x) && x == as.integer(x)) as.integer(x) else x)
    
 
-   if(length(call) > 3) 
+   if(length(call) > 3 && ! ( is.name(call[[4]]) && as.character(call[[4]]) == ""))
       i = createMultiDimGEPIndex(call, env, ir, ...)
     else 
       i = compile(subtractOne(call[[3]]), env, ir)
