@@ -64,7 +64,7 @@ function(call, env, ir, ...)
   }
 
    
-  isIntType = identical(targetType, Int32Type)   || identical(targetType, Int8Type)  
+  isIntType = sameType(targetType, Int32Type)   || sameType(targetType, Int8Type)  
    
 
   if(isIntType) {
