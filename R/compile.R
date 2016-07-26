@@ -121,14 +121,16 @@ function(call, env, ir, ..., .useHandler = TRUE)
     } else
       val = compile(args[[2]], env, ir)
 
-      if(is.name(args[[1]])) {
+   
+
+   if(is.name(args[[1]])) {
          var = as.character(args[[1]])
 
       # We don't search parameters for the var name, since we don't
       # want to try to assign over a parameter name.
       #XXX  I think we do want to mimic that behaviour but understand which local variable that corresponds to.
-      ref <- getVariable(var, env, ir, load = FALSE, search.params = FALSE)
-      if(is.null(ref)) {
+         ref <- getVariable(var, env, ir, load = FALSE, search.params = FALSE)
+         if(is.null(ref)) {
 
                  # No existing variable; detect type and create one.
           if(is.null(type)) 
@@ -155,7 +157,7 @@ function(call, env, ir, ..., .useHandler = TRUE)
 
           if(is(val, "Value"))
             type = getDataType(val, env)
-        }
+      }
           #XXXX Merge with compile.character
          if(stringLiteral) {  # isStringType(type)) 
            gvar = createGlobalVariable(sprintf(".%s", var), env$.module, type, val, TRUE, PrivateLinkage)
@@ -181,10 +183,10 @@ function(call, env, ir, ..., .useHandler = TRUE)
    }
 
    if(!is.null(val)) {
+#browser()
       if(!sameType(getType(val), getElementType(getType(ref)))) {
 #XXX
 #cat("fix this cast\n")
-#if(var == "subthread") browser()
 #         val = Rllvm::createCast(ir, "SIToFP", val, getElementType(getType(ref)))
 	  val = createCast(env, ir, getElementType(getType(ref)), getType(val), val)
       }
@@ -581,7 +583,7 @@ function(fun, returnType, types = list(), module = Module(name), name = NULL,
        # The dimTypes need to have names or we need to be able to map them back to the particular arguments. They do!
     if(any(isDimensionedType)) {
        dimTypes = types[isDimensionedType]
-       types[isDimensionedType] = replicate(sum(isDimensionedType), SEXPType)
+       types[isDimensionedType] = replicate(sum(isDimensionedType), SEXPType) #XXXX Not necessarily a SEXPType anymore.
     } else
        dimTypes = list()
      
