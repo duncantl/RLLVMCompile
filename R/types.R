@@ -106,21 +106,24 @@ function(types, values = NULL)
    if(length(types) == 1)
      return(types[[1]])
 
-   types = lapply(types, function(x) if(is(x, "Type")) x@ref else x)
-   
-   if( identical(types[[1]], types[[2]]) )
-     return(types[[1]])
+   if(sameType(types[[1]], types[[2]]))
+       return(types[[1]])   
 
-   ints = c(Int1Type, Int8Type, Int16Type, Int32Type)
-   i = match(types, ints)
+   rawTypes = lapply(types, function(x) if(is(x, "Type")) x@ref else x)
+
+#   if( identical(rawtypes[[1]], rawtypes[[2]]) )
+#     return(types[[1]])
+
+   ints = c(Int1Type@ref, Int8Type@ref, Int16Type@ref, Int32Type@ref)
+   i = match(rawTypes, ints)
    if(!any(is.na(i)))
        return(ints[[ max(i)  ]])
 
-   i = match(types, c(Int32Type, DoubleType))
+   i = match(rawTypes, c(Int32Type@ref, DoubleType@ref))
    if(!any(is.na(i)))
       return(DoubleType)
 
-   i = match(types, c(Int8Type, StringType))
+   i = match(rawTypes, c(Int8Type@ref, StringType@ref))
    if(all(!is.na(i))) {
        if(length(values)) {
            isChar = sapply(values, function(x) is.character(x) && nchar(x) == 1)
@@ -138,7 +141,10 @@ getTypeOfElement =
   #
 function(type)
 {
- 
+
+  if(is(type, "RMatrixType"))
+       return(type@elType)
+    
   if(is(type, "SEXPType")) 
     return(switch(class(type),
                    INTSXPType = Int32Type,
@@ -148,8 +154,6 @@ function(type)
                    VECSXP = getSEXPType(),
                    stop("don't know element type of this SEXP")))
 
-  if(is(type, "MatrixType"))
-       return(type@elType)
   
   if(isPointerType(type))
     return(getElementType(type))
