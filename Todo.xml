@@ -7,6 +7,40 @@
 <topic>
 <title>Tools</title>
 <items>
+
+<item status="done">
+Compilation of code in Rllvm/tests/walkblocks.R  (the part in the FALSE section) fails.
+Seems to have wrong types in the fcmp.
+<br/>
+Same issue with the enums overloaded for Add and Sub (in this case Sub).
+</item>
+
+<item status="done">
+The addition instruction isn't being added.
+<r:code>
+library(RLLVMCompile)
+g = function(x, y) x[1] + y[1]
+i.ptr = pointerType(Int32Type)#, 0L)
+#debug(RLLVMCompile:::mathHandler)
+gc = compileFunction(g, Int32Type, list(i.ptr, i.ptr), optimize = FALSE)
+showModule(gc)
+<r:output><![CDATA[
+define i32 @g(i32* readonly %x, i32* readonly %y) {
+entry:
+  %0 = getelementptr i32, i32* %x, i64 0
+  %1 = load i32, i32* %0
+  %2 = getelementptr i32, i32* %y, i64 0
+  %3 = load i32, i32* %2
+  %"x[1] + y[1]" = ret i32 %1, i32 %3
+  ret i32 %"x[1] + y[1]"
+}
+]]></r:output>
+</r:code>
+<br/>
+Enums are overloaded for BinOps and BinaryOps and Add was 1 rather than 11.
+</item>
+
+
 <item>
 See getBlockGraph()
 <br/>Visualize a module, i.e., the relationships between its blocks, etc.
