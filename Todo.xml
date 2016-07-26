@@ -8,6 +8,28 @@
 <title>Tools</title>
 <items>
 
+<item status="verify">
+Check we haven't broken anything else. Fixed getMathOpType to use the @ref pointers for comparing the types.
+<br/>
+Comparing double to Int32Type
+See tests/compareDiffTypes.R
+It seems like we end up with two elements in convert.i and so the subsetting  vars[[convert.i]] is hierarchical.
+<br/>
+isIntType is false.
+Importantly, targetType is NULL.  So neither  operand types will match.
+So
+<r:code>
+getMathOpType(types, call[-1])
+</r:code>
+is responsible.
+<br/>
+Does this have anything to do with the Int1Type for the return type?
+</item>
+
+<item>
+Put better names for variables in multiSubset.R
+</item>
+
 <item status="done">
 Compilation of code in Rllvm/tests/walkblocks.R  (the part in the FALSE section) fails.
 Seems to have wrong types in the fcmp.
