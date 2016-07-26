@@ -55,7 +55,7 @@ S3method("fixIfAssign", "logical")
 S3method("fixIfAssign", "character")
 
 
-export(MatrixType, DataFrameType)
+export(RMatrixType, DataFrameType, NativeMatrixType)
 
 export(traverseExpressions, rewriteRNGCalls)
 
@@ -80,3 +80,7 @@ export(compiler)
 
 
 export(setVarType)
+
+
+
+
