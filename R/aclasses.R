@@ -1,18 +1,30 @@
 setClass("RTypeDesc", contains = "VIRTUAL")
 setClass("DimensionedType", contains = c("RTypeDesc", "VIRTUAL"))
-setClass("MatrixType", representation(elType = "ANY", dim = "integer"), contains = "DimensionedType")
-#setClass("ArrayType", contains = "MatrixType")
-setClass("DataFrameType", representation(elTypes = "list", nrow = "integer", ncol = "integer"), contains = "DimensionedType")
+setClass("NativeMatrixType", representation(elType = "ANY", dim = "integer", dimVars = 'character'), contains = "DimensionedType")
+setClass("RMatrixType", representation(elType = "ANY", dim = "integer"), contains = c("DimensionedType", "SEXPType"))
+#setClass("ArrayType", contains = "RMatrixType")
+setClass("DataFrameType", representation(elTypes = "list", nrow = "integer", ncol = "integer"), contains = c("DimensionedType", "SEXPType"))
 
-MatrixType =
-function(elType, nrow = NA, ncol = NA)
+NativeMatrixType =
+function(elType, nrow = NA, ncol = NA, dimVars = character())
 {
   if(!missing(ncol))
       dim = c(nrow, ncol)
   else
       dim = nrow
 
-  new("MatrixType", elType = elType, dim = as.integer(dim))
+  new("NativeMatrixType", elType = elType, dim = as.integer(dim), dimVars = as(dimVars, "character"))
+}
+
+RMatrixType =
+function(elType, nrow = NA, ncol = NA, dimVars = character())
+{
+  if(!missing(ncol))
+      dim = c(nrow, ncol)
+  else
+      dim = nrow
+
+  new("RMatrixType", elType = elType, dim = as.integer(dim))
 }
 
 ArrayType =
