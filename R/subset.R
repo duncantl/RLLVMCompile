@@ -24,6 +24,7 @@ subsetHandler =
 #  - SExt: http://llvm.org/docs/LangRef.html#i_sext
 function(call, env, ir, ..., objType = getElementAssignmentContainerType(call, env), load = TRUE, SEXPToPrimitive = TRUE, .targetType = NULL)
 {
+
   if(length(call) > 3)
                     # perhaps make this a separate method and have the generic dispatcher call it.
       return(multiSubset(call, env, ir, ..., load = load, SEXPToPrimitive = SEXPToPrimitive))
