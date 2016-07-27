@@ -95,6 +95,9 @@ function(expr, env = NULL, ir = NULL)
 getVariable =
 function(sym, env, ir = NULL, load = TRUE, search.params=TRUE, searchR = FALSE, ...)
 {
+  if(is(sym, "Instruction"))
+     return(sym)
+    
   sym = as.character(sym)
   var = if(exists(sym, env)) {
                # The local variables we create in the function
