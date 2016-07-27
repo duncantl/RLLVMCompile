@@ -8,6 +8,12 @@
 <title>Tools</title>
 <items>
 
+<item>
+See tests/forVector.R
+Should be able to determine that ctr = 0 is a double since we return ctr and we know the return type. 
+Should do this in Type Inference.
+</item>
+
 <item status="verify">
 Check we haven't broken anything else. Fixed getMathOpType to use the @ref pointers for comparing the types.
 <br/>
