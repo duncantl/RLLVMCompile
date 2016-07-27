@@ -13,14 +13,27 @@ function(call, env, ir, ..., load = TRUE, SEXPToPrimitive = TRUE)
 
 
    if(is(dimType, "DataFrameType")) {
+
 #      ee = substitute(x[[i]][j], list(x = call[[2]], i = call[[3]], j = call[[4]]))
           #XXX should really call the [[ method in env handlers.
        tmp = substitute( z[[i]], list(z = call[[2]], i = call[[4]]))
        var =  subsetDoubleHandler(tmp, env, ir, ...)
+
+       
          # then get the i-th element. We have the specific type of this element in the data frame.
-         # So we can use this to perform the subsetting.
-         #
-       ty = dimType@elTypes[[ call[[4]] ]]
+         # So we can use this to perform the subsetting. However, if the column index is an expression
+         # we don't know at compile time which column it is. So all the columns are the same type
+         # we do know, but otherwise we abort the compilation,
+       j = call[[4]]
+       if(isLiteral(j))
+           ty = dimType@elTypes[[ call[[4]] ]]
+       else {
+           if(!all(sapply(dimType@elTypes[-1], function(x, y) {
+                                            sameType(x, y) && class(x) == class(y)
+                                        }, y = dimType@elTypes[[1]])))
+               stop("We cannot compile this as the columns have different data types")
+           ty = dimType@elTypes[[1]]
+       }
        vv = compile(substitute(var[j], list(var = var, j = call[[3]])), env, ir, ..., objType = ty)
        return(vv)
    } else if(is(dimType, "RMatrixType")) {
