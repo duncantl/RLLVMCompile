@@ -13,7 +13,7 @@ function(x)
    x
 }
 fc = compileFunction(f, INTSXPType, list(INTSXPType))
-.llvm(fc, 1:3, .all = TRUE)
+.llvm(fc, 1:3) # , .all = TRUE)
 
 ###### REAL()
 

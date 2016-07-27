@@ -1,4 +1,8 @@
+# Shows how we can compile a function and then pass it as a regular pointer to a routine
+# for use in existing C/C++ code.
+
 library(RLLVMCompile)
+
 
 f = function(x) x + 1L
 f = function(x) 10L * x 

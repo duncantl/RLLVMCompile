@@ -1,6 +1,6 @@
 library(RLLVMCompile)
-STRSXPType = getSEXPType("STR")
-SEXPType = getSEXPType()
+#STRSXPType = getSEXPType("STR")
+#SEXPType = getSEXPType()
 
 #f = function(x, a) { x[1] = a}
 #fc = compileFunction(f, VoidType, list(STRSXPType, STRSXPType))
