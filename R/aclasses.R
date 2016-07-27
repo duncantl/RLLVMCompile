@@ -30,6 +30,7 @@ function(elType, nrow = NA, ncol = NA, dimVars = character())
 ArrayType =
 function(elType, dim = c(NA, NA))
 {
+    #XXX Is this defined? Commented out above.
   new("ArrayType", elType = elType, dim = as.integer(dim))
 }
 
