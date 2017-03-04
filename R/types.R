@@ -202,6 +202,11 @@ function(val, env, call = NULL)
 typeFromMetadata =
 function(ty, id, env)    
 {
+   if(is(ty, "StringType"))
+      return(StringType)
+   
+#XXXX Use the newer INTSXPType   rather than the metadata, at least first. This will automatically happen
+# if the metadata is not found.  But still should just return it unless the metadata is very different.
    if(sameType(ty, SEXPType)) {
        # Try to get more specific SEXP type by looking in the module's metadata.
        md = getMetadata(env$.module, id)
