@@ -22,7 +22,7 @@ function(call, env, ir, ..., .targetType = NULL)
          # and we don't need to do this.
         compile(call[[2]], env, ir)
         #call = quote(return(r_ans))
-        return(NULL)
+        return(TRUE)
       }
 
       args = as.list(call[-1])
