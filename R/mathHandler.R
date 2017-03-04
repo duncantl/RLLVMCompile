@@ -121,13 +121,16 @@ function(call, env, ir, ..., isSubsetIndex = FALSE)
 
     # XXX Have to deal with different types.
   if(isIntType)
-     codes = c("+" = Add, "-" = Sub, "*" = Mul, "/" = SDiv, "%/%" = SRem)
+     codes = c("+" = "Add", "-" = "Sub", "*" = "Mul", "/" = "SDiv", "%/%" = "SRem")
   else 
-     codes = c("+" = FAdd, "-" = FSub, "*" = FMul, "/" = FDiv, "%/%" = FRem)
+     codes = c("+" = "FAdd", "-" = "FSub", "*" = "FMul", "/" = "FDiv", "%/%" = "FRem")
 
 
-  opName = as.character(call[[1]]) 
-  op = codes[ opName ]
+  opName = as.character(call[[1]])
+  if(opName %in% names(codes))
+    op = structure(BinaryOps[[ codes[ opName ] ]], names = opName)
+  else
+    op = structure(NA, names = opName)
 
   if(any(w <- sapply(e, is, "Constant"))) {
       # if any of the operands are constants
