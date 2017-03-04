@@ -87,7 +87,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
        #  See fgets.Rdb in Rllvm/
    if(!is.null(type <- getSApplyType(call, env, funName))) {
       fun = env$.module[[ as.character(call[[3]]) ]]
-      rt = getReturnType(fun)
+      rt = getFunctionReturnType(fun)
       e = rewriteSApply(call, type, rt, env = env, ir = ir) # return type of routine being called.
       ans = lapply(e, compile, env, ir, ...)
       return(ans[[length(ans)]])
@@ -237,3 +237,6 @@ function(name, env, discardVarArgs = FALSE)
    else
        ans
 }
+
+
+
