@@ -31,8 +31,16 @@ rewriteSApply =
   #
   #     ty = getDataType(sym, env)
   #
+    #
+    #  unprotect the variable, not by count (1L)
+    #  when the R object being returned has direct element accessor (logical, integern, numeric)
+    #       get the pointer for the array outside of the loop and use it.
+    #
 function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...)
 {
+    # returnType is the C-level return type of the function being sapply()'ed to each element, i.e. the FUN
+  
+
    X = call[[2]]
     # get length of the R vector.
    len = quote(n <- Rf_length(x))
@@ -52,15 +60,15 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
 
 #XXX Could add the types for els and el right now.
    
-   # allocate answer
+      # allocate answer
    alloc = quote(r_ans <- Rf_allocVector(sexpEnum, n))
-   alloc[[3]][[2]] = sexpTypeNum = getSEXPTypeNum(returnType)  # get INTSXP, REALSXP, etc.
+   alloc[[3]][[2]] = sexpTypeNum = getSEXPTypeNum(returnType) # !!returnType)  # get INTSXP, REALSXP, etc.
 
-   # create the instruction to get the element
-     
+      # create the instruction to get the element from X and assign it to el
+
    funCall = quote(tmp <- f(el))
    funCall[[3]][[1]] = call[[3]]
-   if(length(call) > 3) 
+   if(length(call) > 3)    # dealing with extra arguments to our f()
       funCall[[3]][seq(3, length = length(call) - 3)] = call[-(1:3)]
 
    loop =
@@ -69,27 +77,38 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
              x  # replaced with f(el)
              r_ans[i] = tmp  # leave to the compiler make sense of this.
            })
-   loop[[4]][[3]] = funCall
+   loop[[4]][[3]] = funCall 
 
 
       # Add the type for r_ans to the compiler's known types
       # This might indicate that we have created that variable already
       # So we may need to maintain a list of the variables we have explicitly
       # allocated separately from the type information that we know ahead of time.
-   if(!is.null(env)) 
-     env$.types$r_ans = getSEXPType(names(sexpTypeNum))
-
+   R.returnType = getSEXPType(names(sexpTypeNum))
+   if(!is.null(env))
+            #??? would class(vecType) work the same with the new classes
+     env$.types$r_ans = R.returnType
 
    if(!hasElsAccessor) {
        accessorFun = if(is(vecType, "STRSXPType")) "STRING_ELT" else "VECTOR_ELT"
        loop[[4]][[2]][[3]] =  substitute( f(x, i-1L), list( f = as.name(accessorFun), x = X ) )
    }
 
-   if(is(returnType, "VECSXPType"))
-       loop[[4]][[3]] = substitute(SET_VECTOR_ELT(r_ans, i, val), list(val = loop[[4]][[3]][[3]]))
-   else if(is(returnType, "STRSXPType"))
-       loop[[4]][[3]] = substitute(SET_STRING_ELT(r_ans, i, val), list(val = loop[[4]][[3]][[3]]))
-
+      # Fix up the assignment of the value tmp within the loop to the r_ans object
+   if(is(R.returnType, "VECSXPType") || is(R.returnType, "STRSXPType")) {
+       loop[[4]][[3]] = substitute(OP(r_ans, i - 1L, val), list(val = loop[[4]][[3]][[3]],
+                                                                OP = if(is(R.returnType, "VECSXPType"))
+                                                                        as.name("SET_VECTOR_ELT")
+                                                                     else
+                                                                        as.name("SET_STRING_ELT")))
+       if(sameType(returnType, StringType))
+          loop[[4]][[3]][[4]] = substitute(mkChar(val), list(val = loop[[4]][[3]][[4]]))
+       loop[[4]] = loop[[4]][-4]       
+   } else {
+       acc = getSEXPTypeElementAccessor(R.returnType)
+       loop[[4]][[4]][[2]] = substitute( ACC(r_ans)[i], list(ACC = as.name(acc)))
+   }
+   
    ans = c(len,
            els,
            alloc,

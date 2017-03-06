@@ -121,8 +121,10 @@ function(type, env)
       "INTEGER"
    else if(is(type, "REALSXPType") || sameType(type, DoubleType) ) # This DoubleType is for when we are dealing with a matrix and have the element type.
       'REAL'
-#   else  if(is(type, "STRSXPType") || sameType(type, StringType))
-   else
+   else if(is(type, "STRSXPType") || sameType(type, StringType)) {
+browser()
+'SET_STRING_ELT(%s, %s)'
+   } else 
       stop("not done yet")
 }
 
@@ -164,10 +166,26 @@ function(fun)
 getSEXPTypeNum =
 function(type)
 {
-  if(class(type) == "Type")  # generic
+#  if(class(type) == "Type")  # generic
       #return(c(ANY = ANYSXP))
-      return(c(VEC = VECSXP))
-  
+#      return(c(VEC = VECSXP))
+
+  ans = if(is(type, "LGLSXPType")  || sameType(type, Int1Type))  #XXX Int1Type is not a class
+      c(LGL = LGLSXP)
+  else if(is(type, "INTSXPType")  || sameType(type, Int32Type))
+      c(INT = INTSXP)
+  else if(is(type, "REALSXPType") || sameType(type, DoubleType))
+      c(REAL = REALSXP)
+  else if(is(type, "STRSXPType") || sameType(type, StringType))
+      c(STR = STRSXP)    
+  else
+      c(VEC = VECSXP)
+#     stop("don't know what SEXP type corresponds to this type")
+
+  return(ans)
+
+if(FALSE) {
+    # For old sytem in Rllvm.
   if(sameType(type, getSEXPType("STR")) || sameType(type, StringType))
      c(STR = STRSXP)
   else if(sameType(type, getSEXPType("REAL")) || sameType(type, DoubleType))
@@ -178,6 +196,7 @@ function(type)
      c(INT = INTSXP)
   else
      stop("don't know what SEXP type corresponds to this type")
+}
 }
 
 

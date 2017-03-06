@@ -41,7 +41,7 @@ function(call, env, ir, ..., fun = env$.fun, name = getName(fun), .targetType = 
        return(TRUE)
    } else if(funName == ".R" || funName %in% names(env$.CallableRFunctions)) {
        return(callRFunction(call, env, ir, ...))
-    } else if(funName == ".debug") {
+   } else if(funName == ".debug") {
          if(!env$.debug)
            return(FALSE)
 
