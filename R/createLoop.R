@@ -121,7 +121,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
                   # 1-indexed. This is a bit clunky, but LLVM will optimize this
                   # all away.
        offset = ir$createLoad(to)
-       offset.var = ir$binOp(Sub, offset, 1L)
+       offset.var = ir$binOp(BinaryOps['Sub'], offset, 1L)
        ir$createStore(offset.var, to)
      }
    }, limits, list(iv, len))
@@ -143,7 +143,7 @@ function(var, limits, body, env, fun = env$.fun, ir = IRBuilder(module), module 
    ir$setInsertPoint(incrBlock)
 
      i = ir$createLoad(iv)
-     inc = ir$binOp(Add, i, 1L)
+     inc = ir$binOp(BinaryOps['Add'], i, 1L)
      ir$createStore(inc, iv)
      ir$createBr(cond)
 #END MOVED   
