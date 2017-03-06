@@ -33,7 +33,7 @@ rewriteSApply =
   #
     #
     #  unprotect the variable, not by count (1L)
-    #  when the R object being returned has direct element accessor (logical, integern, numeric)
+    #  [test] when the R object being returned has direct element accessor (logical, integern, numeric)
     #       get the pointer for the array outside of the loop and use it.
     #
 function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...)
@@ -101,14 +101,15 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
                                                                         as.name("SET_VECTOR_ELT")
                                                                      else
                                                                         as.name("SET_STRING_ELT")))
-       if(sameType(returnType, StringType))
-          loop[[4]][[3]][[4]] = substitute(mkChar(val), list(val = loop[[4]][[3]][[4]]))
+   if(sameType(returnType, StringType))
+       loop[[4]][[3]][[4]] = substitute(mkChar(val), list(val = loop[[4]][[3]][[4]]))
        loop[[4]] = loop[[4]][-4]       
    } else {
        acc = getSEXPTypeElementAccessor(R.returnType)
-       loop[[4]][[4]][[2]] = substitute( ACC(r_ans)[i], list(ACC = as.name(acc)))
+       alloc = list(alloc, substitute(r_ans_p <- ACC(r_ans), list(ACC = as.name(acc))))
+       loop[[4]][[4]][[2]] = quote( r_ans_p[i] )
    }
-   
+
    ans = c(len,
            els,
            alloc,
