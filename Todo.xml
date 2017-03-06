@@ -460,6 +460,22 @@ See call.R@86 and WrongNumArgs error.
 <items>
 
 <item>
+Deal with calls on LHS of an assignment:
+<c:code>
+INTEGER(ans)[i] = 2
+</c:code>
+Arises in Rllvm/explorations/sapply.R
+</item>
+
+<item>
+In sapply(), deal with strings potentially being passed as CHARSXP to the function being applied
+to each element. If it is expecting a char * (i.e., StringType), then we need to access that pointer
+before the call.
+<br/>
+Do we do this in rewriteSApply() or when we compile the resulting expression? Probably the latter.
+</item>
+
+<item>
 Add Block graph diagrams to show control flow.
 And allow the text to flow around these if they are small.
 </item>
