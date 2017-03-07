@@ -102,7 +102,7 @@ function(call, vecType, returnType, addReturn = TRUE, env = NULL, ir = NULL, ...
                                                                      else
                                                                         as.name("SET_STRING_ELT")))
    if(sameType(returnType, StringType))
-       loop[[4]][[3]][[4]] = substitute(mkChar(val), list(val = loop[[4]][[3]][[4]]))
+       loop[[4]][[3]][[4]] = substitute(Rf_mkChar(val), list(val = loop[[4]][[3]][[4]]))
        loop[[4]] = loop[[4]][-4]       
    } else {
        acc = getSEXPTypeElementAccessor(R.returnType)
