@@ -180,7 +180,7 @@ function(env, ir, toType, fromType, val, ...)
   i <- which(sapply(fromTypes, function(x) sameType(fromType, x)))
 
   if (!length(i))
-    stop(sprintf("Don't know how to handle this fromType ", as(type, "character"), " (reverseLookupType says type '%s')", reverseLookupType(fromType)))
+    stop(sprintf("Don't know how to handle this fromType ", as(fromType, "character"), " (reverseLookupType says type '%s')", reverseLookupType(fromType)))
 
   ## checking needed here
   fun = casters[[i]]
