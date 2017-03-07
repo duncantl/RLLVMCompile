@@ -956,7 +956,7 @@ function(..., env = NULL, useFloat = FALSE)
        Rf_ScalarInteger = list(SEXPType, Int32Type),
        Rf_ScalarReal = list(SEXPType, DoubleType),
        Rf_ScalarLogical = list(SEXPType, Int32Type),
-       Rf_mkString = list(SEXPType, StringType),          
+       Rf_mkString = list(SEXPType, StringType),
 
        Rprintf = list(VoidType, StringType, "..." = TRUE),
        printf = list(Int32Type, StringType, "..." = TRUE),
@@ -1077,7 +1077,7 @@ function(var)
 {
    where = sapply(var, function(x) find(x)[1])
    if(any(is.na(where)))
-     stop("Cannot find variables ", paste(var[is.na(where)], collapse = ", "))
+     stop("Cannot find variable ", if(sum(is.na(where) > 1)) "s", " ", paste(var[is.na(where)], collapse = ", "))
 
    var %in% ".GlobalEnv"
 }
